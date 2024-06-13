@@ -1,0 +1,41 @@
+services:
+  node:
+    container_name: node
+    build: ./node
+    image: node
+    volumes:
+      - ./node/res:/home/apriego-/node
+      - node_data:/home/apriego-/node/node_modules
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+  django:
+    container_name: django
+    build: ./django
+    image: django
+    volumes:
+      - ./django/app:/home/apriego-/django-app
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+
+volumes:
+  node_data:
+    driver: local
+    driver_opts:
+      device: "/home/apriego-/node/node_modules"
+      o: bind
+      type: none
+  django_data:
+    driver: local
+    driver_opts:
+      device: "/home/apriego-/django"
+      o: bind
+      type: none
+
+networks:
+  app-network:
+      name: app-network
+      driver: bridge
