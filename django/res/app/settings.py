@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -44,7 +45,7 @@ LOGGING = {
     },
 }
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['django', 'localhost', 'http://localhost:3000']
 
 
 # Application definition
@@ -53,10 +54,14 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'corsheaders',
+    'channels',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'app',
 ]
 
 MIDDLEWARE = [
@@ -88,8 +93,14 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'app.wsgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
+WSGI_APPLICATION = 'app.wsgi.application'
+# ASGI_APPLICATION = 'app.asgi.application'
 # CORS
 # =====================================================#
 
@@ -106,19 +117,37 @@ CORS_ALLOW_HEADERS = [
     "authorization",
     "content-type",
     "dnt",
+    'token',
     "origin",
     "user-agent",
 ]
 
-# =====================================================#
+# ===================================================== #
+
+# REST
+# ===================================================== #
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+# ====================================================== #
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+import os
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ['DATABASE_NAME'],
+        'USER': os.environ['DATABASE_USER'],
+        'PASSWORD': os.environ['DATABASE_PASSWORD'],
+        'HOST': os.environ['DATABASE_HOST'],
+        'PORT': '5432',
     }
 }
 

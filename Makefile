@@ -2,8 +2,10 @@
 all:
 	docker compose -f docker-compose.yml up --detach --build
 
-django:
-	docker compose -f django up --detach --build
+
+2clean:
+	@rm -rf /home/apriego-/data
+
 clean:
 	@if [ ! -z "$$(docker ps -aq)" ]; then \
 		docker stop $$(docker ps -aq); \

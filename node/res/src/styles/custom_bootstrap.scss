@@ -1,0 +1,49 @@
+@import "../../node_modules/bootstrap/scss/functions";
+@import "../../node_modules/bootstrap/scss/variables";
+@import "../../node_modules/bootstrap/scss/mixins";
+
+// Customs variables
+$cream: #F9F9EF;
+$blacky: #171716;
+
+
+// Import fonts
+@font-face {
+	font-family: 'Roboto';
+	src: url('../assets/fonts/Roboto-Regular.woff') format('woff'),
+		url('../assets/fonts/Roboto-Regular.ttf') format('ttf');
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face {
+	font-family: 'KronaOne';
+	src: url('../assets/fonts/KronaOne-Regular.woff') format('woff'),
+		url('../assets/fonts/KronaOne-Regular.ttf') format('ttf');
+	font-weight: normal;
+	font-style: normal;
+}
+
+
+:root {
+	--bs-cream: #{$cream};
+	--bs-cream-hover: #{rgba(red($cream), green($cream), blue($cream), 0.7)};
+	--bs-cream-subtle: #ecece2;
+	
+	--bs-blacky: #{$blacky};
+	--bs-blacky-hover: #383636;
+	--bs-blacky-subtle: #323230;
+
+
+
+
+}
+
+$custom-colors: (
+	"blacky": $blacky,
+	"cream": $cream
+);
+
+$theme-colors: map-merge($theme-colors, $custom-colors);
+
+// Import Bootstrap's core
+@import "../../node_modules/bootstrap/scss/bootstrap.scss";

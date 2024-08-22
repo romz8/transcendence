@@ -5,7 +5,9 @@ services:
     image: node
     volumes:
       - ./node/res:/home/apriego-/node
-      - node_data:/home/apriego-/node/node_modules
+      - node_data:/home/apriego-/node/res/node_modules
+    env_file:
+      - .env
     ports:
       - "3000:3000"
     networks:
@@ -15,23 +17,44 @@ services:
     build: ./django
     image: django
     volumes:
-      - ./django/app:/home/apriego-/django-app
+      - django_data:/home/apriego-/django/
+    env_file:
+      - .env
     ports:
       - "8080:8080"
     networks:
       - app-network
-
+    depends_on:
+      - postgres
+  postgres:
+    build: ./postgreSQL
+    container_name: postgres
+    image: postgres
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/home/apriego-/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
 volumes:
   node_data:
     driver: local
     driver_opts:
-      device: "/home/apriego-/node/node_modules"
+      device: "./node/res/node_modules"
       o: bind
       type: none
   django_data:
     driver: local
     driver_opts:
-      device: "/home/apriego-/django"
+      device: "./django/res"
+      o: bind
+      type: none
+  postgres_data:
+    driver: local
+    driver_opts:
+      device: "./postgreSQL/res"
       o: bind
       type: none
 

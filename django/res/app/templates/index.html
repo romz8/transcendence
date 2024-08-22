@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Rooms</title>
+</head>
+<body>
+    <h1>Chat Rooms</h1>
+    <form action="{% url 'index' %}" method="get">
+        <label for="room-name">Room name:</label>
+        <input id="room-name" type="text" name="room_name" required>
+        <button type="submit">Enter</button>
+    </form>
+</body>
+</html>
