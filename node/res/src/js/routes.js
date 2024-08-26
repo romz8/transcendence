@@ -8,7 +8,7 @@ import { is_authenticated, getCookie } from './login';
 
 const routes = {
 	'/': { title: 'Home', render: home},
-	'/profile': { title: 'Profile', render: profile}
+	'/profile': { title: 'Profile', render: profile},
 };
 
 /* Select main container where different pages will render */

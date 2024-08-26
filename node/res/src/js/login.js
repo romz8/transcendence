@@ -4,6 +4,8 @@ let uid;
 
 window.onload = fetchUIDENV;
 
+///////////////////////////////////////////// UTILS /////////////////////////////////////////////
+
 async function fetchUIDENV() {
     fetch('http://localhost:8080/uidenv/', {
         method: 'GET',
@@ -26,15 +28,18 @@ function expiresDate(seconds)
     return currentDate;
 }
 
-export async function callApi42(){
-    const params = new URLSearchParams ({
-        "client_id": uid,
-        "redirect_uri": "http://localhost:3000/",
-        "scope": "public",
-        "state": "1234566i754twrqwdfghgfddtrwsewrt",
-        "response_type": "code"
-    });
-    window.location.href = `https://api.intra.42.fr/oauth/authorize/?${params.toString()}`;
+export function getCookie(cname) {
+    let name = cname + "=";
+    let ca = document.cookie.split(';');
+    for(let i = 0; i < ca.length; i++)
+    {
+        let c = ca[i];
+        while (c.charAt(0) == ' ')
+            c = c.substring(1);
+        if (c.indexOf(name) == 0)
+            return c.substring(name.length, c.length);
+    }
+    return "";
 }
 
 function getPathVars() {
@@ -55,6 +60,10 @@ function clearURL() {
     url.search = '';
     window.history.replaceState({}, document.title, url.toString());
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////// USER STATUS /////////////////////////////////////////////
 
 function conectWB(id, dataToken)
 {
@@ -78,6 +87,19 @@ function conectWB(id, dataToken)
     document.cookie = "token=" + dataToken["access"] + "; expires=" + expiresDate(dataToken["token_exp"]) + "; Secure; SameSite=Strict";
     document.cookie = "id=" + id + "; expires=" + expiresDate(dataToken["token_exp"]) + "; Secure; SameSite=Strict";
     document.cookie = "refresh=" + dataToken["refresh"] + "; expires=" + expiresDate(dataToken["refresh_exp"]) + "; Secure; SameSite=Strict";
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export async function callApi42(){
+    const params = new URLSearchParams ({
+        "client_id": uid,
+        "redirect_uri": "http://localhost:3000/",
+        "scope": "public",
+        "state": "1234566i754twrqwdfghgfddtrwsewrt",
+        "response_type": "code"
+    });
+    window.location.href = `https://api.intra.42.fr/oauth/authorize/?${params.toString()}`;
 }
 
 async function postUserBack(dataToken)
@@ -111,7 +133,58 @@ async function insertDB(data)
     postUserBack(data);
 }
 
+
+///////////////////////////////////// REFRESH TOKEN /////////////////////////////////////
+
+async function getNewAccessToken(infoLogin)
+{
+    try {
+        const response = await fetch('http://localhost:8080/refreshToken/', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(infoLogin)
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        const data = await response.json();
+        console.log(data);
+        if (data['access'])
+        {
+            console.log(data['access_token']);
+            document.cookie = "token=" + data["access"] + "; expires=" + expiresDate(data["token_exp"]) + "; Secure; SameSite=Strict";
+            document.cookie = "id=" + data['id'] + "; expires=" + expiresDate(data["token_exp"]) + "; Secure; SameSite=Strict"; /// needed (dosnt work now)????
+            document.cookie = "refresh=" + data["refresh"] + "; expires=" + expiresDate(data["refresh_exp"]) + "; Secure; SameSite=Strict";
+        }
+        console.log("Response OK");
+    } catch (error) {
+        console.error('There has been a problem with your fetch operation:', error);
+        return null;
+    }
+}
+
+async function refresh_token(refresh)
+{
+    const infoLogin = {
+        refresh_token: refresh
+    }
+    getNewAccessToken(infoLogin);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
 function callBackAccess() {
+    if (!getCookie("token"))
+    {
+        console.log("AAAAAAAAAAA")
+        const refresh = getCookie("refresh");
+        if (refresh)
+            refresh_token(refresh);
+    }
     let vars = getPathVars();
     if (!vars["code"] || !vars["state"])
         return ;
@@ -144,20 +217,6 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 //////////////////////////////////////////////////////////
-
-export function getCookie(cname) {
-    let name = cname + "=";
-    let ca = document.cookie.split(';');
-    for(let i = 0; i < ca.length; i++)
-    {
-        let c = ca[i];
-        while (c.charAt(0) == ' ')
-            c = c.substring(1);
-        if (c.indexOf(name) == 0)
-            return c.substring(name.length, c.length);
-    }
-    return "";
-}
 
 export async function is_authenticated(access)
 {

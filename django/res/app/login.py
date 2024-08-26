@@ -116,12 +116,22 @@ def refreshToken(request):
     if (not body.get('refresh_token')):
         return JsonResponse({'error': 'Missing refresh token'}, status=400)
     if request.method == "POST":
+        logger.info(body.get('refresh_token'))
         params = {
             'grant_type': 'refresh_token',
             'client_id': os.environ['UID'],
             'refresh_token': body.get('refresh_token')
         }
         response = post42("/oauth/token", params)
+        if response.get('access_token'):
+            logger.info(response)
+            formatResponse = {
+                'refresh': str(response.get('refresh_token')),
+                'access': str(response.get('access_token')),
+                'refresh_exp': str(response.get('expires_in') + 86400),
+                'token_exp': str(response.get('expires_in')),
+            }
+            return JsonResponse(formatResponse)
     return JsonResponse(response)
 
 @csrf_exempt
