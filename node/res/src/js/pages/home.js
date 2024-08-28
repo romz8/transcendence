@@ -17,9 +17,9 @@ class HomeOut extends HTMLElement {
 								<span>Log in with 42</span>
 							</button>
 							<button type="button" class="btn btn-outline-cream btn-login d-flex align-items-center justify-content-center">
-								<span>Log in with email</span>
+								<a href="/login" data-link>Login</a>
 							</button>
-							<a class="link-cream link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover" href="#">or sign up</a>
+							<a class="link-cream link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover" href="/signup" data-link>or sign up</a>
 						</div>
 					</div>
 				</main>

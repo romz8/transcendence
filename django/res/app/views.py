@@ -13,38 +13,24 @@ from django.core import serializers
 import os
 import json
 from django.db.models import Q, F
+from rest_framework.decorators import api_view
 from django.forms.models import model_to_dict
 
 logger = logging.getLogger(__name__)
 
-@csrf_exempt
+@api_view(['GET'])
 def verify_token(request):
     auth_header = request.headers.get('Authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
-        return JsonResponse({'error': 'Authorization header missing or invalid'}, status=401)
     token = auth_header.split(' ')[1]
-    # logger.info(token)
-    jwt_authenticator = JWTAuthentication()
-    try:
-        user, validated_token = jwt_authenticator.authenticate(request)
-        if user:
-            userid = f'USER_{user.id}'
-            response = {"user": userid}
-            logger.info(response)
-            return JsonResponse(response)
-    except AuthenticationFailed:
-        pass
 
     token_info = introspect_token(token)
-    # logger.info(token_info)
     if not token_info or not token_info.get('active'):
         return JsonResponse({'error': 'Invalid or inactive token'})
-    if Users.objects.filter(id=token_info.get('resource_owner_id')).exists():
+    if Users.objects.filter(intra_id=token_info.get('resource_owner_id')).exists():
         if not (token_info.get('application').get('uid') and token_info.get('application').get('uid') == os.environ['UID']):
             return JsonResponse({'error': 'Not genereted in this site'}, status=403)
     else:
         return JsonResponse({'error': 'Valid Acces_tokken but user no logged'}, status=403)
-    # logger.info(token_info)
     response = {"user": token_info.get('resource_owner_id', 'anonymous')}
     return JsonResponse(response)
 
@@ -54,17 +40,20 @@ def protected_view(request):
     logger.info("Accessing protected resource")
     return JsonResponse({"message": "This is a protected resource"})
 
-@token_required(scopes=['public'])
+@api_view(['GET'])
 def infoUser(request):
-    userid = request.user
-    user = Users.objects.get(id=userid)
+    user = request.user
+    logger.info("============================== user ==============================")
+    logger.info(user)
+    logger.info("==================================================================")
+
     user_json = {
-        'id': user.id,
+        'id': user.intra_id,
         'username': user.username,
         'alias': user.alias,
         'campus': user.campus,
-        'name': user.name,
-        'lastname': user.lastname,
+        'name': user.first_name,
+        'lastname': user.last_name,
         'img': user.img
     }
     return JsonResponse(user_json)
@@ -83,116 +72,99 @@ def get_friend_details(user_id, pend):
 
     return list(friend_details)
 
-@csrf_exempt
-@token_required(scopes=['public'])
+@api_view(['POST'])
 def list_friends(request):
-    if request.method == "POST":
-        try:
-            body = json.loads(request.body.decode('utf-8'))
-            user_id = body.get('id')
-            logger.info(user_id)
-            if not user_id:
-                return JsonResponse({'error': 'Missing arguments'}, status=400)
-            if Friends.objects.filter(Q(usersid1=user_id) | Q(usersid2=user_id)).exists():
-                friendsList = get_friend_details(user_id, False)
-                response = {
-                    'status': 'Friends',
-                    'friends': friendsList
-                }
-                return JsonResponse(response)
-            else:
-                return JsonResponse({'status': 'dont have friends'})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    return JsonResponse({'error': 'Wrong method'}, status=405)
+    try:
+        body = json.loads(request.body.decode('utf-8'))
+        user_id = body.get('id')
+        logger.info(user_id)
+        if not user_id:
+            return JsonResponse({'error': 'Missing arguments'}, status=400)
+        if Friends.objects.filter(Q(usersid1=user_id) | Q(usersid2=user_id)).exists():
+            friendsList = get_friend_details(user_id, False)
+            response = {
+                'status': 'Friends',
+                'friends': friendsList
+            }
+            return JsonResponse(response)
+        else:
+            return JsonResponse({'status': 'dont have friends'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
-@csrf_exempt
-@token_required(scopes=['public'])
+@api_view(['POST'])
 def list_pending(request):
-    if request.method == "POST":
-        try:
-            body = json.loads(request.body.decode('utf-8'))
-            user_id = body.get('id')
-            logger.info(user_id)
-            if not user_id:
-                return JsonResponse({'error': 'Missing arguments'}, status=400)
-            if Friends.objects.filter((Q(usersid1=user_id) | Q(usersid2=user_id)) & Q(pending=True)).exists():
-                friendsList = get_friend_details(user_id, True)
-                response = {
-                    'status': 'Pending',
-                    'friends': friendsList
-                }
-                return JsonResponse(response)
-            else:
-                return JsonResponse({'status': 'dont have pending'})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    return JsonResponse({'error': 'Wrong method'}, status=405)
+    try:
+        body = json.loads(request.body.decode('utf-8'))
+        user_id = body.get('id')
+        logger.info(user_id)
+        if not user_id:
+            return JsonResponse({'error': 'Missing arguments'}, status=400)
+        if Friends.objects.filter((Q(usersid1=user_id) | Q(usersid2=user_id)) & Q(pending=True)).exists():
+            friendsList = get_friend_details(user_id, True)
+            response = {
+                'status': 'Pending',
+                'friends': friendsList
+            }
+            return JsonResponse(response)
+        else:
+            return JsonResponse({'status': 'dont have pending'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
-@csrf_exempt
-@token_required(scopes=['public'])
+@api_view(['POST'])
 def add_friend(request):
-    if request.method == "POST":
-        try:
-            body = json.loads(request.body.decode('utf-8'))
-            username = body.get('name')
-            fromID = body.get('id')
-            if not username or not fromID:
-                return JsonResponse({'error': 'Missing arguments'}, status=400)
-            if Users.objects.filter(alias=username).exists():
-                user = Users.objects.get(alias=username)
-                if (Friends.objects.filter((Q(usersid1=user.id) & Q(usersid2=fromID)) | (Q(usersid1=fromID) & Q(usersid2=user.id))).exists()):
-                    return JsonResponse({'exist': 'true'})
-                response = {'exist': 'false'}
-                newFriend = Friends(pending=True, usersid1=Users.objects.get(id=fromID), usersid2=user)
-                newFriend.save()
-                return JsonResponse(response)
-            else:
-                    return JsonResponse({'error': 'Dont exist username'})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    return JsonResponse({'error': 'Wrong method'}, status=405)
+    try:
+        body = json.loads(request.body.decode('utf-8'))
+        username = body.get('name')
+        fromID = body.get('id')
+        if not username or not fromID:
+            return JsonResponse({'error': 'Missing arguments'}, status=400)
+        if Users.objects.filter(alias=username).exists():
+            user = Users.objects.get(alias=username)
+            if (Friends.objects.filter((Q(usersid1=user.id) & Q(usersid2=fromID)) | (Q(usersid1=fromID) & Q(usersid2=user.id))).exists()):
+                return JsonResponse({'exist': 'true'})
+            response = {'exist': 'false'}
+            newFriend = Friends(pending=True, usersid1=Users.objects.get(id=fromID), usersid2=user)
+            newFriend.save()
+            return JsonResponse(response)
+        else:
+                return JsonResponse({'error': 'Dont exist username'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
-@csrf_exempt
-@token_required(scopes=['public'])
+@api_view(['POST'])
 def confirm_friends(request):
-    if request.method == "POST":
-        try:
-            body = json.loads(request.body.decode('utf-8'))
-            username = body.get('name')
-            fromID = body.get('id')
-            logger.info(username)
-            logger.info(fromID)
-            if not username or not fromID:
-                return JsonResponse({'error': 'Missing arguments'}, status=400)
-            if Users.objects.filter(alias=username).exists():
-                user = Users.objects.get(alias=username)
-                if (Friends.objects.filter((Q(usersid1=user.id) & Q(usersid2=fromID) & Q(pending=True))).exists()):
-                    friend = Friends.objects.get(usersid1=user.id, usersid2=fromID, pending=True)
-                    friend.pending = False
-                    friend.save()
-                    return JsonResponse({'success': 'New friends'})
-                else:
-                    return JsonResponse({'error': 'Not pending request'})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    return JsonResponse({'error': 'Wrong method'}, status=405)
+    try:
+        body = json.loads(request.body.decode('utf-8'))
+        username = body.get('name')
+        fromID = body.get('id')
+        logger.info(username)
+        logger.info(fromID)
+        if not username or not fromID:
+            return JsonResponse({'error': 'Missing arguments'}, status=400)
+        if Users.objects.filter(alias=username).exists():
+            user = Users.objects.get(alias=username)
+            if (Friends.objects.filter((Q(usersid1=user.id) & Q(usersid2=fromID) & Q(pending=True))).exists()):
+                friend = Friends.objects.get(usersid1=user.id, usersid2=fromID, pending=True)
+                friend.pending = False
+                friend.save()
+                return JsonResponse({'success': 'New friends'})
+            else:
+                return JsonResponse({'error': 'Not pending request'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
-@csrf_exempt
-@token_required(scopes=['public'])
+@api_view(['POST'])
 def updateInfoUser(request):
-    if request.method == "POST":
-        try:
-            userid = request.user
-            body = json.loads(request.body.decode('utf-8'))
-            alias = body.get('alias')
-            logger.info(alias)
-            if alias:
-                user = Users.objects.get(id=userid)
-                user.alias = alias
-                user.save()
-                return JsonResponse({'success': 'info updated'})
-        except Exception as e:
-            logger.info(str(e))
-            return JsonResponse({'error': str(e)}, status=500)
-    return JsonResponse({'error': 'Wrong method'}, status=405)
+    try:
+        user = request.user
+        body = json.loads(request.body.decode('utf-8'))
+        alias = body.get('alias')
+        if alias:
+            user.alias = alias
+            user.save()
+            return JsonResponse({'success': 'info updated'})
+    except Exception as e:
+        logger.info(str(e))
+        return JsonResponse({'error': str(e)}, status=500)

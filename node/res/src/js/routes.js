@@ -1,5 +1,7 @@
 import home from './pages/home.js';
 import profile from './pages/profile.js';
+import login from './pages/login.js';
+import singup from './pages/singup.js';
 import { is_authenticated, getCookie } from './login';
 //import about from './pages/about.js';
 //import settings from './pages/settings.js';
@@ -9,6 +11,8 @@ import { is_authenticated, getCookie } from './login';
 const routes = {
 	'/': { title: 'Home', render: home},
 	'/profile': { title: 'Profile', render: profile},
+	'/login': { title: 'Login', render: login},
+	'/signup': { title: 'Signup', render: singup},
 };
 
 /* Select main container where different pages will render */
@@ -50,7 +54,7 @@ export async function	router() {
 	const isAuth =  await is_authenticated(getCookie("token"));
 	const	windowPathname = window.location.pathname;
 	let view = routes[windowPathname];
-	console.log(app)
+	console.log(view)
 	//updateActiveElementNavbar();
 	if (view) {
 		if (isAuth) {
@@ -58,7 +62,13 @@ export async function	router() {
 			app.innerHTML = view.render();
 		}
 		else {
-			app.innerHTML = '<home-out></home-out>';
+			console.log(view.title)
+			if (view.title == "Login")
+				app.innerHTML = view.render();
+			else if (view.title == "Signup")
+				app.innerHTML = view.render();
+			else
+				app.innerHTML = '<home-out></home-out>';
 		}
 		
 	} else {

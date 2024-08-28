@@ -121,6 +121,7 @@ async function postUserBack(dataToken)
         document.cookie = "token=" + dataToken["access"] + "; expires=" + expiresDate(dataToken["token_exp"]) + "; Secure; SameSite=Strict";
         document.cookie = "id=" + data['id'] + "; expires=" + expiresDate(dataToken["token_exp"]) + "; Secure; SameSite=Strict";
         document.cookie = "refresh=" + dataToken["refresh"] + "; expires=" + expiresDate(dataToken["refresh_exp"]) + "; Secure; SameSite=Strict";
+        console.log(data);
         router();
     } catch (error) {
         console.error('There has been a problem with your fetch operation:', error);
@@ -206,6 +207,7 @@ function callBackAccess() {
         if (data["access"])
         {
             clearURL();
+            console.log(data);
             insertDB(data);
         }
     })
