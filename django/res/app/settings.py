@@ -153,7 +153,6 @@ DATABASES = {
     }
 }
 
-
 AUTH_USER_MODEL = 'app.Users'
 
 # Password validation

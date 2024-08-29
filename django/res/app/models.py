@@ -1,7 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-# from django.core.exceptions import ValidationError
-# from django.db.models import UniqueConstraint
 
 class Users(AbstractUser):
     alias = models.CharField(max_length=50, blank=False, null=False)
@@ -13,17 +11,6 @@ class Users(AbstractUser):
     class Meta:
         managed = True
         db_table = 'users'
-
-#     user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
-#     id = models.CharField(primary_key=True, max_length=50)
-#     alias = models.CharField(max_length=50, blank=False, null=False)
-#     username = models.CharField(max_length=50, blank=False, null=False)
-#     intra = models.BooleanField(blank=False, null=False)
-#     campus = models.CharField(max_length=100, blank=True, null=True)
-#     name = models.CharField(max_length=30, blank=True, null=True)
-#     lastname = models.CharField(max_length=140, blank=True, null=True)
-#     img = models.CharField(max_length=300, blank=False, null=False)
-#     class Meta:
 
 class UserStatus(models.Model):
     users = models.OneToOneField(Users, primary_key=True, on_delete=models.CASCADE)

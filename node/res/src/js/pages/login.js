@@ -1,5 +1,4 @@
-import { callApi42, is_authenticated, getCookie } from '../login';
-import { router } from '/src/js/routes.js';
+import { expiresDate } from "../login.js"
 
 class LogIn extends HTMLElement {
 	constructor() {
@@ -86,29 +85,78 @@ class LogIn extends HTMLElement {
             margin-right: 10px;
         }
         </style>
+        <nav-bar data-authorized></nav-bar>
         <div class="form-container">
         <div class="form-box">
             <h2 class="text-center">Log In</h2>
             <div id="error-message" class="error-message">Invalid username or password.</div>
             <div class="form-group">
-                <label for="Username">Username</label>
-                <input type="text" class="form-control" id="Username" placeholder="Insert Username">
+                <label for="username">Username</label>
+                <input type="text" class="form-control" id="username" placeholder="Insert Username">
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
                 <input type="password" class="form-control" id="password" placeholder="Insert Password">
             </div>
-            <button type="submit" class="btn btn-outline-cream btn-login d-flex align-items-center justify-content-center gap-3 mt-3">Log In</button>
+            <button id="login-btn" class="btn btn-outline-cream btn-login d-flex align-items-center justify-content-center gap-3 mt-3">Log In</button>
         </div>
         </div>
 		`;
 	}
 	connectedCallback() {
-        // const   updateInfoBtn = document.getElementById('update-info-btn');
-        // updateInfoBtn.addEventListener('click', updateProfileInfo);
+        const   loginBtn = document.getElementById('login-btn');
+        loginBtn.addEventListener('click', getLoginWeb);
     };
         
 	
+}
+
+function showError(message) {
+    const errorMessageDiv = document.getElementById('error-message');
+    errorMessageDiv.innerText = message;
+    errorMessageDiv.style.display = 'block';
+}
+
+function loginWeb(infoLogin) {
+    fetch('http://localhost:8080/loginWeb/', {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(infoLogin)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data["error"] == "Invalid credentials")
+        {
+            showError('Invalid username or password.');
+        }
+        else
+        {
+            alert('Login successful');
+            document.cookie = "token=" + data["access"] + "; expires=" + expiresDate(data["token_exp"]) + "; Secure; SameSite=Strict";
+            document.cookie = "id=" + data['id'] + "; expires=" + expiresDate(data["token_exp"]) + "; Secure; SameSite=Strict"; /// needed (dosnt work now)????
+            document.cookie = "refresh=" + data["refresh"] + "; expires=" + expiresDate(data["refresh_exp"]) + "; Secure; SameSite=Strict";
+        }
+    })
+    .catch(error => {
+        console.error('There has been a problem with your fetch operation:', error);
+    });
+}
+
+function getLoginWeb()
+{
+    const infoLogin = {
+        username: document.getElementById("username").value,
+        password: document.getElementById("password").value
+    }
+    loginWeb(infoLogin);
 }
 
 customElements.define('log-in', LogIn);

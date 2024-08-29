@@ -1,5 +1,6 @@
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.authentication import JWTAuthentication
 import requests
 import logging
 
@@ -11,6 +12,13 @@ class Intra42Authentication(BaseAuthentication):
         if not auth_header:
             return None
 
+        jwt_authenticator = JWTAuthentication()
+        try:
+            user, validated_token = jwt_authenticator.authenticate(request)
+            if user:
+                return (user, None)
+        except AuthenticationFailed:
+            pass
         # Validar el access_token con la API de intra.42.fr
         response = requests.get('https://api.intra.42.fr/v2/me', headers={'Authorization': auth_header})
         if response.status_code != 200:

@@ -21,7 +21,7 @@ async function fetchUIDENV() {
     .catch(error => console.error('There has been a problem with your fetch operation:', error));
 }
 
-function expiresDate(seconds)
+export function expiresDate(seconds)
 {
     const currentDate = new Date();
     currentDate.setSeconds(currentDate.getSeconds() + Number(seconds));
@@ -181,7 +181,7 @@ async function refresh_token(refresh)
 function callBackAccess() {
     if (!getCookie("token"))
     {
-        console.log("AAAAAAAAAAA")
+        console.log(getCookie('token'))
         const refresh = getCookie("refresh");
         if (refresh)
             refresh_token(refresh);
@@ -207,7 +207,6 @@ function callBackAccess() {
         if (data["access"])
         {
             clearURL();
-            console.log(data);
             insertDB(data);
         }
     })

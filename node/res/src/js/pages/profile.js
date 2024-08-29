@@ -86,8 +86,8 @@ class ProFile extends HTMLElement {
             margin-right: 10px;
         }
         </style>
-			<nav-bar data-authorized></nav-bar>
-            <div class="form-container">
+        <nav-bar data-authorized></nav-bar>
+        <div class="form-container">
         <div class="form-box">
             <h2 class="text-center">Profile</h2>
                 <div id="error-message" class="error-message">Invalid username or password.</div>

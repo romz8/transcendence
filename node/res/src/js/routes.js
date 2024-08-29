@@ -54,7 +54,6 @@ export async function	router() {
 	const isAuth =  await is_authenticated(getCookie("token"));
 	const	windowPathname = window.location.pathname;
 	let view = routes[windowPathname];
-	console.log(view)
 	//updateActiveElementNavbar();
 	if (view) {
 		if (isAuth) {
@@ -62,7 +61,6 @@ export async function	router() {
 			app.innerHTML = view.render();
 		}
 		else {
-			console.log(view.title)
 			if (view.title == "Login")
 				app.innerHTML = view.render();
 			else if (view.title == "Signup")

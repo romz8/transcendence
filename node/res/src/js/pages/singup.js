@@ -86,39 +86,72 @@ class SingUp extends HTMLElement {
             margin-right: 10px;
         }
         </style>
+        <nav-bar data-authorized></nav-bar>
         <div class="form-container">
         <div class="form-box">
             <h2 class="text-center">Sign Up</h2>
-            <form>
-                <div id="error-message" class="error-message">Invalid username or password.</div>
-                <div class="form-group">
-                    <label for="alias">Alias</label>
-                    <input type="text" class="form-control" id="alias" placeholder="Insert Alias">
-                </div>
-                <div class="form-group">
-                    <label for="name">Name</label>
-                    <input type="text" class="form-control" id="name" placeholder="Insert Name">
-                </div>
-                <div class="form-group">
-                    <label for="lastName">Last Name</label>
-                    <input type="text" class="form-control" id="lastName" placeholder="Insert Last Name">
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" class="form-control" id="password" placeholder="Insert Password">
-                </div>
-                <button type="submit" onclick="getSignUp()" class="btn btn-outline-cream btn-login d-flex align-items-center justify-content-center gap-3 mt-3">Register</button>
-            </form>
+            <div id="error-message" class="error-message">Invalid username or password.</div>
+            <div class="form-group">
+                <label for="alias">Alias</label>
+                <input type="text" class="form-control" id="alias" placeholder="Insert Alias">
+            </div>
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" class="form-control" id="name" placeholder="Insert Name">
+            </div>
+            <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" class="form-control" id="lastName" placeholder="Insert Last Name">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" id="password" placeholder="Insert Password">
+            </div>
+            <button id="register-btn" class="btn btn-outline-cream btn-login d-flex align-items-center justify-content-center gap-3 mt-3">Register</button>
         </div>
         </div>
 		`;
 	}
 	connectedCallback() {
-        // const   updateInfoBtn = document.getElementById('update-info-btn');
-        // updateInfoBtn.addEventListener('click', updateProfileInfo);
+        const   registerBtn = document.getElementById('register-btn');
+        registerBtn.addEventListener('click', getSignUp);
     };
-        
-	
+
+}
+
+function singUp(infoLogin)
+{
+    console.log(infoLogin)
+    fetch('http://localhost:8080/singUp/', {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(infoLogin)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data["exist"] == true)
+            showError('User already exist.');
+    })
+    .catch(error => console.error('There has been a problem with your fetch operation:', error));
+}
+
+function getSignUp()
+{
+    const infoLogin = {
+        username: document.getElementById("alias").value,
+        lastname: document.getElementById("name").value,
+        firstname: document.getElementById("lastName").value,
+        password: document.getElementById("password").value
+    }
+    singUp(infoLogin);
 }
 
 customElements.define('sing-up', SingUp);

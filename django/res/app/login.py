@@ -26,21 +26,19 @@ def uidenv(request):
     response['UID'] = os.environ['UID']
     return JsonResponse(response)
 
-# @csrf_exempt
-# def checkLogin(request):
-#     body = json.loads(request.body.decode('utf-8'))
-#     response = {'response': 'GET'}
-#     if request.method == "POST":
-#         exist = Users.objects.filter(id=body.get('user')).exists()
-#         if not exist:
-#             response['exist'] = False; 
-#         else:
-#             response['exist'] = True
-#             user = Users.objects.get(id=body.get('user'))
-#             user_dict = model_to_dict(user)
-#             json_data = json.dumps(user_dict)
-#             response['userdata'] = json_data
-#     return JsonResponse(response)
+@api_view(['POST'])
+def checkLogin(request):
+    body = json.loads(request.body.decode('utf-8'))
+    response = {'response': 'GET'}
+    exist = Users.objects.filter(id=body.get('user')).exists()
+    if not exist:
+        response['exist'] = False; 
+    else:
+        response['exist'] = True
+        user = Users.objects.get(id=body.get('user'))
+        user_dict = model_to_dict(user)
+        json_data = json.dumps(user_dict)
+        response['userdata'] = json_data
 
 @csrf_exempt
 def insertLogin(request):
@@ -125,67 +123,58 @@ def loginIntra(request):
 #             return JsonResponse(formatResponse)
 #     return JsonResponse(response)
 
-# @csrf_exempt
-# def singUp(request):
-#     if request.method == "POST":
-#         try:
-#             body = json.loads(request.body.decode('utf-8'))
-#             name = body.get('username')
-#             first = body.get('firstname')
-#             last = body.get('lastname')
-#             password = body.get('password')
-#             if not name or not first or not last or not password:
-#                 return JsonResponse({'error': 'Missing arguments'}, status=400)
-#             exist = User.objects.filter(username=name).exists()
-#             response = {'response': 'POST'}
-#             if exist:
-#                 response["exist"] = True
-#             else:
-#                 u = User(username=name, first_name=first, last_name=last)
-#                 u.set_password(password)
-#                 u.save()
+@api_view(['POST'])
+def singUp(request):
+    try:
+        body = json.loads(request.body.decode('utf-8'))
+        name = body.get('username')
+        first = body.get('firstname')
+        last = body.get('lastname')
+        pswd = body.get('password')
+        if not name or not first or not last or not pswd:
+            return JsonResponse({'error': 'Missing arguments'}, status=400)
+        exist = Users.objects.filter(username=name).exists()
+        response = {'response': 'POST'}
+        if exist:
+            response["exist"] = True
+        else:
+            animal = random.choice(["penguin", "cat", "chicken"])
+            img = './src/assets/loginimg/' + animal + '.jpeg'
 
-#                 animal = random.choice(["penguin", "cat", "chicken"])
-#                 img = '../assets/loginimg/' + animal + '.jpeg'
+            aaa = Users(campus="Campus of life", username=name, alias=name,
+                         first_name=first, last_name=last, img=img, intra=False)
+            aaa.set_password(pswd)
+            aaa.save()
+            response["exist"] = False
+        return JsonResponse(response)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
-#                 userid = "USER_" + str(u.id)
-#                 aaa = Users(user=u, id=userid, campus="Campus of life", username=name, alias=name, name=first, lastname=last, img=img, intra=False)
-#                 aaa.save()
-#                 response["exist"] = False
-#             return JsonResponse(response)
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status=500)
-#     return JsonResponse({'error': 'Wrong method'}, status=405)
+@api_view(['POST'])
+def loginWeb(request):
+    try:
+        body = json.loads(request.body.decode('utf-8'))
+        username = body.get('username')
+        password = body.get('password')
 
-# @csrf_exempt
-# def loginWeb(request):
-#     if request.method == "POST":
-#         try:
-#             body = json.loads(request.body.decode('utf-8'))
-#             username = body.get('username')
-#             password = body.get('password')
+        if not username or not password:
+            return JsonResponse({'error': 'Missing arguments'}, status=400)
 
-#             if not username or not password:
-#                 return JsonResponse({'error': 'Missing arguments'}, status=400)
-
-#             user = authenticate(username=username, password=password)
-#             if user is not None:
-#                 users = Users.objects.get(user_id=user)
-#                 refresh = RefreshToken.for_user(user)
-#                 logger.info("==============================RESPONSE LOGINWEB==============================================")
-#                 logger.info(refresh["exp"] - datetime.now().timestamp())
-#                 logger.info(datetime.fromtimestamp(refresh["exp"]))
-#                 logger.info("==========================================================================================")
-#                 return JsonResponse({
-#                     'refresh': str(refresh),
-#                     'access': str(refresh.access_token),
-#                     'refresh_exp': str(refresh["exp"] - datetime.now().timestamp()),
-#                     'token_exp': str(refresh.access_token["exp"] - datetime.now().timestamp()),
-#                     'id': users.id
-#                 })
-#             else:
-#                 return JsonResponse({'error': 'Invalid credentials'})
-#         except Exception as e:
-#             logger.info(str(e))
-#             return JsonResponse({'error': str(e)}, status=500)
-#     return JsonResponse({'error': 'Wrong method'}, status=405)
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
+            logger.info("==============================RESPONSE LOGINWEB==============================================")
+            logger.info(user)
+            logger.info("==========================================================================================")
+            return JsonResponse({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'refresh_exp': str(refresh["exp"] - datetime.now().timestamp()),
+                'token_exp': str(refresh.access_token["exp"] - datetime.now().timestamp()),
+                'id': user.id
+            })
+        else:
+            return JsonResponse({'error': 'Invalid credentials'})
+    except Exception as e:
+        logger.info(str(e))
+        return JsonResponse({'error': str(e)}, status=500)

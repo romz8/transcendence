@@ -3,18 +3,15 @@ from django.http import JsonResponse
 import logging
 from app.validator import token_required
 from app.validator import introspect_token
-from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from app.models import Users, Friends, UserStatus
-from django.core import serializers
 
 import os
 import json
 from django.db.models import Q, F
 from rest_framework.decorators import api_view
-from django.forms.models import model_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +19,16 @@ logger = logging.getLogger(__name__)
 def verify_token(request):
     auth_header = request.headers.get('Authorization')
     token = auth_header.split(' ')[1]
+
+    logger.info(token)
+    jwt_authenticator = JWTAuthentication()
+    try:
+        user, validated_token = jwt_authenticator.authenticate(request)
+        if user:
+            response = {"user": user.id}
+            return (JsonResponse(response))
+    except AuthenticationFailed:
+        pass
 
     token_info = introspect_token(token)
     if not token_info or not token_info.get('active'):
@@ -48,7 +55,7 @@ def infoUser(request):
     logger.info("==================================================================")
 
     user_json = {
-        'id': user.intra_id,
+        'id': user.id,
         'username': user.username,
         'alias': user.alias,
         'campus': user.campus,
