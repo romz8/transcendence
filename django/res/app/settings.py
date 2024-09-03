@@ -54,7 +54,6 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'corsheaders',
-    'channels',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -92,12 +91,6 @@ TEMPLATES = [
         },
     },
 ]
-
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
-    },
-}
 
 WSGI_APPLICATION = 'app.wsgi.application'
 # ASGI_APPLICATION = 'app.asgi.application'

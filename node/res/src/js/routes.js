@@ -2,6 +2,7 @@ import home from './pages/home.js';
 import profile from './pages/profile.js';
 import login from './pages/login.js';
 import singup from './pages/singup.js';
+import game from './pages/game.js';
 import { is_authenticated, getCookie } from './login';
 //import about from './pages/about.js';
 //import settings from './pages/settings.js';
@@ -13,6 +14,7 @@ const routes = {
 	'/profile': { title: 'Profile', render: profile},
 	'/login': { title: 'Login', render: login},
 	'/signup': { title: 'Signup', render: singup},
+	'/gamebot': { title: 'You will lose', render: game},
 };
 
 /* Select main container where different pages will render */
