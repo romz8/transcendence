@@ -17,6 +17,8 @@ Including another URLconf
 from django.urls import path
 from . import views
 from . import login
+from django.conf import settings
+from django.conf.urls.static import static
 # from . import friends
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -32,10 +34,12 @@ urlpatterns = [
     path('loginIntra/', login.loginIntra, name='loginIntra'),
     path('insertlogin/', login.insertLogin, name='insertlogin'),
     path('checkLogin/', login.checkLogin, name='checkLogin'),
+    path("verify_username/", login.verifyUsername, name="verifyUsername"),
     # path('protected_view/', views.protected_view, name='protected_view'),
-    # path('refreshToken/', login.refreshToken, name='refreshToken'),
+    path('refreshToken/', login.refreshToken, name='refreshToken'),
     path('singUp/', login.singUp, name='singUp'),
     path('loginWeb/', login.loginWeb, name='loginWeb'),
+    path('change_img/', login.changeImg, name='changeImg')
     # path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     # path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

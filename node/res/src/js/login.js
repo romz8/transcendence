@@ -102,39 +102,6 @@ export async function callApi42(){
     window.location.href = `https://api.intra.42.fr/oauth/authorize/?${params.toString()}`;
 }
 
-async function postUserBack(dataToken)
-{
-    try {
-        const response = await fetch('http://localhost:8080/insertlogin/', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + dataToken['access']
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok ' + response.statusText);
-        }
-        let data = await response.json();
-        document.cookie = "token=" + dataToken["access"] + "; expires=" + expiresDate(dataToken["token_exp"]) + "; Secure; SameSite=Strict";
-        document.cookie = "id=" + data['id'] + "; expires=" + expiresDate(dataToken["token_exp"]) + "; Secure; SameSite=Strict";
-        document.cookie = "refresh=" + dataToken["refresh"] + "; expires=" + expiresDate(dataToken["refresh_exp"]) + "; Secure; SameSite=Strict";
-        console.log(data);
-        router();
-    } catch (error) {
-        console.error('There has been a problem with your fetch operation:', error);
-        return null;
-    }
-}
-
-async function insertDB(data)
-{
-    postUserBack(data);
-}
-
-
 ///////////////////////////////////// REFRESH TOKEN /////////////////////////////////////
 
 async function getNewAccessToken(infoLogin)
@@ -158,7 +125,6 @@ async function getNewAccessToken(infoLogin)
         {
             console.log(data['access_token']);
             document.cookie = "token=" + data["access"] + "; expires=" + expiresDate(data["token_exp"]) + "; Secure; SameSite=Strict";
-            document.cookie = "id=" + data['id'] + "; expires=" + expiresDate(data["token_exp"]) + "; Secure; SameSite=Strict"; /// needed (dosnt work now)????
             document.cookie = "refresh=" + data["refresh"] + "; expires=" + expiresDate(data["refresh_exp"]) + "; Secure; SameSite=Strict";
         }
         console.log("Response OK");
@@ -173,15 +139,16 @@ async function refresh_token(refresh)
     const infoLogin = {
         refresh_token: refresh
     }
-    getNewAccessToken(infoLogin);
+    await getNewAccessToken(infoLogin);
+    router();
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////// LOGIN INTRA ////////////////////////////////////////////////
 
 function callBackAccess() {
     if (!getCookie("token"))
     {
-        console.log(getCookie('token'))
+        console.log(getCookie('refresh'))
         const refresh = getCookie("refresh");
         if (refresh)
             refresh_token(refresh);
@@ -207,7 +174,9 @@ function callBackAccess() {
         if (data["access"])
         {
             clearURL();
-            insertDB(data);
+            document.cookie = "token=" + data["access"] + "; expires=" + expiresDate(data["token_exp"]) + "; Secure; SameSite=Strict";
+            document.cookie = "refresh=" + data["refresh"] + "; expires=" + expiresDate(data["refresh_exp"]) + "; Secure; SameSite=Strict";
+            router();
         }
     })
     .catch(error => console.error('There has been a problem with your fetch operation:', error));

@@ -98,15 +98,48 @@ class ProFile extends HTMLElement {
                 <button id="update-info-btn" class="btn btn-outline-cream btn-login d-flex align-items-center justify-content-center gap-3 mt-3">Save</button>
         </div>
     </div>
+
+    <form id="formImagenPerfil" enctype="multipart/form-data">
+        <input type="file" id="imagenPerfil" name="imagen_perfil" accept="image/*">
+        <button type="submit">Cambiar imagen</button>
+    </form>
+    <img id="imgPerfil" src="" alt="Imagen de perfil actual">
 		`;
 	}
 	connectedCallback() {
         const   updateInfoBtn = document.getElementById('update-info-btn');
         updateInfoBtn.addEventListener('click', updateProfileInfo);
+        document.getElementById('formImagenPerfil').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var formData = new FormData();
+            var imagen = document.getElementById('imagenPerfil').files[0];
+            formData.append('img', imagen);
+            console.log(formData)
+            
+            fetch('http://localhost:8080/change_img/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + getCookie("token"),
+                },
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success')
+                {
+                    console.log(data.url_imagen)
+                    document.getElementById('imgPerfil').src = "http://localhost:8080" + data.url_imagen;
+                }
+                else
+                    alert('Error al cargar la imagen');
+            })
+            .catch(error => console.error('Error:', error));
+        });
     };
         
 	
 }
+
 
 function    updateProfileInfo () {
     console.log(document.getElementById("alias").value);

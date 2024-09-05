@@ -8,10 +8,9 @@ import json
 import os
 import random
 
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate
 from app.utilsApi42 import post42, get42
 
-from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view
 
@@ -41,29 +40,65 @@ def checkLogin(request):
         response['userdata'] = json_data
 
 @csrf_exempt
-def insertLogin(request):
-    response = get42('/v2/me', None, request.headers.get('Authorization'))
+def verifyUsername(request):
+    if request.method == "POST":
+        body = json.loads(request.body.decode('utf-8'))
+        name = body.get('username')
+        if not name:
+            return JsonResponse({'error': 'Missing arguments'}, status=400)
+        exist = Users.objects.filter(username=name).exists()
+        return JsonResponse({'status': exist})
+
+    return JsonResponse({'error': 'Wrong method'}, status=405)
+
+
+import requests
+from io import BytesIO
+
+def download_and_save_image(user, url):
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        ext = url.split('.')[-1]
+
+        image_name = user.username + '.' + ext
+        img_temp = BytesIO(response.content)
+
+        try:
+            image = Image.open(img_temp)
+            image.verify()
+        except (IOError, SyntaxError) as e:
+            return {'status': 'error'}
+        
+        if user.img:
+            if os.path.isfile(user.img.path):
+                user.img.delete()
+
+        user.img.save(image_name, ContentFile(response.content), save=True)
+        return {'status': 'success', 'url_imagen': user.img.url}
+    return {'status': 'error'}
+
+def insertLogin(tokken):
+    response = get42('/v2/me', None, tokken)
     if response.status_code == 200:
         body = response.json()
-        logger.info("====================== BODY REQUEST ===========================")
-        logger.info(body)
-        logger.info("===============================================================")
         exist = Users.objects.filter(intra_id=body.get('id')).exists()
-        resp = {'response': 'GET'}
         if not exist:
-            user = Users(intra_id=body.get('id'), username=body.get('login'), alias=body.get('login'), img=body.get('image').get('link'),
+            user = Users(intra_id=body.get('id'), username=body.get('login'), alias=body.get('login'),
                         intra=True, first_name=body.get('first_name'), last_name=body.get('last_name'),
                         campus=body.get('campus')[0].get('name'))
+            value = download_and_save_image(user, body.get('image').get('link'))
+
+            logger.info("===================value===================")
+            logger.info(value.get('status'))
+            logger.info("===================value===================")
+
+            if value["status"] == 'error':
+                return False
             user.save()
-            resp['exist'] = False
-        else:
-            resp['exist'] = True
-        resp['alias'] = body.get('login')
-        resp['image'] = body.get('image').get('link')
-        resp['id'] = body.get('id')
-        return JsonResponse(resp)
+        return True
     else:
-        return JsonResponse({'error': 'Request 42 api wrong'}, status=response.status_code)
+        return False
 
 @csrf_exempt
 def loginIntra(request):
@@ -82,46 +117,49 @@ def loginIntra(request):
         }
         try:
             response = post42("/oauth/token", params)
-            logger.info("==============================RESPONSE INTRA==============================================")
-            logger.info(response.get("created_at") + response.get("expires_in"))
-            logger.info(datetime.fromtimestamp(response.get("created_at") + response.get("expires_in") + 86400))
-            logger.info("==========================================================================================")
+            if response.status_code != 200:
+                return JsonResponse({'error': 'Bad request'}, status=response.status_code)
+            resjson = response.json()
             formatResponse = {
-                'refresh': str(response.get('refresh_token')),
-                'access': str(response.get('access_token')),
-                'refresh_exp': str(response.get('expires_in') + 86400),
-                'token_exp': str(response.get('expires_in')),
+                'refresh': str(resjson.get('refresh_token')),
+                'access': str(resjson.get('access_token')),
+                'refresh_exp': str(resjson.get('expires_in') + 86400),
+                'token_exp': str(resjson.get('expires_in')),
             }
+            insertLogin(str(resjson.get('access_token')))
             return JsonResponse(formatResponse)
         except Exception as e:
             logger.info(str(e))
             return JsonResponse({'error': str(e)}, status=500)
     return JsonResponse({'error': 'Wrong method'}, status=405)
 
-# @csrf_exempt
-# def refreshToken(request):
-#     body = json.loads(request.body.decode('utf-8'))
-#     response = {'response': 'POST'}
-#     if (not body.get('refresh_token')):
-#         return JsonResponse({'error': 'Missing refresh token'}, status=400)
-#     if request.method == "POST":
-#         logger.info(body.get('refresh_token'))
-#         params = {
-#             'grant_type': 'refresh_token',
-#             'client_id': os.environ['UID'],
-#             'refresh_token': body.get('refresh_token')
-#         }
-#         response = post42("/oauth/token", params)
-#         if response.get('access_token'):
-#             logger.info(response)
-#             formatResponse = {
-#                 'refresh': str(response.get('refresh_token')),
-#                 'access': str(response.get('access_token')),
-#                 'refresh_exp': str(response.get('expires_in') + 86400),
-#                 'token_exp': str(response.get('expires_in')),
-#             }
-#             return JsonResponse(formatResponse)
-#     return JsonResponse(response)
+@csrf_exempt
+def refreshToken(request):
+    body = json.loads(request.body.decode('utf-8'))
+    myresponse = {'response': 'POST'}
+    if (not body.get('refresh_token')):
+        return JsonResponse({'error': 'Missing refresh token'}, status=400)
+    if request.method == "POST":
+        params = {
+            'grant_type': 'refresh_token',
+            'client_id': os.environ['UID'],
+            'refresh_token': body.get('refresh_token')
+        }
+        response = post42("/oauth/token", params)
+        if response.status_code != 200:
+            return JsonResponse({'error': 'Bad request'}, status=response.status_code)
+        respjson = response.json()
+        if respjson.get('access_token'):
+            formatResponse = {
+                'refresh': str(respjson.get('refresh_token')),
+                'access': str(respjson.get('access_token')),
+                'refresh_exp': str(respjson.get('expires_in') + 86400),
+                'token_exp': str(respjson.get('expires_in')),
+            }
+            return JsonResponse(formatResponse)
+    else:
+        return JsonResponse({'error': 'Bad Method'}, status=405)
+    return JsonResponse(myresponse)
 
 @api_view(['POST'])
 def singUp(request):
@@ -141,10 +179,10 @@ def singUp(request):
             animal = random.choice(["penguin", "cat", "chicken"])
             img = './src/assets/loginimg/' + animal + '.jpeg'
 
-            aaa = Users(campus="Campus of life", username=name, alias=name,
+            user = Users(campus="Campus of life", username=name, alias=name,
                          first_name=first, last_name=last, img=img, intra=False)
-            aaa.set_password(pswd)
-            aaa.save()
+            user.set_password(pswd)
+            user.save()
             response["exist"] = False
         return JsonResponse(response)
     except Exception as e:
@@ -163,9 +201,6 @@ def loginWeb(request):
         user = authenticate(username=username, password=password)
         if user is not None:
             refresh = RefreshToken.for_user(user)
-            logger.info("==============================RESPONSE LOGINWEB==============================================")
-            logger.info(user)
-            logger.info("==========================================================================================")
             return JsonResponse({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
@@ -178,3 +213,45 @@ def loginWeb(request):
     except Exception as e:
         logger.info(str(e))
         return JsonResponse({'error': str(e)}, status=500)
+
+from django.core.files.base import ContentFile
+from PIL import Image
+
+
+def verify_ext(img, ext):
+    if ext != "jpeg" and ext != "png" and ext != "jpg":
+        logger.info(ext)
+        return False
+
+    try:
+        image = Image.open(img)
+        image.verify()
+    except (IOError, SyntaxError) as e:
+        return False
+    return True
+
+@api_view(['POST'])
+def changeImg(request):
+    if request.FILES.get('img'):
+        users = request.user
+        img = request.FILES['img']
+        
+        max_size_mb = 2
+        max_size_bytes = max_size_mb * 1024 * 1024
+        if img.size > max_size_bytes:
+            return JsonResponse({"error": "File too Big"}, status=400)
+
+        ext = img.name.split('.')[-1]
+        if not verify_ext(img, ext):
+            return JsonResponse({"error": "Bad file type"}, status=400)
+
+        new_filename = f"{users.username}.{ext}"
+        old_img = users.img.path if users.img else None
+        
+        img.seek(0)
+        users.img.save(new_filename, ContentFile(img.read()), save=True)
+        if old_img:
+            if os.path.isfile(old_img):
+                os.remove(old_img)
+        return JsonResponse({'status': 'success', 'url_imagen': users.img.url})
+    return JsonResponse({'status': 'error'}, status=400)
