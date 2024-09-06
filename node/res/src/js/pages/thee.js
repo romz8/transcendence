@@ -12,7 +12,7 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 
 const scene = new THREE.Scene();
 
-const geometryBox = new THREE.BoxGeometry(0.03, 0.4, 0.1);
+const geometryBox = new THREE.BoxGeometry(1, 1, 1);
 const materia = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
 const cube = new THREE.Mesh( geometryBox, materia );
 cube.position.x = 1;

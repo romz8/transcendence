@@ -61,7 +61,8 @@ def download_and_save_image(user, url):
     if response.status_code == 200:
         ext = url.split('.')[-1]
 
-        image_name = user.username + '.' + ext
+        random_mesh = img_name_gen()
+        image_name = f"{user.username}{random_mesh}.{ext}"
         img_temp = BytesIO(response.content)
 
         try:
@@ -135,11 +136,27 @@ def loginIntra(request):
 
 @csrf_exempt
 def refreshToken(request):
-    body = json.loads(request.body.decode('utf-8'))
-    myresponse = {'response': 'POST'}
-    if (not body.get('refresh_token')):
-        return JsonResponse({'error': 'Missing refresh token'}, status=400)
     if request.method == "POST":
+        body = json.loads(request.body.decode('utf-8'))
+        if (not body.get('refresh_token')):
+            return JsonResponse({'error': 'Missing refresh token'}, status=400)
+
+        try:
+            old_refresh = RefreshToken(body.get('refresh_token'))
+            #PFFFFFFFFF
+            new_refresh = RefreshToken.for_user(old_refresh.user)
+            new_access_token = str(new_refresh.access_token)
+            logger.info("**********************USER**********************")
+            #PFFFFFFFFFF
+            return JsonResponse({
+                'refresh': str(new_refresh),
+                'access': new_access_token,
+                'refresh_exp': new_refresh["exp"] - datetime.datetime.now().timestamp(),
+                'token_exp': new_refresh.access_token['exp'] - datetime.datetime.now().timestamp(),
+            })
+        except:
+            pass
+        
         params = {
             'grant_type': 'refresh_token',
             'client_id': os.environ['UID'],
@@ -156,10 +173,10 @@ def refreshToken(request):
                 'refresh_exp': str(respjson.get('expires_in') + 86400),
                 'token_exp': str(respjson.get('expires_in')),
             }
+            logger.info("======================INTRA======================")
             return JsonResponse(formatResponse)
     else:
         return JsonResponse({'error': 'Bad Method'}, status=405)
-    return JsonResponse(myresponse)
 
 @api_view(['POST'])
 def singUp(request):
@@ -230,6 +247,15 @@ def verify_ext(img, ext):
         return False
     return True
 
+import string
+
+def img_name_gen():
+    logger.info("======================= img_name_gen =======================")
+    caracteres = string.ascii_letters + string.digits
+    cadena = ''.join(random.choice(caracteres) for _ in range(8))
+    logger.info(cadena)
+    return (cadena)
+
 @api_view(['POST'])
 def changeImg(request):
     if request.FILES.get('img'):
@@ -245,7 +271,8 @@ def changeImg(request):
         if not verify_ext(img, ext):
             return JsonResponse({"error": "Bad file type"}, status=400)
 
-        new_filename = f"{users.username}.{ext}"
+        random_mesh = img_name_gen()
+        new_filename = f"{users.username}{random_mesh}.{ext}"
         old_img = users.img.path if users.img else None
         
         img.seek(0)
