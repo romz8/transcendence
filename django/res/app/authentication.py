@@ -19,13 +19,11 @@ class Intra42Authentication(BaseAuthentication):
                 return (user, None)
         except AuthenticationFailed:
             pass
-        # Validar el access_token con la API de intra.42.fr
         response = requests.get('https://api.intra.42.fr/v2/me', headers={'Authorization': auth_header})
         if response.status_code != 200:
             raise AuthenticationFailed('Invalid or expired token')
 
         user_info = response.json()
-        # Buscar o crear un usuario local
         from app.models import Users
         try:
             user = Users.objects.get(username=user_info['login'])

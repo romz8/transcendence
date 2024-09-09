@@ -20,7 +20,6 @@ def verify_token(request):
     auth_header = request.headers.get('Authorization')
     token = auth_header.split(' ')[1]
 
-    logger.info(token)
     jwt_authenticator = JWTAuthentication()
     try:
         user, validated_token = jwt_authenticator.authenticate(request)

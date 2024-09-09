@@ -86,7 +86,7 @@ class SingUp extends HTMLElement {
             margin-right: 10px;
         }
         </style>
-        <nav-bar data-authorized></nav-bar>
+        <nav-bar></nav-bar>
         <div class="form-container">
         <div class="form-box">
             <h2 class="text-center">Sign Up</h2>

@@ -6,7 +6,7 @@ class Users(AbstractUser):
     intra = models.BooleanField(blank=False, null=False)
     campus = models.CharField(max_length=100, blank=True, null=True)
     img = models.ImageField(upload_to='img_profile/', blank=True, null=True)
-    intra_id = models.CharField(unique=True, max_length=50)
+    intra_id = models.CharField(unique=True, null=True, max_length=50)
 
     class Meta:
         managed = True

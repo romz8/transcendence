@@ -90,10 +90,6 @@ def insertLogin(tokken):
                         campus=body.get('campus')[0].get('name'))
             value = download_and_save_image(user, body.get('image').get('link'))
 
-            logger.info("===================value===================")
-            logger.info(value.get('status'))
-            logger.info("===================value===================")
-
             if value["status"] == 'error':
                 return False
             user.save()
@@ -143,16 +139,11 @@ def refreshToken(request):
 
         try:
             old_refresh = RefreshToken(body.get('refresh_token'))
-            #PFFFFFFFFF
-            new_refresh = RefreshToken.for_user(old_refresh.user)
-            new_access_token = str(new_refresh.access_token)
-            logger.info("**********************USER**********************")
-            #PFFFFFFFFFF
             return JsonResponse({
-                'refresh': str(new_refresh),
-                'access': new_access_token,
-                'refresh_exp': new_refresh["exp"] - datetime.datetime.now().timestamp(),
-                'token_exp': new_refresh.access_token['exp'] - datetime.datetime.now().timestamp(),
+                'refresh': str(old_refresh),
+                'refresh_exp': str(old_refresh["exp"] - datetime.now().timestamp()),
+                'access': str(old_refresh.access_token),
+                'token_exp': str(old_refresh.access_token['exp'] - datetime.now().timestamp()),
             })
         except:
             pass
@@ -173,7 +164,6 @@ def refreshToken(request):
                 'refresh_exp': str(respjson.get('expires_in') + 86400),
                 'token_exp': str(respjson.get('expires_in')),
             }
-            logger.info("======================INTRA======================")
             return JsonResponse(formatResponse)
     else:
         return JsonResponse({'error': 'Bad Method'}, status=405)
@@ -193,13 +183,17 @@ def singUp(request):
         if exist:
             response["exist"] = True
         else:
-            animal = random.choice(["penguin", "cat", "chicken"])
-            img = './src/assets/loginimg/' + animal + '.jpeg'
-
             user = Users(campus="Campus of life", username=name, alias=name,
-                         first_name=first, last_name=last, img=img, intra=False)
+                         first_name=first, last_name=last, intra=False)
             user.set_password(pswd)
             user.save()
+            animal = random.choice(["penguin.jpeg", "cat.jpeg", "chicken.jpeg"])
+            random_mesh = img_name_gen()
+            imgcontentpath = f"{str(Path(__file__).resolve().parent.parent)}/media/def/{animal}"
+            with open(imgcontentpath, 'rb') as file:
+                content = file.read()
+            img = f"{name}{random_mesh}.jpeg"
+            user.img.save(img, ContentFile(content), save=True)
             response["exist"] = False
         return JsonResponse(response)
     except Exception as e:
@@ -237,7 +231,6 @@ from PIL import Image
 
 def verify_ext(img, ext):
     if ext != "jpeg" and ext != "png" and ext != "jpg":
-        logger.info(ext)
         return False
 
     try:
@@ -250,11 +243,11 @@ def verify_ext(img, ext):
 import string
 
 def img_name_gen():
-    logger.info("======================= img_name_gen =======================")
     caracteres = string.ascii_letters + string.digits
     cadena = ''.join(random.choice(caracteres) for _ in range(8))
-    logger.info(cadena)
     return (cadena)
+
+from pathlib import Path
 
 @api_view(['POST'])
 def changeImg(request):
@@ -274,6 +267,10 @@ def changeImg(request):
         random_mesh = img_name_gen()
         new_filename = f"{users.username}{random_mesh}.{ext}"
         old_img = users.img.path if users.img else None
+        logger.info("============================================================")
+        
+        logger.info(imgcontentpath)
+        logger.info("============================================================")
         
         img.seek(0)
         users.img.save(new_filename, ContentFile(img.read()), save=True)

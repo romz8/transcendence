@@ -15,7 +15,6 @@ class PongGame extends HTMLElement {
         this.futureLeftY = this.gameHeight / 2 - this.paddleHeight / 2;
         this.leftPaddleX = 10;
         this.rightPaddleY = this.gameHeight / 2 - this.paddleHeight / 2;
-        this.futureRightY = this.gameHeight / 2 - this.paddleHeight / 2;
         this.rightPaddleX = 790;
         this.ballX = this.gameWidth / 2;
         this.ballY = this.gameHeight / 2;
@@ -113,18 +112,33 @@ class PongGame extends HTMLElement {
 
     startGame() {
         document.addEventListener('keydown', (e) => this.keys[e.key.toLowerCase()] = true);
-        document.addEventListener('keyup', (e) => this.keys[e.key.toLowerCase()] = false);
-        
+        document.addEventListener('keyup', (e) => this.keys[e.key.toLowerCase()] = false);        
         
         const gameLoop = () => {
             this.movePaddles();
             this.moveBall();
             this.updatePositions();
-            requestAnimationFrame(gameLoop);
+            if (this.checkWinner() == false)
+                requestAnimationFrame(gameLoop);
         };
         setInterval(this.setTimeLoop, 1000, this);
         gameLoop();
     }
+
+    checkWinner(){
+        if (this.leftScore == 5)
+        {
+            alert("AI WON GIT GUD")
+            return true;
+        }
+        else if (this.rightScore == 5)
+        {
+            alert ("LUCKY GUY YOU WON")
+            return true;
+        }
+        return false;
+    }
+
 
     movePaddles() {
         if (Math.abs(this.leftPaddleY - this.futureLeftY) > 5) {
@@ -134,16 +148,16 @@ class PongGame extends HTMLElement {
                 this.leftPaddleY += this.aiSpeed;
             }
         }
-        // if (this.keys['w'] && this.rightPaddleY > 0)
-        //     this.rightPaddleY -= this.paddleSpeed;
+        if (this.keys['w'] && this.rightPaddleY > 0)
+            this.rightPaddleY -= this.paddleSpeed;
 
-        // if (this.keys['s'] && this.rightPaddleY < this.gameHeight - this.paddleHeight)
-        //     this.rightPaddleY += this.paddleSpeed;
+        if (this.keys['s'] && this.rightPaddleY < this.gameHeight - this.paddleHeight)
+            this.rightPaddleY += this.paddleSpeed;
 
-        if (this.ballDirectionX > 0 && this.ballY < this.rightPaddleY + this.paddleHeight / 2 && this.rightPaddleY > 0)
-            this.rightPaddleY -= this.aiSpeed;
-        else if (this.ballDirectionX > 0 && this.ballY > this.rightPaddleY + this.paddleHeight / 2 && this.rightPaddleY < this.gameHeight - this.paddleHeight)
-            this.rightPaddleY += this.aiSpeed;
+        // if (this.ballDirectionX > 0 && this.ballY < this.rightPaddleY + this.paddleHeight / 2 && this.rightPaddleY > 0)
+        //     this.rightPaddleY -= this.aiSpeed;
+        // else if (this.ballDirectionX > 0 && this.ballY > this.rightPaddleY + this.paddleHeight / 2 && this.rightPaddleY < this.gameHeight - this.paddleHeight)
+        //     this.rightPaddleY += this.aiSpeed;
     }
 
     changeDir(dirx)
@@ -180,9 +194,12 @@ class PongGame extends HTMLElement {
     }
 
     resetBall() {
+        this.leftPaddleY = this.gameHeight / 2 - this.paddleHeight / 2;
+        this.rightPaddleY = this.gameHeight / 2 - this.paddleHeight / 2;
         this.ballX = this.gameWidth / 2;
         this.ballY = this.gameHeight / 2;
         this.ballDirectionX *= -1;
+        this.ballDirectionY = Math.floor(Math.random() * 2) == 0? -1: 1;
         this.ballSpeedX = 5;
         this.ballSpeedY = 3;
     }

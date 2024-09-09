@@ -16,11 +16,9 @@ def introspect_token(token):
 
     try:
         response = requests.get(introspection_url, headers=headers)
-        # logger.info(response.headers)
         if response.status_code == 200:
             data = response.json()
             data['active'] = 'resource_owner_id' in data and 'expires_in_seconds' in data and data['expires_in_seconds'] > 0
-            # logger.info(data)
             return data
         return {'active': False}
     except Exception as e:
@@ -57,7 +55,6 @@ def token_required(scopes=None):
             else:
                 return JsonResponse({'error': 'Valid Acces_tokken but user no logged'}, status=403)
             request.user = token_info.get('resource_owner_id', 'anonymous')
-            logger.info(request.user)
             request.scopes = token_scopes
             return f(request, *args, **kwargs)
         return decorated

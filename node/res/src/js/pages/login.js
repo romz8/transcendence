@@ -1,3 +1,4 @@
+import { generateLangs } from "/src/js/languages.js";
 import { expiresDate } from "../login.js"
 
 class LogIn extends HTMLElement {
@@ -85,10 +86,10 @@ class LogIn extends HTMLElement {
             margin-right: 10px;
         }
         </style>
-        <nav-bar data-authorized></nav-bar>
+        <nav-bar></nav-bar>
         <div class="form-container">
         <div class="form-box">
-            <h2 class="text-center">Log In</h2>
+            <h2 class="text-center" id="login-title">Log In</h2>
             <div id="error-message" class="error-message">Invalid username or password.</div>
             <div class="form-group">
                 <label for="username">Username</label>
@@ -104,6 +105,7 @@ class LogIn extends HTMLElement {
 		`;
 	}
 	connectedCallback() {
+		generateLangs("login")
         const   loginBtn = document.getElementById('login-btn');
         loginBtn.addEventListener('click', getLoginWeb);
     };
