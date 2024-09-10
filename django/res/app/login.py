@@ -85,7 +85,7 @@ def insertLogin(tokken):
         body = response.json()
         exist = Users.objects.filter(intra_id=body.get('id')).exists()
         if not exist:
-            user = Users(intra_id=body.get('id'), username=body.get('login'), alias=body.get('login'),
+            user = Users(intra_id=body.get('id'), username=f'42-{body.get('login')}', alias=body.get('login'),
                         intra=True, first_name=body.get('first_name'), last_name=body.get('last_name'),
                         campus=body.get('campus')[0].get('name'))
             value = download_and_save_image(user, body.get('image').get('link'))
@@ -266,12 +266,7 @@ def changeImg(request):
 
         random_mesh = img_name_gen()
         new_filename = f"{users.username}{random_mesh}.{ext}"
-        old_img = users.img.path if users.img else None
-        logger.info("============================================================")
-        
-        logger.info(imgcontentpath)
-        logger.info("============================================================")
-        
+        old_img = users.img.path if users.img else None        
         img.seek(0)
         users.img.save(new_filename, ContentFile(img.read()), save=True)
         if old_img:

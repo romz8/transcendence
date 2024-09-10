@@ -160,7 +160,13 @@ function    updateProfileInfo () {
 			return response.json();
 		})
 		.then(data => {
-			alert('info updated succesfully');
+            console.log(data);
+            if (data['success'])
+			    alert('info updated succesfully');
+            else if (data['error'] === 'duplicate alias')
+                alert('duplicate alias');
+            else
+                alert('ERROR -_-')
 		})
 		.catch(error => {
 			console.error('There has been a problem with your fetch operation:', error)

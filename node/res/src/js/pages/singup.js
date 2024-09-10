@@ -138,7 +138,7 @@ function singUp(infoLogin)
     })
     .then(data => {
         if (data["exist"] == true)
-            showError('User already exist.');
+            alert('User already exist.');
     })
     .catch(error => console.error('There has been a problem with your fetch operation:', error));
 }

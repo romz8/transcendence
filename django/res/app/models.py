@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 class Users(AbstractUser):
-    alias = models.CharField(max_length=50, blank=False, null=False)
+    alias = models.CharField(max_length=50, unique=True,blank=False, null=False)
     intra = models.BooleanField(blank=False, null=False)
     campus = models.CharField(max_length=100, blank=True, null=True)
     img = models.ImageField(upload_to='img_profile/', blank=True, null=True)

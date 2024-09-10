@@ -10,6 +10,7 @@ from app.models import Users
 
 import os
 import json
+from django.db import IntegrityError
 from django.db.models import Q, F
 from rest_framework.decorators import api_view
 
@@ -72,6 +73,9 @@ def updateInfoUser(request):
             user.alias = alias
             user.save()
             return JsonResponse({'success': 'info updated'})
+    except IntegrityError as e:
+        logger.info("Duplicate alias!")
+        return JsonResponse({'error': 'duplicate alias'})
     except Exception as e:
         logger.info(str(e))
         return JsonResponse({'error': str(e)}, status=500)

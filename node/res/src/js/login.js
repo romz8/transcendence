@@ -190,6 +190,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 export async function is_authenticated(access)
 {
+    console.log(access)
     if (!access)
         return Promise.resolve(false);
     return fetch('http://localhost:8080/verify_token/', {

@@ -26,7 +26,7 @@ class Intra42Authentication(BaseAuthentication):
         user_info = response.json()
         from app.models import Users
         try:
-            user = Users.objects.get(username=user_info['login'])
+            user = Users.objects.get(username=f"42-{user_info['login']}")
         except Users.DoesNotExist:
             raise AuthenticationFailed('Invalid or expired token')
         return (user, None)

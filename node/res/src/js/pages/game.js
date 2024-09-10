@@ -126,12 +126,12 @@ class PongGame extends HTMLElement {
     }
 
     checkWinner(){
-        if (this.leftScore == 5)
+        if (this.leftScore == 5 )
         {
             alert("AI WON GIT GUD")
             return true;
         }
-        else if (this.rightScore == 5)
+        else if (this.rightScore == 5 )
         {
             alert ("LUCKY GUY YOU WON")
             return true;
