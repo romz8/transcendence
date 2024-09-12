@@ -10,7 +10,7 @@ class NavBar extends HTMLElement {
 		if (this.hasAttribute('data-authorized')) {
 			optionalElements = /* html */`
 			<li><a href="/gamebot" class="nav-link" data-link id="play">Play AI</a></li>
-			<li><a href="/gamerem" class="nav-link" data-link id="play">Play Rem</a></li>
+			<li><a href="/waitroom" class="nav-link" data-link id="play">Play Rem</a></li>
 			<li class="nav-item dropdown">
 			<a class="nav-link dropdown-toggle" href="" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="profile">Profile</a>
 			<ul class="dropdown-menu dropdown-menu-end">

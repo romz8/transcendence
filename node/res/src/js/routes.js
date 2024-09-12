@@ -16,7 +16,9 @@ const routes = {
 	'/login': { title: 'Login', render: login},
 	'/signup': { title: 'Signup', render: singup},
 	'/gamebot': { title: 'You will lose', render: gameai},
-	'/gamerem': { title: 'HAVE FUN', render: gamerem},
+	'/waitroom': { title: 'HAVE FUN', render: gamerem},
+	'/waitroom/create': { title: 'HAVE FUN', render: gamerem},
+	'/waitroom/join': { title: 'HAVE FUN', render: gamerem},
 };
 
 /* Select main container where different pages will render */
