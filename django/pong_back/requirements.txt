@@ -1,0 +1,11 @@
+Django>=4
+psycopg2-binary>=2.9
+djangorestframework
+django-cors-headers>=4.2
+djangorestframework-simplejwt
+channels>=4.0.0
+daphne>=4.0.0
+web3
+python-dotenv
+py-solc-x
+Pillow>=10.4.0 

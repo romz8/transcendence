@@ -1,21 +1,27 @@
-FROM python:3.12.4
+# Use the official Python image from the Docker Hub
+FROM python:3.12
 
-WORKDIR /home/apriego-/django
+# Set the working directory in the container
+WORKDIR /app
 
-COPY res/requirements.txt ./
+# Copy the requirements file into the container
+COPY ./pong_back/requirements.txt /app/
 
+# Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# COPY res ./
+# Copy the project files into the container
+COPY ./pong_back /app/
 
-# COPY ./scripts/entrypoint.sh .
-# RUN chmod +x ./entrypoint.sh
-# RUN apt upgrade
 RUN apt update
 RUN apt install netcat-openbsd
 
-EXPOSE 8080
+# Expose the port the app runs on
+EXPOSE 8001
 
-ENTRYPOINT [ "bash", "./entrypoint.sh" ]
+ENTRYPOINT [ "bash", "/app/entrypoint.sh" ]
+# Command to run the Django development server
+#CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
-CMD [ "python", "manage.py", "runserver", "0.0.0.0:8080" ]
+# Command to run the Daphne server
+CMD ["daphne", "-b", "localhost", "-p", "8001", "pong_project.asgi:application"]

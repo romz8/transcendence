@@ -11,21 +11,36 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - app-network
-  django:
-    container_name: django
-    build: ./django
-    image: django
+      - pongnet
+  login:
+    container_name: login
+    build: ./login
+    image: login
     volumes:
-      - django_data:/home/apriego-/django/
+      - login_data:/home/apriego-/login/
     env_file:
       - .env
     ports:
       - "8080:8080"
     networks:
-      - app-network
+      - pongnet
     depends_on:
       - postgres
+  django:
+    container_name: django
+    build: ./django
+    command: python manage.py runserver 0.0.0.0:8001 #is this necessaryy ?
+    volumes:
+      - ./django/pong_back:/app
+    env_file:
+      - .env
+    ports:
+      - "8001:8001"
+    networks:
+      - pongnet
+    depends_on:
+      - login
+    # restart: 'always'
   postgres:
     build: ./postgreSQL
     container_name: postgres
@@ -37,7 +52,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - app-network
+      - pongnet
 volumes:
   node_data:
     driver: local
@@ -45,10 +60,10 @@ volumes:
       device: "./node/res/node_modules"
       o: bind
       type: none
-  django_data:
+  login_data:
     driver: local
     driver_opts:
-      device: "./django/res"
+      device: "./login/res"
       o: bind
       type: none
   postgres_data:
@@ -59,6 +74,6 @@ volumes:
       type: none
 
 networks:
-  app-network:
-      name: app-network
+  pongnet:
+      name: pongnet
       driver: bridge
