@@ -9,7 +9,8 @@ class NavBar extends HTMLElement {
 		let	optionalElements = '';
 		if (this.hasAttribute('data-authorized')) {
 			optionalElements = /* html */`
-			<li><a href="/gamebot" class="nav-link" data-link id="play">Play</a></li>
+			<li><a href="/gamebot" class="nav-link" data-link id="play">Play AI</a></li>
+			<li><a href="/gamerem" class="nav-link" data-link id="play">Play Rem</a></li>
 			<li class="nav-item dropdown">
 			<a class="nav-link dropdown-toggle" href="" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="profile">Profile</a>
 			<ul class="dropdown-menu dropdown-menu-end">
@@ -37,8 +38,8 @@ class NavBar extends HTMLElement {
 							Language
 							</a>
 							<ul class="dropdown-menu dropdown-menu-end">
-							<li class="language-select" value="cat"><a class="dropdown-item" href="#">Catalan</a></li>
-							<li class="language-select" value="es"><a class="dropdown-item" href="#">Spanish</a></li>
+							<li class="language-select" value="cat"><a class="dropdown-item" href="#">Catala</a></li>
+							<li class="language-select" value="es"><a class="dropdown-item" href="#">Español</a></li>
 							<li class="language-select" value="en"><a class="dropdown-item" href="#">English</a></li>
 							</ul>
 						</li>

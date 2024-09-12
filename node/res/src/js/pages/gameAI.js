@@ -1,4 +1,4 @@
-class PongGame extends HTMLElement {
+class PongAI extends HTMLElement {
     constructor() {
         super();
         this.gameWidth = 800;
@@ -205,8 +205,8 @@ class PongGame extends HTMLElement {
     }
 }
 
-customElements.define('pong-game', PongGame);
+customElements.define('pong-ai', PongAI);
 
-export default function game () {
-    return ('<pong-game></pong-game>');
+export default function gameai () {
+    return ('<pong-ai></pong-ai>');
 }

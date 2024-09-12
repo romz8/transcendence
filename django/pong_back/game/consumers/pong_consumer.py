@@ -96,7 +96,7 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
         await self.accept()
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         self.active = True
-        self.playername = await self.get_player()
+        self.playername = self.user.username
         self.room.add_player(self.channel_name, self.role, self.user.id, self.playername)
         await self.send(text_data=json.dumps({
             'type':gamestatus.init.name,
@@ -354,8 +354,8 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
     
     @database_sync_to_async
     def get_player(self):
-        return "Unknown"
         try:
             return Profile.objects.get(user=self.user).playername
         except Profile.DoesNotExist:
             logger.error(f'Profile does not exist for user: {self.user.id}')
+        return "Unknown"

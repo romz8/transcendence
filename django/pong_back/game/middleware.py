@@ -36,12 +36,18 @@ class JwtAuthMiddleware:
         query_string = scope['query_string'].decode('utf-8')
         query_params = parse_qs(query_string)
         token = query_params.get('token', [None])[0]
-        
-        if token is not None:
-            scope['user'] = await get_user_from_token(token)
+        if not token:
+            return None
+        headers = {"Authorization": f"Bearer {token}"}
+        req = requests.get("http://login:8080/verify_token/", headers=headers)
+        if req.status_code == 200:
+            username = req.json()['user']
+            if username:
+                scope['user'] = Users.objects.get(username=username)
+            else:
+                scope['user'] = AnonymousUser()
         else:
             scope['user'] = AnonymousUser()
-        
         return await self.inner(scope, receive, send)
     
 def JwtAuthMiddlewareStack(inner):
