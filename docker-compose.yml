@@ -40,7 +40,7 @@ services:
       - pongnet
     depends_on:
       - login
-    # restart: 'always'
+    restart: 'always'
   postgres:
     build: ./postgreSQL
     container_name: postgres

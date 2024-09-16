@@ -48,6 +48,7 @@ class MatchList(APIView):
 @api_view(['POST'])
 def create_waitroom(request):
     owner = request.user
+    logger.info(owner)
     if WaitRoom.objects.filter(owner=owner).exists():
         roomid = WaitRoom.objects.filter(owner=owner).first().genId
         return(Response({"details":"there is already a waitroom", "genId": roomid}, status=status.HTTP_406_NOT_ACCEPTABLE)) #not sure on the content

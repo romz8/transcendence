@@ -1,6 +1,6 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 from .rooms import Room, gamestatus
-from game.models import WaitRoom, Match, Tourparticipation, Tournament
+from game.models import WaitRoom, Match, Tourparticipation, Tournament, Users
 import logging
 import asyncio
 import random
@@ -9,7 +9,6 @@ from asgiref.sync import async_to_sync
 import json
 from urllib.parse import parse_qs
 from rest_framework_simplejwt.tokens import UntypedToken
-from django.contrib.auth.models import User
 from .game_management_mixin import GameManager, init, ENDSCORE
 
 logger = logging.getLogger(__name__)
@@ -96,7 +95,7 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
         await self.accept()
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         self.active = True
-        self.playername = self.user.username
+        self.playername = self.user.alias
         self.room.add_player(self.channel_name, self.role, self.user.id, self.playername)
         await self.send(text_data=json.dumps({
             'type':gamestatus.init.name,
@@ -168,6 +167,8 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
 
     async def game_handler(self, data):
         event = data.get('event', None)
+        logger.info(event)
+        
         if event == 'ready' and self.room.state != gamestatus.over:
             self.room.ready_players.add(self.role)         
             logger.info(f"Player {self.role} is ready")
@@ -311,36 +312,29 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
             else:
                 p2 = self.room.players[p]['user_id']
         try:
-            user_p1 = await database_sync_to_async(User.objects.get)(id=p1)
-            user_p2 = await database_sync_to_async(User.objects.get)(id=p2)
+            user_p1 = await database_sync_to_async(Users.objects.get)(id=p1)
+            user_p2 = await database_sync_to_async(Users.objects.get)(id=p2)
 
             if self.tournament_mode:
                 tag, tourid = self.game_id.split("-")
                 logger.info(f"********** DB SAVE - TOURNAMENT : {tourid} - tag {tag}")
                 tour = await database_sync_to_async(Tournament.objects.get)(id=tourid)
                 match = await database_sync_to_async(Match.objects.get)(id = tag, tournament=tour)
-                match_player1 = await database_sync_to_async(lambda: match.player1)()
-                if match_player1 == user_p1:
-                    logger.info(f"we are IN RIGHT SENSE : saving with user1 is DB -{match.player1.id} and  room-{user_p1.id}")
-                    match.score_p1=self.room.score['player1']    
-                    match.score_p2=self.room.score['player2']
-                    loser = user_p1 if self.room.score['player1'] < self.room.score['player2'] else user_p2
-                else:
-                    logger.info(f"we are saving with user1 is DB -{match.player1.id} and  room-{user_p2.id}")
-                    match.score_p1=self.room.score['player2']
-                    match.score_p2=self.room.score['player1']
-                    loser = user_p2 if self.room.score['player2'] < self.room.score['player1'] else user_p1
+                match.score_p1=self.room.score['player1']
+                match.score_p2=self.room.score['player2']
                 match.state=db_state
-                
                 await database_sync_to_async(match.save)()
+                if self.room.score['player1'] < self.room.score['player2']:
+                    loser = user_p1
+                else:
+                    loser = user_p2
                 loser = await database_sync_to_async(Tourparticipation.objects.get)(userid=loser, tournament=tour)
                 loser.is_eliminated = True
                 await database_sync_to_async(loser.save)()
             else:
                 await database_sync_to_async(Match.objects.create)(player1=user_p1, player2=user_p2, score_p1=self.room.score['player1'], score_p2=self.room.score['player2'], state=db_state)
-                await database_sync_to_async(WaitRoom.objects.filter(genId=self.game_id).delete)()
             logger.info(f"**** ==== ***** Game saved to database: {user_p1} vs {user_p2} with score {self.room.score['player1']} - {self.room.score['player2']}")
-        except User.DoesNotExist:
+        except Users.DoesNotExist:
             logger.error("**** ==== ***** Error saving game to database: User not found")
         except Tournament.DoesNotExist:
             logger.error(f"**** ==== ***** Error saving game to database: Tournament not found with input: {tour}")
@@ -351,11 +345,3 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
         await self.accept() 
         await self.send(text_data=json.dumps({'error': message, 'code': code}))
         await self.close(code=code)
-    
-    @database_sync_to_async
-    def get_player(self):
-        try:
-            return Profile.objects.get(user=self.user).playername
-        except Profile.DoesNotExist:
-            logger.error(f'Profile does not exist for user: {self.user.id}')
-        return "Unknown"

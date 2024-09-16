@@ -2,6 +2,7 @@ import random
 import asyncio
 import logging
 import json
+import time
 from .rooms import gamestatus
 
 logger = logging.getLogger(__name__)
@@ -12,8 +13,8 @@ MESSAGE_DURATION = 2000
 PITCHWIDTH = 600
 PITCHHEIGHT = 400
 TOP_BOUNDARY = PADDING
-BALL_SPEED = 8
-PAD_SPEED = 12
+BALL_SPEED = 2
+PAD_SPEED = 2
 
 init = {
     'padHeight': 80,
@@ -95,7 +96,7 @@ class GameManager:
         - The loop runs at approximately 60 frames per second (`await asyncio.sleep(1 / 60)`), ensuring smooth gameplay.
         - Resets the room's goal state to `False` after a goal is detected.
         """
-        time_step = 1/20
+        time_step = 1/60
         while not self.room.goal:
         
             await self.move_pads()
@@ -165,6 +166,11 @@ class GameManager:
         rightPad = game_state['rightPad']
         ballX = game_state['ballX']
         ballY = game_state['ballY']
+        ballSpeedX = game_state['ballSpeedX']
+        ballSpeedY = game_state['ballSpeedY']
+        padSpeed = game_state['padSpeed']
+        timestamp = time.time()
+
         roomstate = event['roomstate']
         await self.send(text_data=json.dumps({
             'type': 'update',
@@ -173,6 +179,10 @@ class GameManager:
             'rightPad': rightPad,
             'ballX': ballX,
             'ballY': ballY,
+            'ballSpeedX': ballSpeedX,
+            'ballSpeedY': ballSpeedY,
+            'padSp eed': padSpeed,
+            'timestamp': timestamp,      
         }))
 
 
@@ -267,11 +277,11 @@ class GameManager:
             game_state['ballY'] >= game_state['leftPad'] and game_state['ballY'] <= game_state['leftPad'] + init['padHeight']):
                 game_state['ballSpeedX'] *= -1
                 game_state['ballX'] = init['leftPadX'] + init['padWidth'] + init['ballRadius']
-                await self.channel_layer.group_send(
+                '''await self.channel_layer.group_send(
                 self.room_group_name,
                 {
                     'type': 'broadcast_hit',
-                    'event': 'hit',})
+                    'event': 'hit',})'''
                 await self.increase_speed()
 
 
@@ -281,11 +291,11 @@ class GameManager:
             game_state['ballY'] <= game_state['rightPad'] + init['padHeight']):
                 game_state['ballSpeedX'] *= -1
                 game_state['ballX'] = init['rightPadX'] - init['ballRadius']
-                await self.channel_layer.group_send(
+                """await self.channel_layer.group_send(
                 self.room_group_name,
                 {
                     'type': 'broadcast_hit',
-                    'event': 'hit',})
+                    'event': 'hit',}) """
                 await self.increase_speed()
     
     async def check_goal(self):
@@ -346,9 +356,10 @@ class GameManager:
             elif (key == 's') or (key == 'ArrowDown'):
                 game_state['rightPadDown'] = key_state
         
-        await self.move_pads()
-        await self.send_updates()
+        #await self.move_pads()
+        #await self.send_updates()
 
     async def increase_speed(self):
         game_state['ballSpeedX'] *= 1.2
         game_state['ballSpeedY'] *= 1.2
+        game_state['padSpeed'] *= 1.2

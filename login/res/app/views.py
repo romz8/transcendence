@@ -22,32 +22,6 @@ def verify_token(request):
     logger.info("****************************************************************************")
     response = {"user": username}
     return JsonResponse(response)
-    # logger.info(username)
-    # logger.info("****************************************************************************")
-    # auth_header = request.headers.get('Authorization')
-    # token = auth_header.split(' ')[1]
-
-    # jwt_authenticator = JWTAuthentication()
-    # try:
-    #     user, validated_token = jwt_authenticator.authenticate(request)
-    #     if user:
-    #         response = {"user": user.username}
-    #         return (JsonResponse(response))
-    # except AuthenticationFailed:
-    #     pass
-
-    # token_info = introspect_token(token)
-    # if not token_info or not token_info.get('active'):
-    #     return JsonResponse({'error': 'Invalid or inactive token'})
-    # if Users.objects.filter(intra_id=token_info.get('resource_owner_id')).exists():
-    #     if not (token_info.get('application').get('uid') and token_info.get('application').get('uid') == os.environ['UID']):
-    #         return JsonResponse({'error': 'Not genereted in this site'}, status=403)
-    # else:
-    #     return JsonResponse({'error': 'Valid Acces_tokken but user no logged'}, status=403)
-    # logger.info(token_info)
-    # intra = Users.objects.get(intra_id=token_info.get('resource_owner_id'))
-    # return JsonResponse(response)
-
 
 @token_required(scopes=['public'])
 def protected_view(request):

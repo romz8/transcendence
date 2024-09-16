@@ -88,7 +88,7 @@ class Tourparticipation(models.Model):
     class Meta:
         managed = True
         db_table = 'tourparticipation'
-        # unique_together = ['userid','tournament']
+        unique_together = ['userid','tournament']
     
     def clean(self):
         if Tourparticipation.objects.filter(userid=self.userid, tournament=self.tournament).exists():
@@ -129,6 +129,8 @@ class Match(models.Model):
     class Meta:
         ordering = ['game_date']
         unique_together = ["player1", "player2", "game_date", "tournament"]
+        managed = True
+        db_table = 'match'
     
     def clean(self):
         # Allow both players to be None (future matches in Tourbament Sequence)
@@ -153,6 +155,8 @@ class WaitRoom(models.Model):
 
     class Meta:
         unique_together = ['owner', 'attendee']
+        managed = True
+        db_table = 'waitroom'
     
     def __str__(self):
         return f"Room {self.genId} (Owner: {self.owner}, Attendee: {self.attendee})"
