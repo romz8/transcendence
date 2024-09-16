@@ -13,7 +13,7 @@ from app.utilsApi42 import post42, get42
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view
-
+import re
 
 from datetime import datetime
 
@@ -168,16 +168,28 @@ def refreshToken(request):
     else:
         return JsonResponse({'error': 'Bad Method'}, status=405)
 
+def checkArgs(name, alias, first, last, pswd):
+    if not name or not first or not alias or not last or not pswd:
+        return False
+    if len(name) < 2 or len(first) < 2 or len(last) < 2 or len(alias) < 2:
+        return False
+    if not re.match(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&_=+-]).{8,16}$", pswd):
+        logger.info("AQUI")
+        return False
+    return True
+
 @api_view(['POST'])
 def singUp(request):
     try:
         body = json.loads(request.body.decode('utf-8'))
         name = body.get('username')
+        alias = body.get('alias')
         first = body.get('firstname')
         last = body.get('lastname')
         pswd = body.get('password')
-        if not name or not first or not last or not pswd:
-            return JsonResponse({'error': 'Missing arguments'}, status=400)
+        logger.info(f"ALIAS: {alias} NAME: {name} first: {first} last: {last} pswd: {pswd}")
+        if not checkArgs(name, alias, first, last, pswd):
+            return JsonResponse({'error': 'Bad arguments'}, status=400)
         exist = Users.objects.filter(username=name).exists()
         response = {'response': 'POST'}
         if exist:

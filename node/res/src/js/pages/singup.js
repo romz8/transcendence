@@ -96,6 +96,10 @@ class SingUp extends HTMLElement {
                 <input type="text" class="form-control" id="alias" placeholder="Insert Alias">
             </div>
             <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" class="form-control" id="username" placeholder="Insert Username">
+            </div>
+            <div class="form-group">
                 <label for="name">Name</label>
                 <input type="text" class="form-control" id="name" placeholder="Insert Name">
             </div>
@@ -131,14 +135,16 @@ function singUp(infoLogin)
         body: JSON.stringify(infoLogin)
     })
     .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok ' + response.statusText);
-        }
+        // if (!response.ok) {
+        //     throw new Error('Network response was not ok ' + response.json()["error"]);
+        // }
         return response.json();
     })
     .then(data => {
         if (data["exist"] == true)
             alert('User already exist.');
+        if (data["error"])
+            console.log(data['error']);
     })
     .catch(error => console.error('There has been a problem with your fetch operation:', error));
 }
@@ -146,9 +152,10 @@ function singUp(infoLogin)
 function getSignUp()
 {
     const infoLogin = {
-        username: document.getElementById("alias").value,
-        lastname: document.getElementById("name").value,
-        firstname: document.getElementById("lastName").value,
+        alias: document.getElementById("alias").value,
+        username: document.getElementById("username").value,
+        firstname: document.getElementById("name").value,
+        lastname: document.getElementById("lastName").value,
         password: document.getElementById("password").value
     }
     singUp(infoLogin);
