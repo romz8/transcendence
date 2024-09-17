@@ -1,8 +1,11 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.forms.models import model_to_dict
+from django.core.files.base import ContentFile
+from PIL import Image
+from pathlib import Path
 
-from app.models import Users
+from app.models import Users, UserStatus
 import logging
 import json
 import os
@@ -206,6 +209,8 @@ def singUp(request):
                 content = file.read()
             img = f"{name}{random_mesh}.jpeg"
             user.img.save(img, ContentFile(content), save=True)
+            userStatus = UserStatus.objects.create(users=user, is_online=False)
+            userStatus.save()
             response["exist"] = False
         return JsonResponse(response)
     except Exception as e:
@@ -237,8 +242,7 @@ def loginWeb(request):
         logger.info(str(e))
         return JsonResponse({'error': str(e)}, status=500)
 
-from django.core.files.base import ContentFile
-from PIL import Image
+
 
 
 def verify_ext(img, ext):
@@ -258,8 +262,6 @@ def img_name_gen():
     caracteres = string.ascii_letters + string.digits
     cadena = ''.join(random.choice(caracteres) for _ in range(8))
     return (cadena)
-
-from pathlib import Path
 
 @api_view(['POST'])
 def changeImg(request):

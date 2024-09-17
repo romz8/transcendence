@@ -13,8 +13,8 @@ MESSAGE_DURATION = 2000
 PITCHWIDTH = 600
 PITCHHEIGHT = 400
 TOP_BOUNDARY = PADDING
-BALL_SPEED = 2
-PAD_SPEED = 2
+BALL_SPEED = 3
+PAD_SPEED = 3
 
 init = {
     'padHeight': 80,
@@ -169,7 +169,7 @@ class GameManager:
         ballSpeedX = game_state['ballSpeedX']
         ballSpeedY = game_state['ballSpeedY']
         padSpeed = game_state['padSpeed']
-        timestamp = time.time()
+        timestamp = int(time.time() * 1000)
 
         roomstate = event['roomstate']
         await self.send(text_data=json.dumps({

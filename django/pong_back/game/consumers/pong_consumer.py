@@ -333,6 +333,7 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
                 await database_sync_to_async(loser.save)()
             else:
                 await database_sync_to_async(Match.objects.create)(player1=user_p1, player2=user_p2, score_p1=self.room.score['player1'], score_p2=self.room.score['player2'], state=db_state)
+                await database_sync_to_async(WaitRoom.objects.filter(genId=self.game_id).delete)()
             logger.info(f"**** ==== ***** Game saved to database: {user_p1} vs {user_p2} with score {self.room.score['player1']} - {self.room.score['player2']}")
         except Users.DoesNotExist:
             logger.error("**** ==== ***** Error saving game to database: User not found")

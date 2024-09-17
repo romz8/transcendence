@@ -9,11 +9,13 @@ export let statusDisplay, roleDisplay, Display, mode = 'online';
 export let leftPad, rightPad, ball, player, initDirection;
 export let start = false, init = false, goal = false, input = false, gameEnded = false,endscore;
 export let canvas, ctx;
-let previousState = null;
-let currentState = null;
-let currentTimestamp, previousTimestamp, accumulatedTime = 0;
-let serverUpdateRate = 1000 / 20;
-let id = -1
+let id = -13
+const bufferTime = 50; // Delay rendering by 100ms
+let stateBuffer = [];
+let maxBufferSize = 10;
+let lastFrameTime = 0;
+const FPS = 60;  // Target frames per second
+const frameDuration = 1000 / FPS;  // Time per frame in milliseconds
 
 class GameRem extends HTMLElement {
     constructor() {
@@ -89,73 +91,70 @@ async function gameLoop() {
       reset();
     }
   }
-  
-  export async function setState(data) {
-    if (currentState) {
-      previousState = { ...currentState };
-      previousTimestamp = currentTimestamp;
-    } else {
-      previousState = {
-          leftPad: leftPad.y,
-          rightPad: rightPad.y,
-          ballX: ball.x,
-          ballY: ball.y
-      };
-    }
-    currentState = {
+
+export async function setState(data) {
+  // Push the new state and timestamp into the buffer
+  stateBuffer.push({
       leftPad: data.leftPad,
       rightPad: data.rightPad,
       ballX: data.ballX,
-      ballY: data.ballY
-    };
-  
-    currentTimestamp = data.timestamp;
-    accumulatedTime = 0;
-  
+      ballY: data.ballY,
+      timestamp: data.timestamp 
+  });
+  if (stateBuffer.length > maxBufferSize) {
+    stateBuffer.shift(); // Remove the oldest state
   }
+}
+
+
+export function update() {
+  const now = Date.now();
   
+  if (stateBuffer.length < 2) return;
+
+  stateBuffer.sort((a, b) => a.timestamp - b.timestamp);
+
+  const targetTime = now - bufferTime;
+
+  let stateA, stateB;
+  for (let i = 0; i < stateBuffer.length - 1; i++) {
+    if (stateBuffer[i].timestamp <= targetTime && stateBuffer[i + 1].timestamp >= targetTime) {
+      stateA = stateBuffer[i];
+      stateB = stateBuffer[i + 1];
+      break;
+    }
+  }
+  if (stateA && stateB) {
+    const progress = (now - bufferTime - stateA.timestamp) / (stateB.timestamp - stateA.timestamp);
+
+    leftPad.y = interpolate(stateA.leftPad, stateB.leftPad, progress);
+    rightPad.y = interpolate(stateA.rightPad, stateB.rightPad, progress);
+    ball.x = interpolate(stateA.ballX, stateB.ballX, progress);
+    ball.y = interpolate(stateA.ballY, stateB.ballY, progress);
+  }
+}
+
+export function render() {
+  drawPitch();
+  leftPad.draw(ctx);
+  rightPad.draw(ctx);
+  ball.draw(ctx);
+}
+
   export function renderLoop() {
     if (goal) return ;
   
     const now = Date.now();
-    const deltaTime = now - currentTimestamp; // Time since the last server update
+    const deltaTime = now - lastFrameTime;
   
-    update(deltaTime);
-    render();
-  
-    previousTimestamp = now;
-  
+    if (deltaTime >= frameDuration) {
+      update();
+      render();
+      lastFrameTime = now;
+    }
     requestAnimationFrame(renderLoop);
   }
-  
-  export function render() {
-    drawPitch();
-    leftPad.draw(ctx);
-    rightPad.draw(ctx);
-    ball.draw(ctx);
-  }
-  
-  export function update(deltaTime) {
-  
-    if (previousState && currentState) {
-  
-      // Calculate interpolation factor 't' based on how far we are between updates
-      const t = Math.min(accumulatedTime / serverUpdateRate, 1);
-  
-      // Interpolated positions using the factor 't'
-      leftPad.y = interpolate(previousState.leftPad, currentState.leftPad, t);
-      rightPad.y = interpolate(previousState.rightPad, currentState.rightPad, t);
-      ball.x = interpolate(previousState.ballX, currentState.ballX, t);
-      ball.y = interpolate(previousState.ballY, currentState.ballY, t);
-  
-      // Reset accumulation once we’ve reached the next frame (1 or beyond)
-      if (t >= 1) {
-          accumulatedTime = 0; // Reset the accumulator for the next frame
-      }
-      accumulatedTime += deltaTime;
-    }
-  }
-  
+      
   function interpolate(start, end, progress) {
       return start + (end - start) * progress;
     }
@@ -257,4 +256,3 @@ async function gameLoop() {
     goal = true;
     updateScores(data);
   }
-  

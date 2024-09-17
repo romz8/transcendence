@@ -135,9 +135,10 @@ function singUp(infoLogin)
         body: JSON.stringify(infoLogin)
     })
     .then(response => {
-        // if (!response.ok) {
-        //     throw new Error('Network response was not ok ' + response.json()["error"]);
-        // }
+        if (!response.ok) {
+            console.log(`STATUS: ${response.status}`)
+            throw new Error('Network response was not ok ' + response.json()["error"]);
+        }
         return response.json();
     })
     .then(data => {
