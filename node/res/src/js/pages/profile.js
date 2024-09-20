@@ -47,9 +47,8 @@ class ProFile extends HTMLElement {
 		`;
 	}
 	connectedCallback() {
-		/* const   updateInfoBtn = document.getElementById('update-info-btn');
-		updateInfoBtn.addEventListener('click', updateProfileInfo); */
 
+		const	updateSubmitBtn = document.getElementById('update-submit-btn');
 		const	profilePic = document.getElementById('profile-pic');
 		const	inputProfilePic = document.getElementById('input-profile-pic');
 
@@ -89,8 +88,16 @@ class ProFile extends HTMLElement {
 					const responseJson = await response.json();
 					throw new Error(`${responseJson.error}`);
 				}
+				router();
 			} catch (e) {
-				alert(`${e.message}`);
+				const	currentAlert = document.querySelector('.alert-profile-update');
+				if (currentAlert) {
+					currentAlert.remove();
+				}
+				const alertMssg = document.createElement('p');
+				alertMssg.textContent = e.message;
+				alertMssg.classList.add('alert-message', 'alert-profile-update');
+				updateSubmitBtn.insertAdjacentElement('beforebegin', alertMssg);
 			}
 		});
 

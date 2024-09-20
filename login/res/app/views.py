@@ -81,7 +81,7 @@ def updateInfoUser(request):
                 users.save()
             except IntegrityError as e:
                 logger.info("Duplicate alias!")
-                return JsonResponse({'error': 'duplicate alias'}, status=400)
+                return JsonResponse({'error': 'Alias already exists'}, status=400)
             except Exception as e:
                 logger.info(str(e))
                 return JsonResponse({'error': str(e)}, status=400)
