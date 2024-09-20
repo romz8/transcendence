@@ -12,21 +12,17 @@ class Intra42Authentication(BaseAuthentication):
         auth_header = request.headers.get('Authorization')
         if not auth_header:
             return None
-
+        logger.info("==========================================================")
+        logger.info(auth_header)
+        logger.info("==========================================================")
+        
         jwt_authenticator = JWTAuthentication()
         try:
             user, validated_token = jwt_authenticator.authenticate(request)
             if user:
+                logger.info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
                 return (user, None)
         except AuthenticationFailed:
-            pass
-        response = requests.get('https://api.intra.42.fr/v2/me', headers={'Authorization': auth_header})
-        if response.status_code != 200:
+            logger.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             raise AuthenticationFailed('Invalid or expired token')
-
-        user_info = response.json()
-        try:
-            user = Users.objects.get(username=f"42-{user_info['login']}")
-        except Users.DoesNotExist:
-            raise AuthenticationFailed('Invalid or expired token')
-        return (user, None)
+        raise AuthenticationFailed('Invalid or expired token')

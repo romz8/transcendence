@@ -4,7 +4,7 @@
 
 // Customs variables
 $cream: #F9F9EF;
-$blacky: #171716;
+$blacky: #212123;
 
 
 // Import fonts
@@ -26,7 +26,7 @@ $blacky: #171716;
 
 :root {
 	--bs-cream: #{$cream};
-	--bs-cream-hover: #{rgba(red($cream), green($cream), blue($cream), 0.7)};
+	--bs-cream-hover: #f2f1f1;
 	--bs-cream-subtle: #ecece2;
 	
 	--bs-blacky: #{$blacky};

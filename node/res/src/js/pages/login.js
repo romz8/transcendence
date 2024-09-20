@@ -41,7 +41,7 @@ class LogIn extends HTMLElement {
         .error-message {
             border-radius: 0.4em;
             background-color: #fe4f4f;
-            color: whire;
+            color: white;
             margin-top: 10px;
             display: none;
             text-align: center;
@@ -143,7 +143,6 @@ function loginWeb(infoLogin) {
         {
             alert('Login successful');
             document.cookie = "token=" + data["access"] + "; expires=" + expiresDate(data["token_exp"]) + "; Secure; SameSite=Strict";
-            document.cookie = "id=" + data['id'] + "; expires=" + expiresDate(data["token_exp"]) + "; Secure; SameSite=Strict"; /// needed (dosnt work now)????
             document.cookie = "refresh=" + data["refresh"] + "; expires=" + expiresDate(data["refresh_exp"]) + "; Secure; SameSite=Strict";
         }
     })

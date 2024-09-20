@@ -19,8 +19,10 @@ logger = logging.getLogger(__name__)
 @api_view(['GET'])
 def verify_token(request):
     username = request.user.username
-    logger.info("****************************************************************************")
     response = {"user": username}
+    logger.info("****************************************************************************")
+    logger.info(response)
+    logger.info("****************************************************************************")
     return JsonResponse(response)
 
 @token_required(scopes=['public'])

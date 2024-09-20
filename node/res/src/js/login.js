@@ -1,26 +1,5 @@
 import { router } from "./routes";
 
-let uid;
-
-window.onload = fetchUIDENV;
-
-///////////////////////////////////////////// UTILS /////////////////////////////////////////////
-
-async function fetchUIDENV() {
-    fetch('http://localhost:8080/uidenv/', {
-        method: 'GET',
-    })
-    .then(response => {
-        if (!response.ok)
-            throw new Error('Network response was not ok ' + response.statusText);
-        return response.json();
-    })
-    .then(data => {
-        uid = data['UID'];
-    })
-    .catch(error => console.error('There has been a problem with your fetch operation:', error));
-}
-
 export function expiresDate(seconds)
 {
     const currentDate = new Date();
@@ -65,35 +44,35 @@ function clearURL() {
 
 ///////////////////////////////////////////// USER STATUS /////////////////////////////////////////////
 
-function conectWB(id, dataToken)
-{
-    const socket = new WebSocket(`ws://localhost:8001/ws/user_status/?token=${dataToken["access"]}`);
-    socket.onopen = function(event) {
-        console.log("Conexión WebSocket establecida.");
-    };
+// function conectWB(id, dataToken)
+// {
+//     const socket = new WebSocket(`ws://localhost:8000/ws/user_status/?token=${dataToken["access"]}`);
+//     socket.onopen = function(event) {
+//         console.log("Conexión WebSocket establecida.");
+//     };
     
-    socket.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        console.log("Mensaje recibido:", data);
-    };
+//     socket.onmessage = function(event) {
+//         const data = JSON.parse(event.data);
+//         console.log("Mensaje recibido:", data);
+//     };
     
-    socket.onerror = function(error) {
-        console.error("Error en WebSocket:", error);
-    };
+//     socket.onerror = function(error) {
+//         console.error("Error en WebSocket:", error);
+//     };
     
-    socket.onclose = function(event) {
-        console.log("Conexión WebSocket cerrada.");
-    };
-    document.cookie = "token=" + dataToken["access"] + "; expires=" + expiresDate(dataToken["token_exp"]) + "; Secure; SameSite=Strict";
-    document.cookie = "id=" + id + "; expires=" + expiresDate(dataToken["token_exp"]) + "; Secure; SameSite=Strict";
-    document.cookie = "refresh=" + dataToken["refresh"] + "; expires=" + expiresDate(dataToken["refresh_exp"]) + "; Secure; SameSite=Strict";
-}
+//     socket.onclose = function(event) {
+//         console.log("Conexión WebSocket cerrada.");
+//     };
+//     document.cookie = `token=${dataToken["access"]}; expires=${expiresDate(dataToken["token_exp"]).toUTCString()}; Secure; SameSite=Strict`;
+//     document.cookie = `id=${id}; expires=${expiresDate(dataToken["token_exp"]).toUTCString()}; Secure; SameSite=Strict`;
+//     document.cookie = `refresh=${dataToken["refresh"]}; expires=${expiresDate(dataToken["refresh_exp"]).toUTCString()}; Secure; SameSite=Strict`;
+// }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export async function callApi42(){
     const params = new URLSearchParams ({
-        "client_id": uid,
+        "client_id": u ,
         "redirect_uri": "http://localhost:3000/",
         "scope": "public",
         "state": "1234566i754twrqwdfghgfddtrwsewrt",
@@ -124,8 +103,8 @@ async function getNewAccessToken(infoLogin)
         if (data['access'])
         {
             console.log(data['access_token']);
-            document.cookie = "token=" + data["access"] + "; expires=" + expiresDate(data["token_exp"]) + "; Secure; SameSite=Strict";
-            document.cookie = "refresh=" + data["refresh"] + "; expires=" + expiresDate(data["refresh_exp"]) + "; Secure; SameSite=Strict";
+            document.cookie = `token=${data["access"]}; expires=${expiresDate(data["token_exp"]).toUTCString()}; Secure; SameSite=Strict`;
+            document.cookie = `refresh=${data["refresh"]}; expires=${expiresDate(data["refresh_exp"]).toUTCString()}; Secure; SameSite=Strict`;
         }
         console.log("Response OK");
     } catch (error) {
@@ -174,8 +153,8 @@ function callBackAccess() {
         if (data["access"])
         {
             clearURL();
-            document.cookie = "token=" + data["access"] + "; expires=" + expiresDate(data["token_exp"]) + "; Secure; SameSite=Strict";
-            document.cookie = "refresh=" + data["refresh"] + "; expires=" + expiresDate(data["refresh_exp"]) + "; Secure; SameSite=Strict";
+            document.cookie = `token=${data["access"]}; expires=${expiresDate(data["token_exp"]).toUTCString()}; Secure; SameSite=Strict`;
+            document.cookie = `refresh=${data["refresh"]}; expires=${expiresDate(data["refresh_exp"]).toUTCString()}; Secure; SameSite=Strict`;
             router();
         }
     })

@@ -1,7 +1,7 @@
 import {initializeElements, startCountdown} from '../pages/gameRem.js'
 import {displayLeave, displayForfeitMessage, displayOverMessage} from './gameDisplay.js'
 import {statusDisplay, roleDisplay, Display} from "../pages/gameRem.js";
-import {setGoal, setState, renderLoop} from "../pages/gameRem.js";
+import {setGoal, setState, moveLoop} from "../pages/gameRem.js";
 import { getCookie } from '../login.js';
 
 export let ws;
@@ -11,8 +11,7 @@ export async function setWebsocket(id) {
     
     const token = getCookie('token');
     const host = window.location.hostname;
-    let url = `ws://${host}:8001/ws/pingpong/`+ id + "/";
-    //let url = 'ws://10.11.5.6:8000/ws/pingpong/'+ id + "/"; 
+    let url = `ws://${host}:8000/ws/pingpong/`+ id + "/";
     url += "?token=" + token;
     console.log("url is : ", url);
     ws = new WebSocket(url);
@@ -32,6 +31,7 @@ export async function setWebsocket(id) {
             let role = data.role;
             roleDisplay.textContent = `Your Role: ${role}`;
             Display.textContent = `You are: ${data.playerName}`;
+            console.log("message received is : ", data);
             initializeElements(data);
         }
 
@@ -43,7 +43,7 @@ export async function setWebsocket(id) {
         }
         else if (data.type == 'update') {
             await setState(data);
-            renderLoop()
+            moveLoop()
         }
         else if (data.type == 'goal') {
             setGoal(data);     

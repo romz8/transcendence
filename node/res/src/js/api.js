@@ -4,7 +4,7 @@ const DN = "localhost";
 /********************************* GAME API INTERACTIONS *******************************************************/
 export async function getPlayers(){
     try {
-        let resp = await fetchWithAuth(`http://${DN}:8001/game/players/`);
+        let resp = await fetchWithAuth(`http://${DN}:8000/game/players/`);
         if (resp.ok){
             let json = await resp.json();
             return json;
@@ -23,7 +23,7 @@ export async function getPlayers(){
 
 export async function getMatch(){
     try{
-        let resp = await fetchWithAuth(`http://${DN}:8001/game/allmatch/`);
+        let resp = await fetchWithAuth(`http://${DN}:8000/game/allmatch/`);
         if (resp.ok){
             let json = await resp.json();
             return json;
@@ -52,7 +52,7 @@ export async function postPlayer(formData){
             headers: {'Content-Type':'application/json'},
             body: postData,
         };
-        let resp = await fetchWithAuth(`http://${DN}:8001/game/players/`, payload);
+        let resp = await fetchWithAuth(`http://${DN}:8000/game/players/`, payload);
         return resp;
         
     }
@@ -65,7 +65,7 @@ export async function postPlayer(formData){
 export async function getWaitRoom(){
     try{
 
-        let resp = await fetchWithAuth(`http://${DN}:8001/game/waitingroom/`);
+        let resp = await fetchWithAuth(`http://${DN}:8000/game/waitingroom/`);
         if (resp.ok){
             let json = await resp.json();
             console.log("from json ", json);
@@ -90,7 +90,7 @@ export async function getWaitRoom(){
 export async function getListWaitRoom(){
     try{
 
-        let resp = await fetchWithAuth(`http://${DN}:8001/game/waitingroom/listopen/`,{cache:'no-cache'});
+        let resp = await fetchWithAuth(`http://${DN}:8000/game/waitingroom/listopen/`,{cache:'no-cache'});
         if (resp.ok){
             let json = await resp.json();
             console.log("from json ", json);
@@ -113,7 +113,7 @@ export async function getListWaitRoom(){
 export async function createWaitRoom(){
     try{
         let payload = {'method':'POST', headers: {'Content-Type':'application/json'}};
-        let resp = await fetchWithAuth(`http://${DN}:8001/game/waitingroom/create/`, payload);
+        let resp = await fetchWithAuth(`http://${DN}:8000/game/waitingroom/create/`, payload);
         if (resp.ok){
             let json = await resp.json();
             return json;
@@ -136,7 +136,7 @@ export async function createWaitRoom(){
 export async function joinWaitRoom(roomId){
     try{
         let payload = {"method":"PUT", headers:{"Content-Type":"application/json"}};
-        let endpoint = `http://${DN}:8001/game/waitingroom/join/${roomId}/`;
+        let endpoint = `http://${DN}:8000/game/waitingroom/join/${roomId}/`;
         let resp = await fetchWithAuth(endpoint, payload);
         console.log("resp is : ", resp);
         if (resp.ok){
@@ -163,7 +163,7 @@ export async function deleteWaitRoom(){
         if (!roomId){
             return null;
         }
-        let endpoint = `http://${DN}:8001/game/waitingroom/delete/${roomId}/`;
+        let endpoint = `http://${DN}:8000/game/waitingroom/delete/${roomId}/`;
         console.log("delete path is ", endpoint);
         let resp = await fetchWithAuth(endpoint, payload);
         if (resp.ok){
@@ -187,7 +187,7 @@ export async function deleteWaitRoom(){
 export async function getListTournament(){
     try{
 
-        let resp = await fetchWithAuth(`http://${DN}:8001/game/tournament/openlist/`,{cache:'no-cache'});
+        let resp = await fetchWithAuth(`http://${DN}:8000/game/tournament/openlist/`,{cache:'no-cache'});
         if (resp.ok){
             let json = await resp.json();
             console.log("from json ", json);
@@ -216,7 +216,7 @@ export async function createTournament(size, n_humans){
         let payload = {'method':'POST', 
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({size, n_humans})}; 
-        let resp = await fetchWithAuth(`http://${DN}:8001/game/tournament/create/`, payload);
+        let resp = await fetchWithAuth(`http://${DN}:8000/game/tournament/create/`, payload);
         if (resp.ok){
             let json = await resp.json();
             return json;
@@ -240,7 +240,7 @@ export async function createTournament(size, n_humans){
 export async function joinTournament(Id){
     try{
         let payload = {"method":"POST", headers:{"Content-Type":"application/json"}};
-        let endpoint = `http://${DN}:8001/game/tournament/join/${Id}/`;
+        let endpoint = `http://${DN}:8000/game/tournament/join/${Id}/`;
         let resp = await fetchWithAuth(endpoint, payload);
         console.log("resp is : ", resp);
         if (resp.ok){
@@ -262,7 +262,8 @@ export async function joinTournament(Id){
 export async function getTournament(Id){
     try{
 
-        let resp = await fetchWithAuth(`http://${DN}:8001/game/tournament/${Id}`);
+        let resp = await fetchWithAuth(`http://${DN}:8000/game/tournament/${Id}`);
+        console.log(resp.status)
         if (resp.ok){
             let json = await resp.json();
             console.log("from json ", json);
@@ -285,7 +286,7 @@ export async function getTournament(Id){
 
 export async function getPlayerListTournament(Id) {
     try {
-        const response = await fetchWithAuth(`http://${DN}:8001/game/tournament/${Id}/participants/`);
+        const response = await fetchWithAuth(`http://${DN}:8000/game/tournament/${Id}/participants/`);
         const players = await response.json();
         console.log("in list playe api call reuslt is : ", players);
         return players;
@@ -297,7 +298,7 @@ export async function getPlayerListTournament(Id) {
 
 export async function getMatchesListTournament(Id) {
     try {
-        const response = await fetchWithAuth(`http://${DN}:8001/game/tournament/${Id}/matches/`);
+        const response = await fetchWithAuth(`http://${DN}:8000/game/tournament/${Id}/matches/`);
         const players = await response.json();
         console.log("in list playe api call reuslt is : ", players);
         return players;
@@ -309,7 +310,7 @@ export async function getMatchesListTournament(Id) {
 
 export async function getPlayerTournnamentActive(id){
     try {
-        const response = await fetchWithAuth(`http://${DN}:8001/game/tournament/${id}/is_active/`);
+        const response = await fetchWithAuth(`http://${DN}:8000/game/tournament/${id}/is_active/`);
         const players = await response.json();
         console.log("in list playe api call reuslt is : ", players);
         return players;
@@ -328,7 +329,7 @@ export async function deleteTournament(){
         if (!tournamentId){
             return null;
         }
-        let endpoint = `http://${DN}:8001/game/tournament/delete/${tournamentId}/`;
+        let endpoint = `http://${DN}:8000/game/tournament/delete/${tournamentId}/`;
         console.log("delete path is ", endpoint);
         let resp = await fetchWithAuth(endpoint, payload);
         if (resp.ok){
@@ -350,7 +351,7 @@ export async function deleteTournament(){
 export async function putMatchTest(id){
     try {
         let payload = {"method":"PATCH", headers:{"Content-Type":"application/json"}};
-        const response = await fetchWithAuth(`http://${DN}:8001/game/tournament/test/match/${id}/`, payload);
+        const response = await fetchWithAuth(`http://${DN}:8000/game/tournament/test/match/${id}/`, payload);
         const resp = await response.json();
         console.log("in list playe api call reuslt is : ", resp);
         return resp;
@@ -394,7 +395,7 @@ async function refreshToken(){
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({refresh})
     };
-    const resp = await fetch(`http://${DN}:8001/apiAuth/refreshtoken/`, options);
+    const resp = await fetch(`http://${DN}:8000/apiAuth/refreshtoken/`, options);
     if (resp.ok){
         const newtokens = await resp.json();
         localStorage.setItem("access",newtokens.access);
@@ -438,7 +439,7 @@ async function fetchWithAuth(url, options = {}){
 export async function getAuth(){
     try {
         //let token = getAccessToken();
-        let resp = await fetchWithAuth(`http://${DN}:8001/apiAuth/checklogin/`) 
+        let resp = await fetchWithAuth(`http://${DN}:8080/info_user/`) 
         //{headers: {'Authorization':`Bearer ${token}`}});
         if (resp.ok){
             let json = await resp.json();
@@ -453,68 +454,6 @@ export async function getAuth(){
     }
     catch (error){
         console.log("Error fetching authentication", error);
-        return [];
-    }
-}
-
-export async function logout(){
-    try {
-        let refresh = getRefreshToken();
-
-        let payload = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({refresh})
-        };
-
-        let resp = await fetchWithAuth(`http://${DN}:8001/apiAuth/logout/`, payload);
-
-        console.log("Response in logout is:", resp);
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-        if (resp.ok){
-            let json = await resp.json();
-            console.log("log API good, abot to return :" + JSON.stringify(json));
-            return json;
-        }
-        else {
-            console.error('Error implementing logout', resp.statusText);
-            return null;
-        }
-
-            
-    }
-    catch (error){
-        console.log("Error fetching logout api", error);
-        return null;
-    }
-}
-
-
-export async function login(username, password){
-    try 
-    {
-        const payload = {method: 'POST', 
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({username, password}),
-        };
-        let resp = await fetch(`http://${DN}:8001/apiAuth/login/`, payload);
-        if (resp.ok){
-            let json = await resp.json();
-            console.log("WE ARE IN LOGIN SUCESSFULLY API");
-            localStorage.setItem("refresh", json.refresh);
-            localStorage.setItem("access", json.access);
-            return json;
-        }
-        else {
-            console.error('Error implementing login', resp.statusText);
-            return [];
-        }
-    }
-    catch(error){
-        console.log("error on post request in login api : " + error);
         return [];
     }
 }

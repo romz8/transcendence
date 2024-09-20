@@ -1,26 +1,33 @@
-import home from './pages/home.js';
-import profile from './pages/profile.js';
-import login from './pages/login.js';
-import singup from './pages/singup.js';
 import gameai from './pages/gameAI.js';
 import waitroom from './pages/waitroom.js';
-import { is_authenticated, getCookie } from './login';
 import renderGame from './pages/gameRem.js'
+import tournamentRoom from './tournament/tournamentRoom.js';
+import tournament from './tournament/tournament.js';
+import home from './pages/home.js';
+import profile from './pages/profile.js';
+import loading from './pages/loading.js';
+import signup from './pages/signup.js';
+import matchHistory from './pages/match_history.js';
+import { is_authenticated, getCookie } from './user_login.js';
 //import about from './pages/about.js';
 //import settings from './pages/settings.js';
 
 'use strict';
 
 const routes = {
-	'/': { title: 'Home', render: home},
-	'/profile': { title: 'Profile', render: profile},
-	'/login': { title: 'Login', render: login},
-	'/signup': { title: 'Signup', render: singup},
-	'/gamebot': { title: 'You will lose', render: gameai},
-	'/waitroom': { title: 'HAVE FUN', render: waitroom},
-	'/waitroom/create': { title: 'HAVE FUN', render: waitroom},
-	'/waitroom/join': { title: 'HAVE FUN', render: waitroom},
-	'/game/:id': { title: "Game", render: renderGame },
+	'/': { title: 'Home', render: home, auth: true},
+	'/profile': { title: 'Profile', render: profile, auth: true},
+	'/signup': { title: 'Signup', render: signup, auth: false},
+	'/gamebot': { title: 'You will lose', render: gameai, auth: true},
+	'/waitroom': { title: 'HAVE FUN', render: waitroom, auth: true},
+	'/waitroom/create': { title: 'HAVE FUN', render: waitroom, auth: true},
+	'/waitroom/join': { title: 'HAVE FUN', render: waitroom, auth: true},
+	'/game/:id': { title: "Game", render: renderGame, auth: true},
+	'/tournament': { title: "Game", render: tournamentRoom, auth: true},
+	'/tournament/create': { title: "Game", render: tournamentRoom, auth: true},
+	'/tournament/join': { title: "Game", render: tournamentRoom, auth: true},
+	'/tournament/join': { title: "Game", render: tournamentRoom, auth: true},
+	"/tournament/:id": { title: "Game", render: tournament, auth: true},
 };
 
 /* Select main container where different pages will render */
@@ -87,33 +94,27 @@ function routeSearch(path){
 
 /* Renders page as SPA using location.pathname */
 export async function	router() {
-	const isAuth =  await is_authenticated(getCookie("token"));
-	const	windowPathname = window.location.pathname;
-	const {route, param} = routeSearch(windowPathname);
-
-	//updateActiveElementNavbar();
-	if (route) {
-		if (isAuth) {
-			document.title = route.title;
-			console.log(param)
-			if (param)
-				app.innerHTML = route.render(param);
-			else
-				app.innerHTML = route.render();
-		}
-		else {
-			if (route.title == "Login")
-				app.innerHTML = route.render();
-			else if (route.title == "Signup")
-				app.innerHTML = route.render();
-			else
+	app.innerHTML = loading();
+	setTimeout(async () => {
+		const isAuth =  await is_authenticated(getCookie("token"));
+		const windowPathname = window.location.pathname;
+		let view = routes[windowPathname];
+		//updateActiveElementNavbar();
+		if (view) {
+			if (isAuth === view.auth) {
+				document.title = `TS | ${view.title}`;
+				app.innerHTML = view.render();
+			}
+			else {
 				app.innerHTML = '<home-out></home-out>';
+			}
+			
+		} else {
+			history.replaceState('', '', '/');
+			router();
 		}
-		
-	} else {
-		history.replaceState('', '', '/');
-		router();
-	}
+	}, 250);
+	
 };
 
 

@@ -26,16 +26,16 @@ services:
       - pongnet
     depends_on:
       - postgres
-  django:
-    container_name: django
-    build: ./django
-    command: python manage.py runserver 0.0.0.0:8001 #is this necessaryy ?
+  tournament:
+    container_name: tournament
+    build: ./tournament
+    command: python manage.py runserver 0.0.0.0:8000 #is this necessaryy ?
     volumes:
-      - ./django/pong_back:/app
+      - ./tournament/pong_back:/app
     env_file:
       - .env
     ports:
-      - "8001:8001"
+      - "8000:8000"
     networks:
       - pongnet
     depends_on:

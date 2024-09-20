@@ -13,6 +13,7 @@ import random
 
 from django.contrib.auth import authenticate
 from app.utilsApi42 import post42, get42
+from django.contrib.auth.models import AnonymousUser
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view
@@ -94,11 +95,12 @@ def insertLogin(tokken):
             value = download_and_save_image(user, body.get('image').get('link'))
 
             if value["status"] == 'error':
-                return False
+                return AnonymousUser()
             user.save()
-        return True
+            return user
+        return Users.objects.get(intra_id=body.get('id'))
     else:
-        return False
+        return AnonymousUser()
 
 @csrf_exempt
 def loginIntra(request):
@@ -120,13 +122,16 @@ def loginIntra(request):
             if response.status_code != 200:
                 return JsonResponse({'error': 'Bad request'}, status=response.status_code)
             resjson = response.json()
+            user = insertLogin(str(resjson.get('access_token')))
+            if (user == AnonymousUser):
+                return({'error': 'Error with insert Login'}, 400)
+            refresh = RefreshToken.for_user(user)
             formatResponse = {
-                'refresh': str(resjson.get('refresh_token')),
-                'access': str(resjson.get('access_token')),
-                'refresh_exp': str(resjson.get('expires_in') + 86400),
-                'token_exp': str(resjson.get('expires_in')),
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'refresh_exp': str(refresh["exp"] - datetime.now().timestamp()),
+                'token_exp': str(refresh.access_token["exp"] - datetime.now().timestamp()),
             }
-            insertLogin(str(resjson.get('access_token')))
             return JsonResponse(formatResponse)
         except Exception as e:
             logger.info(str(e))

@@ -61,7 +61,7 @@ async function renderLobby(){
           </div>
           <div class="modal-body">
             <ul class="list-group" id="roomList">
-                ${availableRooms.map(room => `<li class="list-group-item room-item" data-room-id="${room.genId}">ROOM : ${room.genId}</li>`).join('')}
+                ${availableRooms.map(room => /*html*/`<li class="list-group-item room-item" data-room-id="${room.genId}">ROOM : ${room.genId}</li>`).join('')}
             </ul>
           </div>
           <div class="modal-footer">
