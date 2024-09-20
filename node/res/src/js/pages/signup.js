@@ -1,3 +1,4 @@
+import { router } from "../routes";
 
 class Signup extends HTMLElement {
 	constructor() {
@@ -13,20 +14,20 @@ class Signup extends HTMLElement {
 					<div class="mb-3 d-flex justify-content-between gap-3">
 						<div class="flex-grow-1">
 							<label for="input-name" class="form-label">Name</label>
-							<input type="text" class="form-control" id="input-name" aria-describedby="nameHelp" placeholder="Enter your name" minlength="2" maxlength="16" required>
+							<input type="text" class="form-control" id="input-name" name="name" aria-describedby="nameHelp" placeholder="Enter your name" minlength="2" maxlength="16" required>
 						</div>
 						<div class="flex-grow-1">
 							<label for="input-last-name" class="form-label">Last name</label>
-							<input type="text" class="form-control" id="input-last-name" aria-describedby="nameHelp" placeholder="Enter your last name" minlength="2" maxlength="16" required>
+							<input type="text" class="form-control" id="input-last-name" name="lastname" aria-describedby="nameHelp" placeholder="Enter your last name" minlength="2" maxlength="16" required>
 						</div>
 					</div>
 					<div class="mb-3">
 						<label for="input-username" class="form-label">Username</label>
-						<input type="text" class="form-control" id="input-username" aria-describedby="usernameHelp" placeholder="Enter your username" minlength="3" maxlength="16" required>
+						<input type="text" class="form-control" id="input-username" name="username" aria-describedby="usernameHelp" placeholder="Enter your username" minlength="3" maxlength="16" required>
 					</div>
 					<div class="mb-3 position-relative">
 						<label for="input-pass" class="form-label">Password</label>
-						<input type="text" class="form-control" id="input-pass" placeholder="Password" required>
+						<input type="password" class="form-control" id="input-pass" name="password" placeholder="Password" required>
 						<div class="password-checklist">
 							<p class="checklist-title">Password should be</h3>
 							<ul class="checklist">
@@ -40,7 +41,7 @@ class Signup extends HTMLElement {
 					</div>
 					<div class="mb-3">
 						<label for="input-pass-rep" class="form-label">Confirm password</label>
-						<input type="password" class="form-control" id="input-pass-rep" placeholder="Password" required>
+						<input type="password" class="form-control" id="input-pass-rep" name="passwordrep" placeholder="Password" required>
 					</div>
 					<button disabled type="submit" id="signup-submit-btn" class="btn btn-outline-cream-fill btn-general w-100 mb-3">Sign up</button>
 				</form>
@@ -48,13 +49,13 @@ class Signup extends HTMLElement {
 		`;
 	}
 	connectedCallback() {
-		const form = document.getElementById('signup-form');
+		const signupForm = document.getElementById('signup-form');
 		
 		/*
 			Changes disabled state of submit button depending on form validity
 		*/
-		form.addEventListener('input', () => {
-    		document.getElementById('signup-submit-btn').disabled = !form.checkValidity();
+		signupForm.addEventListener('input', () => {
+    		document.getElementById('signup-submit-btn').disabled = !signupForm.checkValidity();
 		});
 		
 		/*
@@ -62,29 +63,34 @@ class Signup extends HTMLElement {
 			makes a requests to the DB
 		*/
 		const	inputUsername = document.getElementById('input-username');
-		const	dbUsername = ['ferri17','adria1', 'diego2', 'romain3'];
-		let	alertUsername = false;
-		inputUsername.addEventListener('input', () => {
-			let	foundIdentic = false;
-			for (let i = 0; i < dbUsername.length; i++) {
-				if (inputUsername.value === dbUsername.at(i)) {
-					if (!alertUsername) {
+		inputUsername.addEventListener('input', async () => {
+			try {
+				let	userInfo = { username: `${inputUsername.value}` };
+
+				const response = await fetch("http://localhost:8080/usernameCheck/", {
+					method: "POST",
+					body: JSON.stringify(userInfo),
+				});
+				if (response.ok) {
+					const	responseJson = await response.json();
+					if (responseJson.exist == 'True') {
 						inputUsername.setCustomValidity('invalid');
 						const alertMssg = document.createElement('p');
 						alertMssg.textContent = 'Username already in use';
 						alertMssg.classList.add('alert-message', 'alert-username');
 						inputUsername.insertAdjacentElement('afterend', alertMssg);
-						alertUsername = true;
-						foundIdentic = true;
 					}
-					break ;
+					else {
+						document.querySelector('.alert-message.alert-username')?.remove();
+						inputUsername.setCustomValidity('');
+					}
+
 				}
-			}
-			if (!foundIdentic) {
-				alertUsername = false;
-				document.querySelector('.alert-message.alert-username')?.remove();
-				inputUsername.setCustomValidity('');
-			}
+				else
+					alert(`Unexpected error`);
+			  } catch (e) {
+				alert(`Unexpected error:${e}`);
+			  }
 		
 		});
 
@@ -148,7 +154,27 @@ class Signup extends HTMLElement {
 				inputPassRep.setCustomValidity('');
 			}
 		});
-	};	
+		const signupButtonBtn = document.getElementById('signup-submit-btn');
+		signupButtonBtn.addEventListener('click', async (e) => {
+			e.preventDefault();
+			const formData = new FormData(signupForm);
+			try {
+				const response = await fetch("http://localhost:8080/signUp/", {
+					method: "POST",
+					body: formData,
+				});
+				if (response.ok) {
+					const	homeIcon = document.getElementById('home-icon');
+					homeIcon.click();
+				}
+				else
+					alert(`Unexpected error`);
+			  } catch (e) {
+				alert(`Unexpected error:${e}`);
+			  }
+		});
+	};
+
 }
 
 customElements.define('sign-up', Signup);

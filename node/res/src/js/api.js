@@ -1,4 +1,4 @@
-import { getCookie } from "./login";
+import { getCookie } from "./user_login";
 
 const DN = "localhost";
 /********************************* GAME API INTERACTIONS *******************************************************/

@@ -23,7 +23,7 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-@csrf_exempt
+@api_view(['GET'])
 def uidenv(request):
     response = {'response': 'GET'}
     response['UID'] = os.environ['UID']
@@ -42,19 +42,6 @@ def checkLogin(request):
         user_dict = model_to_dict(user)
         json_data = json.dumps(user_dict)
         response['userdata'] = json_data
-
-@csrf_exempt
-def verifyUsername(request):
-    if request.method == "POST":
-        body = json.loads(request.body.decode('utf-8'))
-        name = body.get('username')
-        if not name:
-            return JsonResponse({'error': 'Missing arguments'}, status=400)
-        exist = Users.objects.filter(username=name).exists()
-        return JsonResponse({'status': exist})
-
-    return JsonResponse({'error': 'Wrong method'}, status=405)
-
 
 import requests
 from io import BytesIO
@@ -102,108 +89,104 @@ def insertLogin(tokken):
     else:
         return AnonymousUser()
 
-@csrf_exempt
+@api_view(['POST'])
 def loginIntra(request):
     body = json.loads(request.body.decode('utf-8'))
-    if request.method == "POST":
-        if (not body.get('code') or not body.get('state')):
-            return JsonResponse({'error': 'Missing state or code'}, status=400)
-        response = {'response': 'POST'}
-        params = {
-            'grant_type': 'authorization_code',
-            'client_id': os.environ['UID'],
-            'client_secret': os.environ['SECRET'],
-            'code': body.get('code'),
-            'redirect_uri': "http://localhost:3000/",
-            'state': body.get('state')
-        }
-        try:
-            response = post42("/oauth/token", params)
-            if response.status_code != 200:
-                return JsonResponse({'error': 'Bad request'}, status=response.status_code)
-            resjson = response.json()
-            user = insertLogin(str(resjson.get('access_token')))
-            if (user == AnonymousUser):
-                return({'error': 'Error with insert Login'}, 400)
-            refresh = RefreshToken.for_user(user)
-            formatResponse = {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'refresh_exp': str(refresh["exp"] - datetime.now().timestamp()),
-                'token_exp': str(refresh.access_token["exp"] - datetime.now().timestamp()),
-            }
-            return JsonResponse(formatResponse)
-        except Exception as e:
-            logger.info(str(e))
-            return JsonResponse({'error': str(e)}, status=500)
-    return JsonResponse({'error': 'Wrong method'}, status=405)
-
-@csrf_exempt
-def refreshToken(request):
-    if request.method == "POST":
-        body = json.loads(request.body.decode('utf-8'))
-        if (not body.get('refresh_token')):
-            return JsonResponse({'error': 'Missing refresh token'}, status=400)
-
-        try:
-            old_refresh = RefreshToken(body.get('refresh_token'))
-            return JsonResponse({
-                'refresh': str(old_refresh),
-                'refresh_exp': str(old_refresh["exp"] - datetime.now().timestamp()),
-                'access': str(old_refresh.access_token),
-                'token_exp': str(old_refresh.access_token['exp'] - datetime.now().timestamp()),
-            })
-        except:
-            pass
-        
-        params = {
-            'grant_type': 'refresh_token',
-            'client_id': os.environ['UID'],
-            'refresh_token': body.get('refresh_token')
-        }
+    if (not body.get('code') or not body.get('state')):
+        return JsonResponse({'error': 'Missing state or code'}, status=400)
+    response = {'response': 'POST'}
+    params = {
+        'grant_type': 'authorization_code',
+        'client_id': os.environ['UID'],
+        'client_secret': os.environ['SECRET'],
+        'code': body.get('code'),
+        'redirect_uri': "http://localhost:3000/",
+        'state': body.get('state')
+    }
+    try:
         response = post42("/oauth/token", params)
         if response.status_code != 200:
             return JsonResponse({'error': 'Bad request'}, status=response.status_code)
-        respjson = response.json()
-        if respjson.get('access_token'):
-            formatResponse = {
-                'refresh': str(respjson.get('refresh_token')),
-                'access': str(respjson.get('access_token')),
-                'refresh_exp': str(respjson.get('expires_in') + 86400),
-                'token_exp': str(respjson.get('expires_in')),
-            }
-            return JsonResponse(formatResponse)
-    else:
-        return JsonResponse({'error': 'Bad Method'}, status=405)
+        resjson = response.json()
+        user = insertLogin(str(resjson.get('access_token')))
+        if (user == AnonymousUser):
+            return({'error': 'Error with insert Login'}, 400)
+        refresh = RefreshToken.for_user(user)
+        formatResponse = {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'refresh_exp': str(refresh["exp"] - datetime.now().timestamp()),
+            'token_exp': str(refresh.access_token["exp"] - datetime.now().timestamp()),
+        }
+        return JsonResponse(formatResponse)
+    except Exception as e:
+        logger.info(str(e))
+        return JsonResponse({'error': str(e)}, status=500)
 
-def checkArgs(name, alias, first, last, pswd):
-    if not name or not first or not alias or not last or not pswd:
+@api_view(['POST'])
+def refreshToken(request):
+    body = json.loads(request.body.decode('utf-8'))
+    if (not body.get('refresh_token')):
+        return JsonResponse({'error': 'Missing refresh token'}, status=400)
+
+    try:
+        old_refresh = RefreshToken(body.get('refresh_token'))
+        return JsonResponse({
+            'refresh': str(old_refresh),
+            'refresh_exp': str(old_refresh["exp"] - datetime.now().timestamp()),
+            'access': str(old_refresh.access_token),
+            'token_exp': str(old_refresh.access_token['exp'] - datetime.now().timestamp()),
+        })
+    except:
+        pass
+    
+    params = {
+        'grant_type': 'refresh_token',
+        'client_id': os.environ['UID'],
+        'refresh_token': body.get('refresh_token')
+    }
+    response = post42("/oauth/token", params)
+    if response.status_code != 200:
+        return JsonResponse({'error': 'Bad request'}, status=response.status_code)
+    respjson = response.json()
+    if respjson.get('access_token'):
+        formatResponse = {
+            'refresh': str(respjson.get('refresh_token')),
+            'access': str(respjson.get('access_token')),
+            'refresh_exp': str(respjson.get('expires_in') + 86400),
+            'token_exp': str(respjson.get('expires_in')),
+        }
+        return JsonResponse(formatResponse)
+
+def checkArgs(name, first, last, pswd, reppswd):
+    if not name or not first or not last or not pswd or not reppswd:
         return False
-    if len(name) < 2 or len(first) < 2 or len(last) < 2 or len(alias) < 2:
+    if len(name) < 3 or len(first) < 2 or len(last) < 2:
         return False
     if not re.match(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&_=+-]).{8,16}$", pswd):
-        logger.info("AQUI")
+        return False
+    if not pswd == reppswd:
         return False
     return True
 
 @api_view(['POST'])
-def singUp(request):
+def signUp(request):
     try:
-        body = json.loads(request.body.decode('utf-8'))
-        name = body.get('username')
-        alias = body.get('alias')
-        first = body.get('firstname')
-        last = body.get('lastname')
-        pswd = body.get('password')
-        logger.info(f"ALIAS: {alias} NAME: {name} first: {first} last: {last} pswd: {pswd}")
-        if not checkArgs(name, alias, first, last, pswd):
+        username = request.POST['username']
+        first = request.POST['name']
+        last = request.POST['lastname']
+        pswd = request.POST['password']
+        reppswd = request.POST['passwordrep']
+        logger.info(f"NAME: {username} first: {first} last: {last} pswd: {pswd} reppswd: {reppswd}")
+        if not checkArgs(username, first, last, pswd, reppswd):
             return JsonResponse({'error': 'Bad arguments'}, status=400)
-        exist = Users.objects.filter(username=name).exists()
+        exist = Users.objects.filter(username=username).exists()
         response = {'response': 'POST'}
         if exist:
             response["exist"] = True
+            return JsonResponse(response, status=400)
         else:
-            user = Users(campus="Campus of life", username=name, alias=name,
+            user = Users(campus="Campus of life", username=username, alias=username,
                          first_name=first, last_name=last, intra=False)
             user.set_password(pswd)
             user.save()
@@ -212,21 +195,22 @@ def singUp(request):
             imgcontentpath = f"{str(Path(__file__).resolve().parent.parent)}/media/def/{animal}"
             with open(imgcontentpath, 'rb') as file:
                 content = file.read()
-            img = f"{name}{random_mesh}.jpeg"
+            img = f"{username}{random_mesh}.jpeg"
             user.img.save(img, ContentFile(content), save=True)
             userStatus = UserStatus.objects.create(users=user, is_online=False)
             userStatus.save()
             response["exist"] = False
         return JsonResponse(response)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        logger.info(str(e))
+        return JsonResponse({'error': str(e)}, status=400)
 
 @api_view(['POST'])
 def loginWeb(request):
     try:
-        body = json.loads(request.body.decode('utf-8'))
-        username = body.get('username')
-        password = body.get('password')
+        # body = json.loads(request.body.decode('utf-8'))
+        username = request.POST['username']
+        password = request.POST['password']
 
         if not username or not password:
             return JsonResponse({'error': 'Missing arguments'}, status=400)
@@ -245,10 +229,17 @@ def loginWeb(request):
             return JsonResponse({'error': 'Invalid credentials'})
     except Exception as e:
         logger.info(str(e))
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=400)
 
-
-
+@api_view(['POST'])
+def username_check(request):
+    try:
+        body = json.loads(request.body.decode('utf-8'))
+        username = body['username']
+        exist = Users.objects.filter(username=username).exists()
+        return JsonResponse({'exist': str(exist)})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
 def verify_ext(img, ext):
     if ext != "jpeg" and ext != "png" and ext != "jpg":

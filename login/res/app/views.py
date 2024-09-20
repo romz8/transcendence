@@ -2,22 +2,25 @@ from django.http import JsonResponse
 
 import logging
 from app.validator import token_required
-from app.validator import introspect_token
 
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.exceptions import AuthenticationFailed
 from app.models import Users
 
 import os
-import json
 from django.db import IntegrityError
-from django.db.models import Q, F
 from rest_framework.decorators import api_view
+
+from PIL import Image
+from pathlib import Path
+from django.core.files.base import ContentFile
+import random
+from django.contrib.auth.models import AnonymousUser
 
 logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
 def verify_token(request):
+    if request.user == AnonymousUser():
+        return JsonResponse({'error': 'missing token'}, status=498)
     username = request.user.username
     response = {"user": username}
     logger.info("****************************************************************************")
@@ -32,6 +35,8 @@ def protected_view(request):
 
 @api_view(['GET'])
 def infoUser(request):
+    if request.user == AnonymousUser():
+        return JsonResponse({'error': 'missing token'}, status=498)
     user = request.user
 
     user_json = {
@@ -46,19 +51,73 @@ def infoUser(request):
     return JsonResponse(user_json)
 
 
+def verify_ext(img, ext):
+    if ext != "jpeg" and ext != "png" and ext != "jpg":
+        return False
+
+    try:
+        image = Image.open(img)
+        image.verify()
+    except (IOError, SyntaxError) as e:
+        return False
+    return True
+
+import string
+
+def img_name_gen():
+    caracteres = string.ascii_letters + string.digits
+    cadena = ''.join(random.choice(caracteres) for _ in range(8))
+    return (cadena)
+
 @api_view(['POST'])
 def updateInfoUser(request):
-    try:
-        user = request.user
-        body = json.loads(request.body.decode('utf-8'))
-        alias = body.get('alias')
-        if alias:
-            user.alias = alias
-            user.save()
-            return JsonResponse({'success': 'info updated'})
-    except IntegrityError as e:
-        logger.info("Duplicate alias!")
-        return JsonResponse({'error': 'duplicate alias'})
-    except Exception as e:
-        logger.info(str(e))
-        return JsonResponse({'error': str(e)}, status=500)
+    if request.user == AnonymousUser():
+        return JsonResponse({'error': 'missing token'}, status=498)
+    users = request.user
+    if request.POST['alias'] or request.FILES.get('imagefile'):
+        if request.POST['alias']:
+            try:
+                users.alias = request.POST['alias']
+                users.save()
+            except IntegrityError as e:
+                logger.info("Duplicate alias!")
+                return JsonResponse({'error': 'duplicate alias'}, status=400)
+            except Exception as e:
+                logger.info(str(e))
+                return JsonResponse({'error': str(e)}, status=400)
+        if request.FILES.get('imagefile'):
+            img = request.FILES['imagefile']
+            
+            max_size_mb = 2
+            max_size_bytes = max_size_mb * 1024 * 1024
+            if img.size > max_size_bytes:
+                return JsonResponse({"error": "File too Big"}, status=400)
+
+            ext = img.name.split('.')[-1]
+            if not verify_ext(img, ext):
+                return JsonResponse({"error": "Bad file type"}, status=400)
+
+            random_mesh = img_name_gen()
+            new_filename = f"{users.username}{random_mesh}.{ext}"
+            old_img = users.img.path if users.img else None        
+            img.seek(0)
+            users.img.save(new_filename, ContentFile(img.read()), save=True)
+            if old_img:
+                if os.path.isfile(old_img):
+                    os.remove(old_img)
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'error': 'missing arguments'}, status=400)
+    # try:
+    #     user = request.user
+    #     body = json.loads(request.body.decode('utf-8'))
+    #     alias = body.get('alias')
+    #     if alias:
+    #         user.alias = alias
+    #         user.save()
+    #         return JsonResponse({'success': 'info updated'})
+    # except IntegrityError as e:
+    #     logger.info("Duplicate alias!")
+    #     return JsonResponse({'error': 'duplicate alias'})
+    # except Exception as e:
+    #     logger.info(str(e))
+    #     return JsonResponse({'error': str(e)}, status=500)

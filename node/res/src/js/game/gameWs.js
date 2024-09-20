@@ -2,7 +2,7 @@ import {initializeElements, startCountdown} from '../pages/gameRem.js'
 import {displayLeave, displayForfeitMessage, displayOverMessage} from './gameDisplay.js'
 import {statusDisplay, roleDisplay, Display} from "../pages/gameRem.js";
 import {setGoal, setState, moveLoop} from "../pages/gameRem.js";
-import { getCookie } from '../login.js';
+import { getCookie } from '../user_login.js';
 
 export let ws;
 export let updateReceived;

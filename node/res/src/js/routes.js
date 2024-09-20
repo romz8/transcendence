@@ -27,6 +27,7 @@ const routes = {
 	'/tournament/create': { title: "Game", render: tournamentRoom, auth: true},
 	'/tournament/join': { title: "Game", render: tournamentRoom, auth: true},
 	'/tournament/join': { title: "Game", render: tournamentRoom, auth: true},
+	'/match-history': { title: 'Match History', render: matchHistory, auth: true},
 	"/tournament/:id": { title: "Game", render: tournament, auth: true},
 };
 
