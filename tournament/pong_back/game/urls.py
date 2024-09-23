@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path("players/", views.player_list, name='player_list'),
     path("allmatch/", views.MatchList.as_view(), name='match_list'),
     path("waitingroom/", views.get_waitroom, name='getWaitroom'),
     path("waitingroom/listopen/", views.ListWaitRoom.as_view(), name='getWaitroom'),
@@ -16,5 +17,6 @@ urlpatterns = [
     path("tournament/<int:pk>/matches/", views.TournamentMatchList.as_view(), name="matchesTournament"),
     path("tournament/<int:pk>/is_active/", views.UserMatchStatusView.as_view(), name="matchesTournament"),
     path('participants/eliminate/', views.UpdateParticipantStatus.as_view(), name='update-participant-status'),
-    path('tournament/test/match/<int:id>/', views.RandomMatch.as_view(), name='radnomizedTest'),
+    path('tournament/test/match/<int:id>/', views.RandomMatch.as_view(), name='randomizedTest'),
+    path('tournament/leave/<int:tournament_id>/', views.QuitTournament.as_view(), name='quitTournament'),
 ]

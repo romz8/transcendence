@@ -2,9 +2,11 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from .eth import set_tournament_result, get_tournament_results
+from django.views.decorators.csrf import csrf_exempt
 import logging
 
 # View for the landing page and form submission
+@csrf_exempt
 def tournament_landing_page(request):
     if request.method == 'POST':
         # Handle the form submission (POST request)

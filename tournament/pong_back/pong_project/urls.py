@@ -20,5 +20,6 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("game/", include("game.urls")),
-    # path('blockchain/', include('blockchain.urls')),
+    path("apiAuth/", include("apiAuth.urls")),
+    path('blockchain/', include('blockchain.urls')),
 ]

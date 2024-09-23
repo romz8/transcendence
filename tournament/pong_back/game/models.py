@@ -1,13 +1,15 @@
 from django.db import models, transaction
+from django.contrib.auth.models import AbstractUser
 import uuid
 from django.utils import timezone
 from datetime import timedelta
 from django.core.exceptions import ValidationError
 import logging
+from .tournament import TournamentSerie, MatchNode
 
 logger = logging.getLogger(__name__)
+# Create your models here.
 
-from django.contrib.auth.models import AbstractUser
 
 class Users(AbstractUser):
     alias = models.CharField(max_length=50, unique=True,blank=False, null=False)
@@ -20,35 +22,17 @@ class Users(AbstractUser):
     class Meta:
         managed = True
         db_table = 'users'
-
-class UserStatus(models.Model):
-    users = models.OneToOneField(Users, primary_key=True, on_delete=models.CASCADE)
-    is_online = models.BooleanField(default=False)
-    last_seen = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        managed = True
-        db_table = 'userstatus'
-
-class Friends(models.Model):
-    id = models.AutoField(primary_key=True)
-    usersid1 = models.ForeignKey(Users, on_delete=models.CASCADE, db_column='usersid1', related_name='friends_as_user1', null=False)
-    usersid2 = models.ForeignKey(Users, on_delete=models.CASCADE, db_column='usersid2', related_name='friends_as_user2', null=False)
-    pending = models.BooleanField(blank=False, null=False, default=True)
-
-    class Meta:
-        managed = True
-        db_table = 'friends'
-        unique_together = ('usersid1', 'usersid2')
-
+    
     def __str__(self):
-        return f'{self.usersid1} - {self.usersid2}'
+        return f"user id {self.id} aka {self.alias}" 
 
 
 class Tournament(models.Model):
     STATE_CHOICES = [('registering', 'Registering'),('ongoing', 'Ongoing'),('finished', 'Finished')]
     
-    winner = models.ForeignKey(Users, models.DO_NOTHING, db_column='winnerid', blank=True, null=True)
+    winner = models.ForeignKey(Users, models.DO_NOTHING, db_column='winnerid', blank=True, null=True, related_name="winner")
+    runner_up = models.ForeignKey(Users, models.DO_NOTHING, db_column='runneruprid', blank=True, null=True, related_name="loser")
+    final_score = models.CharField(max_length=100, null=True, blank=True)
     datetourn = models.DateTimeField(auto_now_add=True, blank=False, null=False)
     state = models.CharField(max_length=50, default="registering", choices=STATE_CHOICES)
     size = models.IntegerField(default=4, choices=[(4,'4'),(8, '8')])
@@ -130,8 +114,6 @@ class Match(models.Model):
     class Meta:
         ordering = ['game_date']
         unique_together = ["player1", "player2", "game_date", "tournament"]
-        managed = True
-        db_table = 'match'
     
     def clean(self):
         # Allow both players to be None (future matches in Tourbament Sequence)
@@ -156,8 +138,6 @@ class WaitRoom(models.Model):
 
     class Meta:
         unique_together = ['owner', 'attendee']
-        managed = True
-        db_table = 'waitroom'
     
     def __str__(self):
         return f"Room {self.genId} (Owner: {self.owner}, Attendee: {self.attendee})"

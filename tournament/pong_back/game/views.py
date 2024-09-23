@@ -48,6 +48,7 @@ def create_waitroom(request):
     wait_room = WaitRoom.objects.create(owner=owner)
     wait_room.save()
     serialized = RoomSerializer(wait_room)
+    
     return (Response(serialized.data, status=status.HTTP_201_CREATED)) #is deserialized data necessary ?
 
 @api_view(['GET']) #CAN BE REPLACED BY GENERIC CONCRETE ON RETRIEVE
@@ -96,7 +97,7 @@ def create_tournament(request):
             return Response({"error": "You are already in a tournament waiting room"}, status=status.HTTP_406_NOT_ACCEPTABLE)
         tourn = Tournament.objects.create(n_humans=n_h, size=size)
         partip = Tourparticipation.objects.create(userid = request.user, tournament=tourn)
-        # fill_with_ai(tourn.id)
+        fill_with_ai(tourn.id)
         result = Tournament.objects.get(pk=tourn.id)
         serialized = TournamentSerializer(result)
         return(Response(serialized.data, status=status.HTTP_201_CREATED))
@@ -238,8 +239,8 @@ class RandomMatch(APIView):
             m.state = "finished"
             m.save()
             serialized = MatchSerializer(m)
-            user_p1 = Users.objects.get(id=m.player1.id)
-            user_p2 = Users.objects.get(id=m.player2.id)
+            user_p1 = User.objects.get(id=m.player1.id)
+            user_p2 = User.objects.get(id=m.player2.id)
             if m.score_p1 < m.score_p2:
                     loser = user_p1
             else:
@@ -304,36 +305,36 @@ class UserMatchStatusView(APIView):
             return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 #************ UTILS FOR TOURNAMENT AND AI CREATION **********************/
-# def fill_with_ai(tourn_id):
-#     try:
-#         logger.info("======================= executting fill_w_ai")
-#         id = Tournament.objects.get(pk=tourn_id)
-#         ai_needed = id.size - id.n_humans
-#         ai_registered = set()
-#         ai_profiles = Profile.objects.filter(is_ai=True).distinct()
-#         ai_count = ai_profiles.count()
-#         logger.info(f"TOTAL NUMBER OF AI is {ai_count} and we need {ai_needed}")
-#         if ai_count < ai_needed:
-#             n_create = ai_needed - ai_count
-#             logger.info(f"we need to create {n_create} AI")
-#             for _ in range(n_create):
-#                 temp_name = "AI_" + uuid.uuid4().hex[:10]
-#                 user = Users.objects.create(username=temp_name)  # Create a new User instance
-#                 ai = Profile.objects.create(user=user, alias=temp_name, bio="", is_ai=True)
-#                 logger.info(f"**** LOOP AI CREATION {_}, ai name {temp_name} now queryset is {ai_profiles.count()}")
-#         # Register AI players to fill the tournament
-#         ai_list = [x.alias for x in ai_profiles]
-#         logger.info(f"******** now the list of ai is {ai_list}")
-#         for ai in ai_profiles.iterator():
-#             logger.info(f"================= ENTER AI PROFILE LOOP, registered ai is {len(ai_registered)}")
-#             if len(ai_registered) >= ai_needed:
-#                 break
-#             ai_registered.add(ai)
-#             logger.info(f"================= ADD AI {ai.user.username}")
-#             Tourparticipation.objects.create(userid=ai.user, tournament=id)
-#         logger.info(f"========== all players registered ==============")
-#     except Http404:
-#         logger.info("TOURNAMENT NOT FOUND FOR AI CREATION")
-#     except Exception as e:
-#         # Handle exceptions to ensure any error is reported
-#         logger.info(f"An error occurred: {str(e)}")
+def fill_with_ai(tourn_id):
+    try:
+        logger.info("======================= executting fill_w_ai")
+        id = Tournament.objects.get(pk=tourn_id)
+        ai_needed = id.size - id.n_humans
+        ai_registered = set()
+        ai_profiles = Users.objects.filter(is_ai=True).distinct()
+        ai_count = ai_profiles.count()
+        logger.info(f"TOTAL NUMBER OF AI is {ai_count} and we need {ai_needed}")
+        if ai_count < ai_needed:
+            n_create = ai_needed - ai_count
+            logger.info(f"we need to create {n_create} AI")
+            for _ in range(n_create):
+                temp_name = "AI_" + uuid.uuid4().hex[:10]
+                temp_alias = "HAL_" + uuid.uuid4().hex[:10]
+                ai = Users.objects.create(username=temp_name, intra=False, alias=temp_alias, is_ai=True)
+                logger.info(f"**** LOOP AI CREATION {_}, ai name {temp_name} now queryset is {ai_profiles.count()}")
+        # Register AI players to fill the tournament
+        ai_list = [x.alias for x in ai_profiles]
+        logger.info(f"******** now the list of ai is {ai_list}")
+        for ai in ai_profiles.iterator():
+            logger.info(f"================= ENTER AI PROFILE LOOP, registered ai is {len(ai_registered)}")
+            if len(ai_registered) >= ai_needed:
+                break
+            ai_registered.add(ai)
+            logger.info(f"================= ADD AI {ai.alias}")
+            Tourparticipation.objects.create(userid=ai, tournament=id)
+        logger.info(f"========== all players registered ==============")
+    except Http404:
+        logger.info("TOURNAMENT NOT FOUND FOR AI CREATION")
+    except Exception as e:
+        # Handle exceptions to ensure any error is reported
+        logger.info(f"An error occurred: {str(e)}")

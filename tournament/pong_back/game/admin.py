@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.contrib import admin
 from .models import Users, Match, WaitRoom, Tournament, Tourparticipation
 
+
 # Register the model with the custom admin class
 
 admin.site.register(Users)

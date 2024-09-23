@@ -14,7 +14,6 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from game.middleware import JwtAuthMiddlewareStack #imported to route to game app middleware.py
 from game.routing import websocket_urlpatterns #imported to route to game app asgi routing.py
 
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'pong_project.settings')
 
 application = ProtocolTypeRouter({

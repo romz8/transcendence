@@ -28,7 +28,6 @@ def update_match_tournament(sender, instance, **kwargs):
                 n_match.state = "playing"
             n_match.save()
         else:
-            logger.info("****** SAVING TOURNAMENT END STATES ******* ")
             tourn = Tournament.objects.get(id = instance.tournament.id)
             loser = instance.player1 if (winner == instance.player2) else instance.player2
             tourn.winner = winner
@@ -97,36 +96,13 @@ def save_tournament_blockchain(sender, instance, created, **kwargs):
 
 
 
-
-def randomize_ai_game(instance, save_flag=True):
-    """
-    Randomizes an AI match and marks it as finished.
-    """
-    logger.info("Randomizing AI match.")
-    if instance.state != "playing":
-        return
-    # Ensure the match is part of a tournament
-    if instance.tournament is not None:
-        # Get player profiles
-        p1 = Users.objects.filter(id=instance.player1.id).first()
-        p2 = Users.objects.filter(id=instance.player2.id).first()
-
-        # Check if both players are AI
-        if p1 and p2 and p1.is_ai and p2.is_ai:
-            with transaction.atomic():
-                # Randomize the result
-                instance.score_p1 = 3  # Example random score
-                instance.score_p2 = 0  # Ensure total score is 3 for simplicity
-                instance.state = "finished"
-                if (save_flag == True):
-                    instance.save()
-                logger.info(f"AI match between {p1.alias} and {p2.alias} randomized.")
-
 def create_match(player1, player2, tournament, round):
     """
     Creates a new match between two players and randomizes it if both are AI.
     """
     # Create the match within an atomic transaction
     with transaction.atomic():
-        match = Match.objects.create(player1=player1, player2=player2, tournament=tournament, round=round, state='waiting')
+        match = Match.objects.create(player1=player1, player2=player2, tournament=tournament, round = round,state='waiting')
     return match
+
+    

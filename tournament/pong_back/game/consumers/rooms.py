@@ -18,6 +18,7 @@ class Room:
         self.direction = 0
         self.goal = False
         self.goal_messages = 0
+        self.game = None
 
 
     def add_player(self, channel_name, role, user_id, playername):

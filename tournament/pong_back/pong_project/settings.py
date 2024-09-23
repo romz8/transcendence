@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'apiAuth',
     'blockchain',
     'corsheaders',
     'django.contrib.admin',
@@ -55,6 +56,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+
+#changed to use the customuser (users) and avoid conflict iwth auth_group_users and auth_permisisons
+AUTH_USER_MODEL = 'game.Users' 
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -102,16 +106,17 @@ CHANNEL_LAYERS = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ['DATABASE_NAME'],
-        'USER': os.environ['DATABASE_USER'],
-        'PASSWORD': os.environ['DATABASE_PASSWORD'],
-        'HOST': os.environ['DATABASE_HOST'],
+        'NAME': 'pong_db',
+        'USER': 'pong',
+        'PASSWORD': 'png_forever',
+        'HOST' : 'db',
         'PORT': '5432',
     }
 }
+
 # CORS definition
 CORS_ALLOW_ALL_ORIGINS = True
-AUTH_USER_MODEL = 'game.Users'
+
 #could be refined to 
 # CORS_ALLOWED_ORIGINS = [
 #     "file://",  # Allow access from local files
@@ -119,26 +124,16 @@ AUTH_USER_MODEL = 'game.Users'
 # ]
 
 REST_FRAMEWORK = {
+    # 'DEFAULT_RENDERER_CLASSES': [
+    #     'rest_framework.renderers.JSONRenderer',
+    # ],
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'game.middleware.Intra42Authentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+        # 'rest_framework.authentication.BasicAuthentication',
+        # 'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication'
     ],
 }
-
-############################### ANT ################################
-# REST_FRAMEWORK = {
-#     # 'DEFAULT_RENDERER_CLASSES': [
-#     #     'rest_framework.renderers.JSONRenderer',
-#     # ],
-#     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
-#     'DEFAULT_AUTHENTICATION_CLASSES': [
-#         # 'rest_framework.authentication.BasicAuthentication',
-#         # 'rest_framework.authentication.TokenAuthentication',
-#         'rest_framework_simplejwt.authentication.JWTAuthentication'
-#     ],
-# }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -172,6 +167,14 @@ SIMPLE_JWT = {
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'TOKEN_TYPE_CLAIM': 'token_type',
 }
+
+# celery settings
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/

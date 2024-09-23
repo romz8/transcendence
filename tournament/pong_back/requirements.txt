@@ -9,3 +9,6 @@ web3
 python-dotenv
 py-solc-x
 Pillow>=10.4.0 
+python-dotenv
+celery==5.3.5
+redis
