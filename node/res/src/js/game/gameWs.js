@@ -1,4 +1,4 @@
-import {initializeElements, startCountdown} from '../pages/gameRem.js'
+import {setGameEnded, initializeElements, startCountdown} from '../pages/gameRem.js'
 import {displayLeave, displayForfeitMessage, displayOverMessage} from './gameDisplay.js'
 import {statusDisplay, roleDisplay, Display} from "../pages/gameRem.js";
 import {setGoal, setState, moveLoop} from "../pages/gameRem.js";
@@ -12,6 +12,7 @@ export async function setWebsocket(id) {
     const token = getCookie('token');
     const host = window.location.hostname;
     let url = `ws://${host}:8000/ws/pingpong/`+ id + "/";
+    //let url = 'ws://10.11.5.6:8000/ws/pingpong/'+ id + "/"; 
     url += "?token=" + token;
     console.log("url is : ", url);
     ws = new WebSocket(url);
@@ -21,6 +22,8 @@ export async function setWebsocket(id) {
     ws.onopen = () => {
         // To Replace with WebSocket server address AND dedicated room from waitroom
         statusDisplay.textContent = 'Connected';
+
+    
     };
 
     ws.onmessage = async (event) => {
@@ -29,8 +32,14 @@ export async function setWebsocket(id) {
         
         if (data.type === "init") {
             let role = data.role;
-            roleDisplay.textContent = `Your Role: ${role}`;
-            Display.textContent = `You are: ${data.playerName}`;
+            if (role == 'player1') {
+                document.getElementById('player1-name').textContent = data.playerName;
+                document.getElementById('player1-name').classList.add('highlight');
+            }
+            else {
+                document.getElementById('player2-name').textContent = data.playerName;
+                document.getElementById('player2-name').classList.add('highlight')
+            }
             console.log("message received is : ", data);
             initializeElements(data);
         }
@@ -56,14 +65,17 @@ export async function setWebsocket(id) {
                 case "close":
                     displayLeave(data.message);
                     ws.close();
+                    setGameEnded();
                     break;
                 case "quit":
-                    displayForfeitMessage(data.message);
+                    displayForfeitMessage(data);
                     ws.close();
+                    setGameEnded();
                     break;
                 case "over":
                     displayOverMessage(data);
                     ws.close();
+                    setGameEnded();
                     break;
                 default:
                     break;

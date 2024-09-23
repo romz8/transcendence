@@ -99,12 +99,15 @@ export async function	router() {
 	setTimeout(async () => {
 		const isAuth =  await is_authenticated(getCookie("token"));
 		const windowPathname = window.location.pathname;
-		let view = routes[windowPathname];
+		const {route, param} = routeSearch(windowPathname);
 		//updateActiveElementNavbar();
-		if (view) {
-			if (isAuth === view.auth) {
-				document.title = `TS | ${view.title}`;
-				app.innerHTML = view.render();
+		if (route) {
+			if (isAuth === route.auth) {
+				document.title = route.title;
+				if (param)
+					app.innerHTML = route.render(param);
+				else
+					app.innerHTML = route.render();
 			}
 			else {
 				app.innerHTML = '<home-out></home-out>';
@@ -117,5 +120,4 @@ export async function	router() {
 	}, 250);
 	
 };
-
 

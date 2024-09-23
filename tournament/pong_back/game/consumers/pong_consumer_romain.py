@@ -1,6 +1,6 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 from .rooms import Room, gamestatus
-from game.models import WaitRoom, Match, Tourparticipation, Tournament, Users
+from game.models import WaitRoom, Users, Match, Tourparticipation, Tournament
 import logging
 import asyncio
 import random
@@ -9,6 +9,7 @@ from asgiref.sync import async_to_sync
 import json
 from urllib.parse import parse_qs
 from rest_framework_simplejwt.tokens import UntypedToken
+#from django.contrib.auth.models import User
 from .game_management_mixin import GameManager, init, ENDSCORE
 
 logger = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
     Attributes:
         rooms (dict): A class-level dictionary to track active game rooms.
     '''
-class PongConsumer(AsyncWebsocketConsumer, GameManager):
+class PongConsumer(AsyncWebsocketConsumer):
     rooms = {}
 
     def __init__(self, *args, **kwargs):
@@ -29,14 +30,14 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
         self.room = None
         self.role = None
         self.playername = None
+        self.room_group_name = None
         self.score = 0
         self.active = False
         self.tournament_mode = False
-        # self.right_player_score = 0
-        # self.left_player_score = 0
 
     def display(self):
         for room_id, room in PongConsumer.rooms.items():
+            logger.info('*************** Room Display **********************')
             logger.info(f'Room: {room_id}')
             logger.info(f'Players: {room.players}')
             logger.info(f'score is : {room.score}')
@@ -55,28 +56,36 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
         7. Adds the player to the room and sends initialization data to the frontend.
         '''
         user = self.scope.get('user', None)
+        logger.info(user is None or not user.is_authenticated)
+        logger.info(user.is_authenticated)
+        
         if user is None or not user.is_authenticated:
             self.close_with_error(4000, 'User not authenticated')
             return
         self.user = user
         self.game_id = self.scope['url_route']['kwargs']['game_id']
-        self.room_group_name = f'game_{self.game_id}'
+        self.room_group_name = f'{self.game_id}'
         try :
             if (self.game_id.startswith("game_")):
                 waitroom = await database_sync_to_async(WaitRoom.objects.get)(genId=self.game_id)
-            else:
+            elif (self.game_id.startswith("T_")):
                 self.tournament_mode = True
-                #add a search for Match
-            # else:
-            #     await self.close_with_error(4001, 'not coming from game nor tournament')
+                tour = await database_sync_to_async(Tournament.objects.get)(id=self.game_id.split("-")[1])
+            else:
+                await self.close_with_error(4001, 'not coming from game nor tournament')
         except WaitRoom.DoesNotExist:
             await self.close_with_error(4001, 'Waitroom for Game not found')
+            return
+        except Tournament.DoesNotExit:
+            await self.close_with_error(4001, 'Tournament for Game not found')
             return
 
         if self.game_id not in PongConsumer.rooms: 
             PongConsumer.rooms[self.game_id] = Room(self.game_id)
         self.room = PongConsumer.rooms[self.game_id]
-
+        if self.room.game is None:
+            self.room.game = GameManager(self.room, self.room_group_name, self.channel_layer)
+        
         if self.user.id in [player['user_id'] for player in self.room.players.values()]:
             await self.close_with_error(4002, 'User already in the game')
             await self.close(code=4002)
@@ -95,7 +104,7 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
         await self.accept()
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         self.active = True
-        self.playername = self.user.alias
+        self.playername = await self.get_player()
         self.room.add_player(self.channel_name, self.role, self.user.id, self.playername)
         await self.send(text_data=json.dumps({
             'type':gamestatus.init.name,
@@ -103,7 +112,10 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
             'playerName': self.playername,
             'init': init,
         }))
-        logger.info(f"CONNECTION MADE IN {self.room}")
+        logger.info("=================================================================")
+        logger.info(f"CONNECTION MADE IN {self.game_id} from player {self.room.players[self.channel_name]}")
+        logger.info(f"GAME_ID : {self.game_id} and room_group_name: {self.room_group_name} and CHANNEL NAME : {self.channel_name}")
+        logger.info("=================================================================")
         self.display()
 
     async def disconnect(self, close_code):
@@ -167,8 +179,6 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
 
     async def game_handler(self, data):
         event = data.get('event', None)
-        logger.info(event)
-        
         if event == 'ready' and self.room.state != gamestatus.over:
             self.room.ready_players.add(self.role)         
             logger.info(f"Player {self.role} is ready")
@@ -177,6 +187,7 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
                 logger.info('both clients are ready!')
                 await self.channel_layer.group_send(self.room_group_name,{
                     'type': 'broadcast_countdown',
+                    'room_channel': self.room_group_name,
                     'roomstate' : self.room.state.name,
                     'players': self.room.player_display,
                     'event': 'start_countdown',
@@ -193,8 +204,8 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
                 return
             
             self.room.start_received = 0
-            await self.set_game_state()
-            asyncio.create_task(self.update_game_state())
+            await self.room.game.set_game_state()
+            asyncio.create_task(self.room.game.update_game_state())
             return
         
         if event == 'reset':
@@ -202,6 +213,7 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
                 self.room_group_name,
                 {
                     'type': 'broadcast_reset',
+                    'room_channel': self.room_group_name,
                     'roomstate' : self.room.state.name,
                     'direction': self.room.direction,
                 }
@@ -210,15 +222,108 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
             self.room.goal_messages = 0
 
         if event == 'update':
-            await self.send_updates()
+            await self.room.game.send_updates()
 
         if event == 'input':
-            await self.set_key_state(data)
+            await self.room.game.set_key_state(data)
             return 
-    
+        if self.room.state == gamestatus.over:
+            await self.end_with_winner()
+
     ''''
     ******************* BRODCAST METHODS ****************
     '''
+
+    """  ============================ NEWLY ADDED BEFORE WAS IN GAMEMANAGER ============================== """
+    async def broadcast_countdown(self, event):
+        """
+        NEWLY ADDED BEFORE WAS IN GAMEMANAGER
+        Broadcasts a Countdown event to all players in the room. they then alert the front socket
+        - Extracts the event type from the incoming event data and sends it as a JSON message to all clients.
+        - This function is used for broadcasting general game-related events that do not require specific game state updates
+        such as notifications or simple status changes.
+        """        
+        data = event['event']
+        roomstate = event['roomstate']
+        players = event['players']
+        self.direction = event['direction']
+        await self.send(text_data=json.dumps({
+            'type': data,
+            'roomstate' : roomstate,
+            'players': players,
+            'direction': self.room.game.direction,
+        }))
+    
+    async def broadcast_game_state(self, event):
+        """
+        Handler for the broadcast of the current game state to all players in the room.
+        - Extracts the `game_state` from the incoming event and sends it to the WebSocket clients.
+        - Sends a JSON message containing the positions of the paddles (`leftPad`, `rightPad`) and the ball (`ballX`, `ballY`).
+        - Ensures that all clients update their game views according to the latest game state received from the server.
+        """
+
+        game_state = event['game_state']
+        room_id = event['room_channel']
+        leftPad = game_state['leftPad']
+        rightPad = game_state['rightPad']
+        ballX = game_state['ballX']
+        ballY = game_state['ballY']
+        roomstate = event['roomstate']
+        await self.send(text_data=json.dumps({
+            'type': 'update',
+            'room_channel': room_id,
+            'roomstate': roomstate,
+            'leftPad': leftPad,
+            'rightPad': rightPad,
+            'ballX': ballX,
+            'ballY': ballY,
+        }))
+
+    async def broadcast_goal(self, event):
+        """
+        Broadcasts a goal event to all players, indicating which player scored and the new direction of the ball.
+
+        - Extracts the player who scored and the new ball direction from the incoming event.
+        - Sends a JSON message containing the player who scored and the direction for the next round.
+        - Ensures that all players are aware of the goal and prepares them for the next round of play.
+        """
+        logger.info(f"Send message: {event['event']} to {self.role}")
+        roomstate = event['roomstate']
+        data = event['event']
+        player = event['player']
+        direction = event['direction']
+        score = event['score']
+        await self.send(text_data=json.dumps({
+            'type': data,
+            'roomstate': roomstate,
+            'player': player,
+            'direction': direction,
+            'score' : score,
+        }))
+    async def broadcast_reset(self, event):
+        """
+        Broadcasts a reset event to all players after a goal is scored.   
+        - Sends a reset message to all connected clients to inform them that the game state is being reset for the next round.
+        - This function helps synchronize the clients by ensuring they are all prepared for the next game state after a goal.
+        """
+        direction = event['direction']
+        roomstate = event['roomstate']
+        await self.send(text_data=json.dumps({
+            'type': 'reset',
+            'state': roomstate,
+        }))
+
+    async def broadcast_hit(self, event):
+        """
+        Broadcasts a reset event to all players after a goal is scored.   
+        - Sends a reset message to all connected clients to inform them that the game state is being reset for the next round.
+        - This function helps synchronize the clients by ensuring they are all prepared for the next game state after a goal.
+        """
+        await self.send(text_data=json.dumps({
+            'type': 'hit',
+        }))
+
+    """  ============================ END ******* NEWLY ADDED BEFORE WAS IN GAMEMANAGER ============================== """
     async def notify_over_quit(self):
         '''
         Sends a "game over" message to all players.
@@ -239,15 +344,9 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
         and loser, saves the game result to the database, and notifies all players 
         of the game outcome.
         '''
-        if (self.room.score['player1'] > self.room.score['player2']):
-            self.room.winner = 'player1'
-            self.room.loser = 'player2'
-        else:
-            self.room.winner = 'player2'
-            self.room.loser = 'player1'
-
-        logger.info(f"ENDING with WINNER player :{self.room.winner} with state {self.room.state}")
-
+        logger.info(f"ENDING with WINNER player :{self.role} with state {self.room.state}")
+        self.room.winner = self.role
+        self.room.loser = 'player2' if self.role == 'player1' else 'player1'
         await self.game_to_db()
         await self.channel_layer.group_send(self.room_group_name, {
             'type': 'game_over',
@@ -278,8 +377,7 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
                     loser = event['loser']
                     message = f'Game over: {winner} won with score {score[winner]} - {loser} lost with score {score[loser]}'
                 case 'quit':
-                    message = f"{player} finds this game too hard!"
-                    player = event['sender']
+                    message = f'{player} quit the game'
                 case 'close':
                     message = f'{player} left the room before starting the game'
                 case _:
@@ -310,6 +408,10 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
         `Match` model. It is called when the game ends, either due to a player winning 
         or forfeiting.
         '''
+        logger.info("=================================================================")
+        logger.info(f"SAVING TO DB IN {self.game_id}")
+        logger.info(f"GAME_ID : {self.game_id} and room_group_name: {self.room_group_name} and CHANNEL NAME : {self.channel_name}")
+        logger.info("=================================================================")
         if self.room.state not in  [gamestatus.over, gamestatus.quit]:
             return
         db_state = "finished" 
@@ -323,24 +425,30 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
             user_p2 = await database_sync_to_async(Users.objects.get)(id=p2)
 
             if self.tournament_mode:
-                tag, tourid = self.game_id.split("-")
+                tag_t, tourid = self.game_id.split("-")
+                tag = tag_t[2:]
                 logger.info(f"********** DB SAVE - TOURNAMENT : {tourid} - tag {tag}")
                 tour = await database_sync_to_async(Tournament.objects.get)(id=tourid)
                 match = await database_sync_to_async(Match.objects.get)(id = tag, tournament=tour)
-                match.score_p1=self.room.score['player1']
-                match.score_p2=self.room.score['player2']
-                match.state=db_state
-                await database_sync_to_async(match.save)()
-                if self.room.score['player1'] < self.room.score['player2']:
-                    loser = user_p1
+                match_player1 = await database_sync_to_async(lambda: match.player1)()
+                if match_player1 == user_p1:
+                    match.score_p1=self.room.score['player1']    
+                    match.score_p2=self.room.score['player2']
+                    loser = user_p1 if self.room.score['player1'] < self.room.score['player2'] else user_p2
                 else:
-                    loser = user_p2
+                    match.score_p1=self.room.score['player2']
+                    match.score_p2=self.room.score['player1']
+                    loser = user_p2 if self.room.score['player2'] < self.room.score['player1'] else user_p1
+                match.state=db_state
+                
+                await database_sync_to_async(match.save)()
                 loser = await database_sync_to_async(Tourparticipation.objects.get)(userid=loser, tournament=tour)
                 loser.is_eliminated = True
                 await database_sync_to_async(loser.save)()
             else:
-                await database_sync_to_async(Match.objects.create)(player1=user_p1, player2=user_p2, score_p1=self.room.score['player1'], score_p2=self.room.score['player2'], state=db_state)
-            logger.info(f"**** ==== ***** Game saved to database: {user_p1} vs {user_p2} with score {self.room.score['player1']} - {self.room.score['player2']}")
+                m = await database_sync_to_async(Match.objects.create)(player1=user_p1, player2=user_p2, score_p1=self.room.score['player1'], score_p2=self.room.score['player2'], state=db_state)
+                await database_sync_to_async(WaitRoom.objects.filter(genId=self.game_id).delete)()
+            logger.info(f"**** ==== ***** Game saved to database with id {m.id} - players {m.player1} vs {m.player2} / score : {m.score_p1} - {m.score_p2}")
         except Users.DoesNotExist:
             logger.error("**** ==== ***** Error saving game to database: User not found")
         except Tournament.DoesNotExist:
@@ -352,3 +460,11 @@ class PongConsumer(AsyncWebsocketConsumer, GameManager):
         await self.accept() 
         await self.send(text_data=json.dumps({'error': message, 'code': code}))
         await self.close(code=code)
+    
+    @database_sync_to_async
+    def get_player(self):
+        try:
+            return Users.objects.get(id=self.user.id).alias
+        except Users.DoesNotExist:
+            logger.error(f'User profile does not exist for user: {self.user.id}')
+        return "Unknown"

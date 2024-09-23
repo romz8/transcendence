@@ -2,58 +2,60 @@ import random
 import asyncio
 import logging
 import json
+import time
 from .rooms import gamestatus
 
 logger = logging.getLogger(__name__)
 
-PADDING = 50
 ENDSCORE = 3
 MESSAGE_DURATION = 2000
-PITCHWIDTH = 600
+PITCHWIDTH = 800
 PITCHHEIGHT = 400
-TOP_BOUNDARY = PADDING
-BALL_SPEED = 8
-PAD_SPEED = 12
+BALL_RADIUS = 5
+BALL_SPEED = 3
+PAD_SPEED = 5
+PAD_HEIGHT = 75
+PAD_WIDTH = 10
+BOTTOM_BOUNDARY = PITCHHEIGHT - PAD_HEIGHT
+TOP_BOUNDARY = 0
 
 init = {
-    'padHeight': 80,
-    'padWidth': 10,
+    'padHeight': PAD_HEIGHT,
+    'padWidth': PAD_WIDTH,
     'padSpeed': PAD_SPEED,
-    'leftPadX': PADDING + 10,
-    'leftPadY': PITCHHEIGHT / 2 + PADDING,
-    'rightPadX': PITCHWIDTH + PADDING - 10 - 10,
-    'rightPadY': PITCHHEIGHT / 2 + PADDING,
-    'ballX': PITCHWIDTH / 2 + PADDING,
-    'ballY': PITCHHEIGHT / 2 + PADDING,
-    'ballRadius': 5,
+    'leftPadX': 0,
+    'leftPadY': PITCHHEIGHT / 2 - PAD_HEIGHT / 2,
+    'rightPadX': 790,
+    'rightPadY': PITCHHEIGHT / 2 - PAD_HEIGHT / 2,
+    'ballX': PITCHWIDTH / 2,
+    'ballY': PITCHHEIGHT / 2,
+    'ballRadius': BALL_RADIUS,
     'ballSpeedX': BALL_SPEED,
     'ballSpeedY': BALL_SPEED,   
     'endscore': ENDSCORE,
 }
 
-BOTTOM_BOUNDARY = PITCHHEIGHT + PADDING - init['padHeight']
-
-
+game_state = {
+    'leftPad': 0,
+    'rightPad': 0,
+    'ballX': 0,
+    'ballY': 0,
+    'ballSpeedX': 0,
+    'ballSpeedY': 0,
+    'leftPadUp': False,
+    'leftPadDown': False,
+    'rightPadUp': False,
+    'rightPadDown': False,
+    'padSpeed': 0,
+}
 
 class GameManager:
-    def __init__(self, room, room_group_name, channel_layer):
-        self.room = room
-        self.room_group_name = room_group_name
-        self.channel_layer = channel_layer #horrible ... will rewrite
-        self.direction = 0
-        self.game_state = {
-            'leftPad': 0,
-            'rightPad': 0,
-            'ballX': 0,
-            'ballY': 0,
-            'ballSpeedX': 0,
-            'ballSpeedY': 0,
-            'leftPadUp': False,
-            'leftPadDown': False,
-            'rightPadUp': False,
-            'rightPadDown': False,
-            'padSpeed': 0,
-        }
+    '''
+    ****************************************************************************
+    GAME STATE MANAGEMENT
+    ****************************************************************************
+    '''
+    direction = 0
 
     async def set_game_state(self):
         """
@@ -66,23 +68,24 @@ class GameManager:
         init['ballSpeedY'] = BALL_SPEED
 
         logger.info('Setting game state')
-        self.game_state['leftPad'] = init['leftPadY']
-        self.game_state['rightPad'] = init['rightPadY']
-        self.game_state['ballX'] = init['ballX']
-        self.game_state['ballY'] = init['ballY']
-        self.game_state['ballSpeedX'] = init['ballSpeedX']
-        self.game_state['ballSpeedY'] = init['ballSpeedY']
-        self.game_state['padSpeed'] = init['padSpeed']
+
+        game_state['leftPad'] = init['leftPadY']
+        game_state['rightPad'] = init['rightPadY']
+        game_state['ballX'] = init['ballX']
+        game_state['ballY'] = init['ballY']
+        game_state['ballSpeedX'] = init['ballSpeedX']
+        game_state['ballSpeedY'] = init['ballSpeedY']
+        game_state['padSpeed'] = init['padSpeed']
 
         if self.direction == 1:
-           self.game_state['ballSpeedX'] *= -1
+            game_state['ballSpeedX'] *= -1
         elif self.direction == 2:
             pass  # No change
         elif self.direction == 3:
-           self.game_state['ballSpeedY'] *= -1
+            game_state['ballSpeedY'] *= -1
         elif self.direction == 4:
-           self.game_state['ballSpeedX'] *= -1
-           self.game_state['ballSpeedY'] *= -1
+            game_state['ballSpeedX'] *= -1
+            game_state['ballSpeedY'] *= -1
 
     async def update_game_state(self):
         """
@@ -94,7 +97,7 @@ class GameManager:
         - The loop runs at approximately 60 frames per second (`await asyncio.sleep(1 / 60)`), ensuring smooth gameplay.
         - Resets the room's goal state to `False` after a goal is detected.
         """
-        time_step = 1/20
+        time_step = 1/60
         while not self.room.goal:
         
             await self.move_pads()
@@ -114,23 +117,23 @@ class GameManager:
     BROADCAST GAME EVENTS
     ****************************************************************************
     '''
-    # async def broadcast_countdown(self, event):
-    #     """
-    #     Broadcasts a Countdown event to all players in the room. they then alert the front socket
-    #     - Extracts the event type from the incoming event data and sends it as a JSON message to all clients.
-    #     - This function is used for broadcasting general game-related events that do not require specific game state updates
-    #     such as notifications or simple status changes.
-    #     """        
-    #     data = event['event']
-    #     roomstate = event['roomstate']
-    #     players = event['players']
-    #     self.direction = event['direction']
-    #     await self.send(text_data=json.dumps({
-    #         'type': data,
-    #         'roomstate' : roomstate,
-    #         'players': players,
-    #         'direction': self.direction,
-    #     }))
+    async def broadcast_countdown(self, event):
+        """
+        Broadcasts a Countdown event to all players in the room. they then alert the front socket
+        - Extracts the event type from the incoming event data and sends it as a JSON message to all clients.
+        - This function is used for broadcasting general game-related events that do not require specific game state updates
+        such as notifications or simple status changes.
+        """        
+        data = event['event']
+        roomstate = event['roomstate']
+        players = event['players']
+        self.direction = event['direction']
+        await self.send(text_data=json.dumps({
+            'type': data,
+            'roomstate' : roomstate,
+            'players': players,
+            'direction': self.direction,
+        }))
     
     async def send_updates(self):
         """
@@ -147,81 +150,87 @@ class GameManager:
             {
                 'type': 'broadcast_game_state',
                 'roomstate' : self.room.state.name,
-                'game_state':self.game_state,
-                'room_channel':self.room_group_name,
+                'game_state': game_state
             }   
             )
 
-    # async def broadcast_game_state(self, event):
-    #     """
-    #     Handler for the broadcast of the current game state to all players in the room.
-    #     - Extracts the `game_state` from the incoming event and sends it to the WebSocket clients.
-    #     - Sends a JSON message containing the positions of the paddles (`leftPad`, `rightPad`) and the ball (`ballX`, `ballY`).
-    #     - Ensures that all clients update their game views according to the latest game state received from the server.
-    #     """
+    async def broadcast_game_state(self, event):
+        """
+        Handler for the broadcast of the current game state to all players in the room.
+        - Extracts the `game_state` from the incoming event and sends it to the WebSocket clients.
+        - Sends a JSON message containing the positions of the paddles (`leftPad`, `rightPad`) and the ball (`ballX`, `ballY`).
+        - Ensures that all clients update their game views according to the latest game state received from the server.
+        """
 
-    #     game_state = event['game_state']
-    #     room_id = event['room_channel']
-    #     leftPad = game_state['leftPad']
-    #     rightPad = game_state['rightPad']
-    #     ballX = game_state['ballX']
-    #     ballY = game_state['ballY']
-    #     roomstate = event['roomstate']
-    #     await self.send(text_data=json.dumps({
-    #         'type': 'update',
-    #         'room_channel': room_id,
-    #         'roomstate': roomstate,
-    #         'leftPad': leftPad,
-    #         'rightPad': rightPad,
-    #         'ballX': ballX,
-    #         'ballY': ballY,
-    #     }))
+        game_state = event['game_state']
+        leftPad = game_state['leftPad']
+        rightPad = game_state['rightPad']
+        ballX = game_state['ballX']
+        ballY = game_state['ballY']
+        ballSpeedX = game_state['ballSpeedX']
+        ballSpeedY = game_state['ballSpeedY']
+        padSpeed = game_state['padSpeed']
+        timestamp = int(time.time() * 1000)
+
+        roomstate = event['roomstate']
+        await self.send(text_data=json.dumps({
+            'type': 'update',
+            'roomstate': roomstate,
+            'leftPad': leftPad,
+            'rightPad': rightPad,
+            'ballX': ballX,
+            'ballY': ballY,
+            'ballSpeedX': ballSpeedX,
+            'ballSpeedY': ballSpeedY,
+            'padSp eed': padSpeed,
+            'timestamp': timestamp,      
+        }))
 
 
-    # async def broadcast_goal(self, event):
-    #     """
-    #     Broadcasts a goal event to all players, indicating which player scored and the new direction of the ball.
+    async def broadcast_goal(self, event):
+        """
+        Broadcasts a goal event to all players, indicating which player scored and the new direction of the ball.
 
-    #     - Extracts the player who scored and the new ball direction from the incoming event.
-    #     - Sends a JSON message containing the player who scored and the direction for the next round.
-    #     - Ensures that all players are aware of the goal and prepares them for the next round of play.
-    #     """
-    #     logger.info(f"Send message: {event['event']} to {self.role}")
-    #     roomstate = event['roomstate']
-    #     data = event['event']
-    #     player = event['player']
-    #     direction = event['direction']
-    #     score = event['score']
-    #     await self.send(text_data=json.dumps({
-    #         'type': data,
-    #         'roomstate': roomstate,
-    #         'player': player,
-    #         'direction': direction,
-    #         'score' : score,
-    #     }))
+        - Extracts the player who scored and the new ball direction from the incoming event.
+        - Sends a JSON message containing the player who scored and the direction for the next round.
+        - Ensures that all players are aware of the goal and prepares them for the next round of play.
+        """
+        logger.info(f"Send message: {event['event']} to {self.role}")
+        roomstate = event['roomstate']
+        data = event['event']
+        player = event['player']
+        direction = event['direction']
+        score = event['score']
+        await self.send(text_data=json.dumps({
+            'type': data,
+            'roomstate': roomstate,
+            'player': player,
+            'direction': direction,
+            'score' : score,
+        }))
 
-    # async def broadcast_reset(self, event):
-    #     """
-    #     Broadcasts a reset event to all players after a goal is scored.   
-    #     - Sends a reset message to all connected clients to inform them that the game state is being reset for the next round.
-    #     - This function helps synchronize the clients by ensuring they are all prepared for the next game state after a goal.
-    #     """
-    #     direction = event['direction']
-    #     roomstate = event['roomstate']
-    #     await self.send(text_data=json.dumps({
-    #         'type': 'reset',
-    #         'state': roomstate,
-    #     }))
+    async def broadcast_reset(self, event):
+        """
+        Broadcasts a reset event to all players after a goal is scored.   
+        - Sends a reset message to all connected clients to inform them that the game state is being reset for the next round.
+        - This function helps synchronize the clients by ensuring they are all prepared for the next game state after a goal.
+        """
+        direction = event['direction']
+        roomstate = event['roomstate']
+        await self.send(text_data=json.dumps({
+            'type': 'reset',
+            'state': roomstate,
+        }))
 
-    # async def broadcast_hit(self, event):
-    #     """
-    #     Broadcasts a reset event to all players after a goal is scored.   
-    #     - Sends a reset message to all connected clients to inform them that the game state is being reset for the next round.
-    #     - This function helps synchronize the clients by ensuring they are all prepared for the next game state after a goal.
-    #     """
-    #     await self.send(text_data=json.dumps({
-    #         'type': 'hit',
-    #     }))
+    async def broadcast_hit(self, event):
+        """
+        Broadcasts a reset event to all players after a goal is scored.   
+        - Sends a reset message to all connected clients to inform them that the game state is being reset for the next round.
+        - This function helps synchronize the clients by ensuring they are all prepared for the next game state after a goal.
+        """
+        await self.send(text_data=json.dumps({
+            'type': 'hit',
+        }))
     
     '''
     ****************************************************************************
@@ -231,56 +240,54 @@ class GameManager:
 
     async def move_pads(self): 
 
-        if self.game_state['leftPadUp'] == True: 
-            if self.game_state['leftPad'] - self.game_state['padSpeed'] < TOP_BOUNDARY:
-               self.game_state['leftPad'] = TOP_BOUNDARY 
+        if game_state['leftPadUp'] == True: 
+            if game_state['leftPad'] - game_state['padSpeed'] < TOP_BOUNDARY:
+                game_state['leftPad'] = TOP_BOUNDARY 
             else:
-                self.game_state['leftPad'] -= self.game_state['padSpeed'] 
+                game_state['leftPad'] -= game_state['padSpeed'] 
         
-        if self.game_state['leftPadDown'] == True:
-            if self.game_state['leftPad'] + self.game_state['padSpeed']  > BOTTOM_BOUNDARY:
-               self.game_state['leftPad'] = BOTTOM_BOUNDARY
+        if game_state['leftPadDown'] == True:
+            if game_state['leftPad'] + game_state['padSpeed']  > BOTTOM_BOUNDARY:
+                game_state['leftPad'] = BOTTOM_BOUNDARY
             else:
-               self.game_state['leftPad'] +=self.game_state['padSpeed']
+                game_state['leftPad'] += game_state['padSpeed']
 
-        if self.game_state['rightPadUp'] == True:
-            if self.game_state['rightPad'] - self.game_state['padSpeed'] < TOP_BOUNDARY:
-               self.game_state['rightPad'] = TOP_BOUNDARY 
+        if game_state['rightPadUp'] == True:
+            if game_state['rightPad'] - game_state['padSpeed'] < TOP_BOUNDARY:
+                game_state['rightPad'] = TOP_BOUNDARY 
             else:
-               self.game_state['rightPad'] -= self.game_state['padSpeed']
-        if self.game_state['rightPadDown'] == True:
-            if self.game_state['rightPad'] + self.game_state['padSpeed'] > BOTTOM_BOUNDARY:
-                self.game_state['rightPad'] = BOTTOM_BOUNDARY
+                game_state['rightPad'] -= game_state['padSpeed']
+        if game_state['rightPadDown'] == True:
+            if game_state['rightPad'] + game_state['padSpeed']  > BOTTOM_BOUNDARY:
+                game_state['rightPad'] = BOTTOM_BOUNDARY
             else:
-               self.game_state['rightPad'] +=self.game_state['padSpeed']
+                game_state['rightPad'] += game_state['padSpeed']
 
     async def move_ball(self):
-       self.game_state['ballX'] += self.game_state['ballSpeedX']
-       self.game_state['ballY'] += self.game_state['ballSpeedY']
+        game_state['ballX'] += game_state['ballSpeedX']
+        game_state['ballY'] += game_state['ballSpeedY']
 
     async def check_collision(self):
         
         #wall
-        if self.game_state['ballY'] + init['ballRadius'] >= PITCHHEIGHT + PADDING or self.game_state['ballY'] - init['ballRadius'] <= PADDING: 
-           self.game_state['ballSpeedY'] *= -1
+        if  game_state['ballY'] >= PITCHHEIGHT or game_state['ballY'] <= 0: 
+            game_state['ballSpeedY'] *= -1
 
         #left pad
-        if  (self.game_state['ballX'] - init['ballRadius'] <= init['leftPadX'] + init['padWidth'] and \
-           self.game_state['ballY'] >= self.game_state['leftPad'] and self.game_state['ballY'] <= self.game_state['leftPad'] + init['padHeight']):
-               self.game_state['ballSpeedX'] *= -1
-               self.game_state['ballX'] = init['leftPadX'] + init['padWidth'] + init['ballRadius']
-               await self.channel_layer.group_send(self.room_group_name, {'type': 'broadcast_hit','event': 'hit',})
-               await self.increase_speed()
+        if  (game_state['ballX'] - init['ballRadius'] <= init['leftPadX'] + init['padWidth'] and
+            game_state['ballY'] >= game_state['leftPad'] and game_state['ballY'] <= game_state['leftPad'] + init['padHeight']):
+                game_state['ballSpeedX'] *= -1
+                game_state['ballX'] = init['leftPadX'] + init['padWidth'] + init['ballRadius']
+                await self.increase_speed()
 
 
         #right pad
-        if  (self.game_state['ballX'] + init['ballRadius'] >= init['rightPadX'] and
-           self.game_state['ballY'] >= self.game_state['rightPad'] and
-           self.game_state['ballY'] <= self.game_state['rightPad'] + init['padHeight']):
-               self.game_state['ballSpeedX'] *= -1
-               self.game_state['ballX'] = init['rightPadX'] - init['ballRadius']
-               await self.channel_layer.group_send( self.room_group_name,{'type': 'broadcast_hit','event': 'hit',})
-               await self.increase_speed()
+        if  (game_state['ballX'] + init['ballRadius'] >= init['rightPadX'] and
+            game_state['ballY'] >= game_state['rightPad'] and
+            game_state['ballY'] <= game_state['rightPad'] + init['padHeight']):
+                game_state['ballSpeedX'] *= -1
+                game_state['ballX'] = init['rightPadX'] - init['ballRadius']
+                await self.increase_speed()
     
     async def check_goal(self):
         """
@@ -291,14 +298,14 @@ class GameManager:
          - Broadcasts the goal event, including which player scored and the new direction for the next round, using `broadcast_goal()`.
          - Calls `set_game_state()` to reset the game state after a goal is detected.
          """
-        if self.game_state['ballX'] - init['ballRadius'] < PADDING:
+        if  game_state['ballX'] <= 0:
             #game_state['ballSpeedX'] *= -1
             await self.set_game_state()
             self.room.goal = True
             self.room.score["player2"] +=1
             player = 'player2'
 
-        if self.game_state['ballX'] + init['ballRadius'] > PITCHWIDTH + PADDING:
+        if  game_state['ballX'] >= PITCHWIDTH - BALL_RADIUS:
             #game_state['ballSpeedX'] *= -1
             await self.set_game_state()
             self.room.goal = True
@@ -320,29 +327,26 @@ class GameManager:
             for x in self.room.score.values():
                 if x >= ENDSCORE:
                     self.room.state = gamestatus.over
-                    #await self.end_with_winner()
+                    await self.end_with_winner()
 
     async def set_key_state(self, data):
         player = data['player']
         key_state = data['keyState']
         key = data['key']
 
-
         if ( player == 'player1'):
             if (key == 'w') or (key == 'ArrowUp'):
-               self.game_state['leftPadUp'] = key_state
+                game_state['leftPadUp'] = key_state
             elif (key == 's') or (key == 'ArrowDown'):
-               self.game_state['leftPadDown'] = key_state    
+                game_state['leftPadDown'] = key_state    
         
         elif ( player == 'player2'):
             if (key == 'w') or (key == 'ArrowUp'):
-               self.game_state['rightPadUp'] = key_state
+                game_state['rightPadUp'] = key_state
             elif (key == 's') or (key == 'ArrowDown'):
-               self.game_state['rightPadDown'] = key_state
-        
-        await self.move_pads()
-        await self.send_updates()
+                game_state['rightPadDown'] = key_state
 
     async def increase_speed(self):
-       self.game_state['ballSpeedX'] *= 1.2
-       self.game_state['ballSpeedY'] *= 1.2
+        game_state['ballSpeedX'] *= 1.2
+        game_state['ballSpeedY'] *= 1.2
+        game_state['padSpeed'] *= 1.2

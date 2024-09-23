@@ -94,7 +94,7 @@ class PongAI extends HTMLElement {
         this.scoreboard.textContent = `${this.leftScore} - ${this.rightScore}`;
     }
     
-    setTimeLoop(obj) {
+    iaPredict(obj) {
         const ballSpeedX = (obj.ballSpeedX * obj.ballDirectionX)
         const ballSpeedY = (obj.ballSpeedY * obj.ballDirectionY)
         let futureLeft = obj.ballY + ((obj.leftPaddleX - obj.ballX) / ballSpeedX) * ballSpeedY;
@@ -121,7 +121,7 @@ class PongAI extends HTMLElement {
             if (this.checkWinner() == false)
                 requestAnimationFrame(gameLoop);
         };
-        setInterval(this.setTimeLoop, 1000, this);
+        setInterval(this.iaPredict, 1000, this);
         gameLoop();
     }
 
