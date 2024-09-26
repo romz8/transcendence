@@ -30,7 +30,40 @@ class PongAI extends HTMLElement {
     connectedCallback() {
         this.innerHTML = /*html*/`
         <style>
-            .game-container {
+        h1 {  
+            color: var(--bs-cs-secondary);
+            font-size: 50px;
+        }
+        h2 {
+            color: var(--bs-cs-secondary);
+            font-size: 35px;
+        }
+        h3 {
+            color: var(--bs-cs-secondary);
+            font-size: 15px;
+        }
+        h4 {
+            color: var(--bs-cs-secondary);
+            font-size: 10px;
+        }
+        #mainContainer {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        #players-container {
+            display: flex;
+            position: relative;
+            top: -100px;
+            justify-content: space-between; /* Distributes child elements to the extremes */
+            width: 100%; /* Ensures the container uses full width */
+            z-index: 2;
+        }
+
+        .game-container {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -38,60 +71,122 @@ class PongAI extends HTMLElement {
             width: ${this.gameWidth}px;
             height: ${this.gameHeight}px;
             background-color: black;
-            }
-            .paddle {
+            z-index: 1;
+        }
+
+        .pitch-svg {
             position: absolute;
-            width: ${this.paddleWidth}px;
-            height: ${this.paddleHeight}px;
-            background-color: white;
-            }
-            #leftPaddle {
+            top: 0;
             left: 0;
-            }
-            #rightPaddle {
-            right: 0;
-            }
-            .ball {
-            position: absolute;
-            width: ${this.ballSize}px;
-            height: ${this.ballSize}px;
-            background-color: white;
-            border-radius: 50%;
-            }
-            .scoreboard {
-            position: absolute;
-            top: 10px;
             width: 100%;
-            color: white;
-            font-size: 24px;
+            height: 100%;
+        }
+
+        #countdown {
+            font-size: 48px;
+            color: white; /* Ensure the text color contrasts with the background */
             text-align: center;
-            font-family: Arial, sans-serif;
-            }
+            width: 100%;
+        }
+
+        #logout-button {
+            position: absolute;
+            top: 670px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        @keyframes rainbow-cascade {
+            0% { color: red; }
+            14% { color: orange; }
+            28% { color: yellow; }
+            42% { color: green; }
+            57% { color: blue; }
+            71% { color: indigo; }
+            85% { color: violet; }
+            100% { color: red; }
+        }
+
+        .highlight {
+            animation: rainbow-cascade 1.5s linear infinite;
+            font-weight: bold;
+        }
+
         </style>
         <nav-bar data-authorized></nav-bar>
+        <div id="mainContainer">
+        <h1>Pong</h1>
         <div class="game-container">
-            <div class="scoreboard" id="scoreboard">0 - 0</div>
-            <div id="leftPaddle" class="paddle"></div>
-            <div id="rightPaddle" class="paddle"></div>
-            <div class="ball"></div>
+            <div id="players-container">
+                <div id="player1-container" class="player-container">
+                    <h2 id="player1-name">AI</h2>
+                    <h3 id="player1-score">Score: 0</h3>
+                </div>
+                <div id="player2-container" class="player-container">
+                    <h2 id="player2-name">${localStorage.getItem('alias')}</h2>
+                    <h3 id="player2-score">Score: 0</h3>
+                </div>
+            </div>
+            <svg class="pitch-svg" xmlns="http://www.w3.org/2000/svg">
+                <!-- Pitch background -->
+                <rect width="100%" height="100%" fill="black" />
+                
+                <!-- Top and bottom lines -->
+                <line x1="0" y1="0" x2="${this.gameWidth}" y2="0" stroke="white" stroke-width="2"/>
+                <line x1="0" y1="${this.gameHeight}" x2="${this.gameWidth}" y2="${this.gameHeight}" stroke="white" stroke-width="2"/>
+                
+                <!-- Center line dashed -->
+                <line x1="${this.gameWidth / 2}" y1="0" x2="${this.gameWidth / 2}" y2="${this.gameHeight}" stroke="white" stroke-width="2" stroke-dasharray="5,10"/>
+
+                <!-- Goal lines dashed -->
+                <line x1="0" y1="0" x2="0" y2="${this.gameHeight}" stroke="white" stroke-width="2" stroke-dasharray="5,10"/>
+                <line x1="${this.gameWidth}" y1="0" x2="${this.gameWidth}" y2="${this.gameHeight}" stroke="white" stroke-width="2" stroke-dasharray="5,10"/>
+
+                <!-- Paddles and Ball -->
+                <!-- Player 1 Paddle -->
+                <rect id="player1-paddle" x="0" y="${this.gameHeight / 2 - this.paddleHeight / 2}" width="10" height="75" fill="white"/>
+                
+                <!-- Player 2 Paddle -->
+                <rect id="player2-paddle" x="790" y="${this.gameHeight / 2 - this.paddleHeight / 2}" width="10" height="75" fill="white"/>
+
+                <!-- Ball -->
+                <circle id="ball" cx="${this.gameWidth / 2}" cy="${this.gameHeight / 2}" r="5" fill="white"/>
+            </svg>
         </div>
+    </div>
         `;
 
-        this.leftPaddle = document.getElementById('leftPaddle');
-        this.rightPaddle = document.getElementById('rightPaddle');
-        this.ball = document.querySelector('.ball');
-        this.scoreboard = document.getElementById('scoreboard');
+        this.leftPaddle = document.getElementById('player1-paddle');
+        this.rightPaddle = document.getElementById('player2-paddle');
+        this.ball = document.getElementById('ball');
+        this.palyer1score = document.getElementById('player1-score');
+        this.palyer2score = document.getElementById('player2-score');
 
         this.updatePositions();
         this.startGame();
     }
+    disconnectedCallback()
+    {
+        this.stopGame()
+    }
+
+    stopGame() {
+        this.gameRunning = false;
+        clearInterval(this.iaInterval);
+        cancelAnimationFrame(this.animationFrameId);
+    }
 
     updatePositions() {
-        this.leftPaddle.style.top = `${this.leftPaddleY}px`;
-        this.rightPaddle.style.top = `${this.rightPaddleY}px`;
-        this.ball.style.left = `${this.ballX}px`;
-        this.ball.style.top = `${this.ballY}px`;
-        this.scoreboard.textContent = `${this.leftScore} - ${this.rightScore}`;
+        this.leftPaddle.setAttribute('y', this.leftPaddleY);
+        this.rightPaddle.setAttribute('y', this.rightPaddleY);
+        this.ball.setAttribute('cx', this.ballX);
+        this.ball.setAttribute('cy', this.ballY);
+        this.palyer1score.textContent = `Score: ${this.leftScore}`
+        this.palyer2score.textContent = `Score: ${this.rightScore}`
     }
     
     iaPredict(obj) {
@@ -111,17 +206,19 @@ class PongAI extends HTMLElement {
     }
 
     startGame() {
+        this.gameRunning = true;
         document.addEventListener('keydown', (e) => this.keys[e.key.toLowerCase()] = true);
         document.addEventListener('keyup', (e) => this.keys[e.key.toLowerCase()] = false);        
         
         const gameLoop = () => {
+            if (!this.gameRunning) return ;
             this.movePaddles();
             this.moveBall();
             this.updatePositions();
             if (this.checkWinner() == false)
                 requestAnimationFrame(gameLoop);
         };
-        setInterval(this.iaPredict, 1000, this);
+        this.iaInterval = setInterval(this.iaPredict, 1000, this);
         gameLoop();
     }
 

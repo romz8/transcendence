@@ -17,16 +17,17 @@ Including another URLconf
 from django.urls import path
 from . import views
 from . import login
+from . import friends
 from django.conf import settings
 from django.conf.urls.static import static
 # from . import friends
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
-    # path("confirm_friends/", views.confirm_friends, name="confirm_friends"),
-    # path("add_friend/", views.add_friend, name="add_friend"),
-    # path("list_pending/", views.list_pending, name="list_pending"),
-    # path("list_friends/", views.list_friends, name="list_friends"),
+    path("confirm_friends/", friends.confirm_friends, name="confirm_friends"),
+    path("add_friend/", friends.add_friend, name="add_friend"),
+    path("list_pending/", friends.list_pending, name="list_pending"),
+    path("list_friends/", friends.list_friends, name="list_friends"),
     path("usernameCheck/", login.username_check, name="username_check"),
     path('verify_token/', views.verify_token, name="verify_token"),
     path("info_user/", views.infoUser, name="info_user"),

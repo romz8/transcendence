@@ -80,7 +80,6 @@ def insertLogin(tokken):
                         intra=True, first_name=body.get('first_name'), last_name=body.get('last_name'),
                         campus=body.get('campus')[0].get('name'))
             value = download_and_save_image(user, body.get('image').get('link'))
-
             if value["status"] == 'error':
                 return AnonymousUser()
             user.save()
@@ -112,6 +111,9 @@ def loginIntra(request):
         if (user == AnonymousUser):
             return({'error': 'Error with insert Login'}, 400)
         refresh = RefreshToken.for_user(user)
+        logger.info(refresh["exp"])
+        logger.info(refresh.access_token["exp"])
+        logger.info(datetime.now().timestamp())
         formatResponse = {
             'refresh': str(refresh),
             'access': str(refresh.access_token),
@@ -157,6 +159,7 @@ def refreshToken(request):
             'token_exp': str(respjson.get('expires_in')),
         }
         return JsonResponse(formatResponse)
+    return JsonResponse({'error': 'Missing acces_token in api 42'}, status=400)
 
 def checkArgs(name, first, last, pswd, reppswd):
     if not name or not first or not last or not pswd or not reppswd:
@@ -183,7 +186,7 @@ def signUp(request):
         exist = Users.objects.filter(username=username).exists()
         response = {'response': 'POST'}
         if exist:
-            response["exist"] = True
+            response["error"] = "User Alredy exist"
             return JsonResponse(response, status=400)
         else:
             user = Users(campus="Campus of life", username=username, alias=username,
@@ -214,7 +217,8 @@ def loginWeb(request):
 
         if not username or not password:
             return JsonResponse({'error': 'Missing arguments'}, status=400)
-
+        logger.info(username)
+        logger.info(password)
         user = authenticate(username=username, password=password)
         if user is not None:
             refresh = RefreshToken.for_user(user)
@@ -226,7 +230,7 @@ def loginWeb(request):
                 'id': user.id
             })
         else:
-            return JsonResponse({'error': 'Invalid credentials'})
+            return JsonResponse({'error': 'Invalid credentials'}, status=409)
     except Exception as e:
         logger.info(str(e))
         return JsonResponse({'error': str(e)}, status=400)

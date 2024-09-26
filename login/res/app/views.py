@@ -77,6 +77,8 @@ def updateInfoUser(request):
     if request.POST['alias'] or request.FILES.get('imagefile'):
         if request.POST['alias']:
             try:
+                if len(request.POST['alias']) < 3 :
+                    return JsonResponse({'error': 'Alias to short'}, status=400)
                 users.alias = request.POST['alias']
                 users.save()
             except IntegrityError as e:
@@ -102,9 +104,16 @@ def updateInfoUser(request):
             old_img = users.img.path if users.img else None        
             img.seek(0)
             users.img.save(new_filename, ContentFile(img.read()), save=True)
-            if old_img:
-                if os.path.isfile(old_img):
-                    os.remove(old_img)
+            try:
+                if old_img:
+                    if os.path.isfile(old_img):
+                        os.remove(old_img)
+                    else:
+                        return JsonResponse({'error': 'Deleting Image'})
+                else:
+                    return JsonResponse({'error': 'Deleting Image'})
+            except Exception as e:
+                return JsonResponse({'error': 'Deleting Image'})
         return JsonResponse({'status': 'success'})
     return JsonResponse({'error': 'missing arguments'}, status=400)
     # try:
