@@ -1,5 +1,6 @@
 from urllib.parse import parse_qs
 import logging
+from asgiref.sync import sync_to_async
 from channels.auth import AuthMiddlewareStack
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ObjectDoesNotExist
@@ -8,15 +9,13 @@ import aiohttp
 
 logger = logging.getLogger(__name__)
 
-# Async function to retrieve user from token
 async def get_user_from_token(username):
     try:
-        return await Users.objects.aget(username=username)
+        return await sync_to_async(Users.objects.get)(username=username)
     except ObjectDoesNotExist:
-        return get_user_model().get_anonymous()
+        raise AuthenticationFailed('Invalid or expired token')
 
-# JWT Middleware for Channels
-class JwtAuthMiddleware:
+class JwtAuthMiddleware:    
     def __init__(self, inner):
         self.inner = inner
 
@@ -24,9 +23,9 @@ class JwtAuthMiddleware:
         query_string = scope['query_string'].decode('utf-8')
         query_params = parse_qs(query_string)
         token = query_params.get('token', [None])[0]
+        
         if not token:
-            scope['user'] = AnonymousUser()
-            return await self.inner(scope, receive, send)
+            raise AuthenticationFailed('Invalid or expired token')
 
         headers = {"Authorization": f"Bearer {token}"}
         logger.info(f"Headers sent: {headers}")
@@ -40,15 +39,16 @@ class JwtAuthMiddleware:
                         if username:
                             scope['user'] = await get_user_from_token(username)
                         else:
-                            scope['user'] = AnonymousUser()
+                            raise AuthenticationFailed('Invalid or expired token')
                     else:
                         logger.error(f"Token verification failed with status: {resp.status}")
-                        scope['user'] = AnonymousUser()
+                        raise AuthenticationFailed('Invalid or expired token')
         except aiohttp.ClientError as e:
             logger.error(f"HTTP error: {e}")
-            scope['user'] = AnonymousUser()
+            raise AuthenticationFailed('Invalid or expired token')
 
         return await self.inner(scope, receive, send)
+
     
 def JwtAuthMiddlewareStack(inner):
     return JwtAuthMiddleware(AuthMiddlewareStack(inner))
@@ -64,7 +64,6 @@ logger = logging.getLogger(__name__)
 
 class Intra42Authentication(BaseAuthentication):
     def authenticate(self, request):
-        logger.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
         auth_header = request.headers.get('Authorization')
         if not auth_header:
             return None

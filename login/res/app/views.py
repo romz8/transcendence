@@ -116,17 +116,3 @@ def updateInfoUser(request):
                 return JsonResponse({'error': 'Deleting Image'})
         return JsonResponse({'status': 'success'})
     return JsonResponse({'error': 'missing arguments'}, status=400)
-    # try:
-    #     user = request.user
-    #     body = json.loads(request.body.decode('utf-8'))
-    #     alias = body.get('alias')
-    #     if alias:
-    #         user.alias = alias
-    #         user.save()
-    #         return JsonResponse({'success': 'info updated'})
-    # except IntegrityError as e:
-    #     logger.info("Duplicate alias!")
-    #     return JsonResponse({'error': 'duplicate alias'})
-    # except Exception as e:
-    #     logger.info(str(e))
-    #     return JsonResponse({'error': str(e)}, status=500)

@@ -105,3 +105,26 @@ def confirm_friends(request):
                 return JsonResponse({'error': 'Not pending request'}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+
+@api_view(['POST'])
+def delete_friend(request):
+    try:
+        body = json.loads(request.body.decode('utf-8'))
+        username = body.get('name')
+        fromuser = request.user
+        if not username or not fromuser:
+            return JsonResponse({'error': 'Missing arguments'}, status=400)
+        if Users.objects.filter(alias=username).exists():
+            user = Users.objects.get(alias=username)
+            if (Friends.objects.filter((Q(usersid1=user) & Q(usersid2=fromuser))).exists()):
+                friend = Friends.objects.get(usersid1=user, usersid2=fromuser)
+                friend.delete()
+                return JsonResponse({'success': 'Deleted a friend YOU ARE A BAD PERSON:('})
+            elif (Friends.objects.filter((Q(usersid2=user) & Q(usersid1=fromuser))).exists()):
+                friend = Friends.objects.get(usersid2=user, usersid1=fromuser)
+                friend.delete()
+                return JsonResponse({'success': 'Deleted a friend YOU ARE A BAD PERSON:('})
+            else:
+                return JsonResponse({'error': 'No Friends to delete :('}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)

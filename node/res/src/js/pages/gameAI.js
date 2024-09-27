@@ -1,3 +1,5 @@
+import { displayCountdown } from "../game/gameDisplay";
+
 class PongAI extends HTMLElement {
     constructor() {
         super();
@@ -8,14 +10,14 @@ class PongAI extends HTMLElement {
         this.ballSize = 10;
         this.paddleSpeed = 5;
         this.ballSpeedX = 5;
-        this.ballSpeedY = 3;
+        this.ballSpeedY = 5;
         this.aiSpeed = 5;
 
         this.leftPaddleY = this.gameHeight / 2 - this.paddleHeight / 2;
         this.futureLeftY = this.gameHeight / 2 - this.paddleHeight / 2;
         this.leftPaddleX = 10;
         this.rightPaddleY = this.gameHeight / 2 - this.paddleHeight / 2;
-        this.rightPaddleX = 790;
+        this.rightPaddleX = 785;
         this.ballX = this.gameWidth / 2;
         this.ballY = this.gameHeight / 2;
         this.ballDirectionX = Math.floor(Math.random() * 2) == 0? -1: 1;
@@ -27,7 +29,7 @@ class PongAI extends HTMLElement {
         this.keys = {};
     }
 
-    connectedCallback() {
+    async connectedCallback() {
         this.innerHTML = /*html*/`
         <style>
         h1 {  
@@ -120,6 +122,7 @@ class PongAI extends HTMLElement {
         <nav-bar data-authorized></nav-bar>
         <div id="mainContainer">
         <h1>Pong</h1>
+        <div id="countdown" style="font-size: 48px; text-align: center;"></div>
         <div class="game-container">
             <div id="players-container">
                 <div id="player1-container" class="player-container">
@@ -148,10 +151,10 @@ class PongAI extends HTMLElement {
 
                 <!-- Paddles and Ball -->
                 <!-- Player 1 Paddle -->
-                <rect id="player1-paddle" x="0" y="${this.gameHeight / 2 - this.paddleHeight / 2}" width="10" height="75" fill="white"/>
+                <rect id="player1-paddle" x="0" y="${this.gameHeight / 2 - this.paddleHeight / 2}" width="${this.paddleWidth}" height="${this.paddleHeight}" fill="white"/>
                 
                 <!-- Player 2 Paddle -->
-                <rect id="player2-paddle" x="790" y="${this.gameHeight / 2 - this.paddleHeight / 2}" width="10" height="75" fill="white"/>
+                <rect id="player2-paddle" x="790" y="${this.gameHeight / 2 - this.paddleHeight / 2}" width="${this.paddleWidth}" height="${this.paddleHeight}" fill="white"/>
 
                 <!-- Ball -->
                 <circle id="ball" cx="${this.gameWidth / 2}" cy="${this.gameHeight / 2}" r="5" fill="white"/>
@@ -167,7 +170,7 @@ class PongAI extends HTMLElement {
         this.palyer2score = document.getElementById('player2-score');
 
         this.updatePositions();
-        this.startGame();
+        await this.startGame();
     }
     disconnectedCallback()
     {
@@ -185,8 +188,6 @@ class PongAI extends HTMLElement {
         this.rightPaddle.setAttribute('y', this.rightPaddleY);
         this.ball.setAttribute('cx', this.ballX);
         this.ball.setAttribute('cy', this.ballY);
-        this.palyer1score.textContent = `Score: ${this.leftScore}`
-        this.palyer2score.textContent = `Score: ${this.rightScore}`
     }
     
     iaPredict(obj) {
@@ -205,24 +206,39 @@ class PongAI extends HTMLElement {
         obj.futureLeftY = futureLeft - obj.paddleHeight / 2;
     }
 
-    startGame() {
+    async doCountdown() {
+        let countdown = 3;
+        while(countdown > 0)
+        {
+            displayCountdown(countdown);
+            countdown--;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        displayCountdown();
+    }
+
+    async startGame() {
         this.gameRunning = true;
         document.addEventListener('keydown', (e) => this.keys[e.key.toLowerCase()] = true);
         document.addEventListener('keyup', (e) => this.keys[e.key.toLowerCase()] = false);        
         
-        const gameLoop = () => {
+        await this.doCountdown();
+
+        const  gameLoop = async () => {
             if (!this.gameRunning) return ;
             this.movePaddles();
-            this.moveBall();
+            await this.moveBall();
             this.updatePositions();
             if (this.checkWinner() == false)
                 requestAnimationFrame(gameLoop);
         };
         this.iaInterval = setInterval(this.iaPredict, 1000, this);
-        gameLoop();
+        await gameLoop();
     }
 
     checkWinner(){
+        this.palyer1score.textContent = `Score: ${this.leftScore}`
+        this.palyer2score.textContent = `Score: ${this.rightScore}`
         if (this.leftScore == 5 )
         {
             alert("AI WON GIT GUD")
@@ -263,11 +279,11 @@ class PongAI extends HTMLElement {
             this.ballDirectionX *= -1;
         else
             this.ballDirectionY *= -1;
-        this.ballSpeedX += 0.1;
-        this.ballSpeedY += 0.1;
+        this.ballSpeedX += 0.4;
+        this.ballSpeedY += 0.4;
     }
 
-    moveBall() {
+    async moveBall() {
         this.ballX += this.ballSpeedX * this.ballDirectionX;
         this.ballY += this.ballSpeedY * this.ballDirectionY;
 
@@ -281,16 +297,18 @@ class PongAI extends HTMLElement {
         if (this.ballX <= 0)
         {
             this.rightScore++;
-            this.resetBall();
+            await this.resetBall();
         }
-        if (this.ballX >= this.gameWidth - this.ballSize)
+        if (this.ballX >= this.gameWidth)
         {
             this.leftScore++;
-            this.resetBall();
+            await this.resetBall();
         }
     }
 
-    resetBall() {
+    async resetBall() {
+        clearInterval(this.iaInterval);
+        this.iaInterval = setInterval(this.iaPredict, 1000, this);
         this.leftPaddleY = this.gameHeight / 2 - this.paddleHeight / 2;
         this.rightPaddleY = this.gameHeight / 2 - this.paddleHeight / 2;
         this.ballX = this.gameWidth / 2;
@@ -298,7 +316,9 @@ class PongAI extends HTMLElement {
         this.ballDirectionX *= -1;
         this.ballDirectionY = Math.floor(Math.random() * 2) == 0? -1: 1;
         this.ballSpeedX = 5;
-        this.ballSpeedY = 3;
+        this.ballSpeedY = 5;
+        if (this.leftScore != 5 && this.rightScore != 5)
+            await this.doCountdown();
     }
 }
 

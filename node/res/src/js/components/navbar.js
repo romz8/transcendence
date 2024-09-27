@@ -1,6 +1,7 @@
 import { router } from '../routes';
 import { updateLightMode } from '../main';
 import { generateLangs } from '../languages';
+import { disconnectWB } from '../user_login';
 
 class NavBar extends HTMLElement {
 	constructor() {
@@ -123,8 +124,8 @@ class NavBar extends HTMLElement {
 			const	logoutBtn = document.getElementById('logout-btn');
 			logoutBtn.addEventListener('click', () => {
 				document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; Secure; SameSite=Strict";
-				document.cookie = "id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; Secure; SameSite=Strict";
 				document.cookie = "refresh=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; Secure; SameSite=Strict";
+				disconnectWB()
 				router();
 			});
 		}

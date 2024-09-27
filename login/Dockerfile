@@ -18,4 +18,4 @@ EXPOSE 8080
 
 ENTRYPOINT [ "bash", "./entrypoint.sh" ]
 
-CMD [ "python", "manage.py", "runserver", "0.0.0.0:8080" ]
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8080", "app.asgi:application"]

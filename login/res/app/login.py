@@ -193,6 +193,8 @@ def signUp(request):
                          first_name=first, last_name=last, intra=False)
             user.set_password(pswd)
             user.save()
+            userStatus = UserStatus(users=user, is_online=False)
+            userStatus.save()
             animal = random.choice(["penguin.jpeg", "cat.jpeg", "chicken.jpeg"])
             random_mesh = img_name_gen()
             imgcontentpath = f"{str(Path(__file__).resolve().parent.parent)}/media/def/{animal}"
@@ -211,7 +213,6 @@ def signUp(request):
 @api_view(['POST'])
 def loginWeb(request):
     try:
-        # body = json.loads(request.body.decode('utf-8'))
         username = request.POST['username']
         password = request.POST['password']
 

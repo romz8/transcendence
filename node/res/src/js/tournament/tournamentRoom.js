@@ -88,9 +88,9 @@ async function joinModale(){
       <div class="modal-body">
       <ul class="list-group" id="roomList">
       ${allTour.map(room => `<li class="list-group-item room-item" data-room-id="${room.id}">ROOM : ${room.id} - with ${room.n_registered}/${room.size} registered</li>`).join('')}
-  </ul>
-</div>
-<div class="modal-footer">
+      </ul>
+    </div>
+    <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             <button type="button" class="btn btn-primary" id="modalSubmitButton">Submit</button>
           </div>
@@ -165,7 +165,7 @@ async function createModale(){
             <!-- Tournament Size Selection -->
             <div class="form-group">
               <label for="tournamentSize">Tournament Size</label>
-              <select class="form-control" id="tournamentSize"">
+              <select class="form-control" id="tournamentSize">
                 <option value="4">4 Players</option>
                 <option value="8">8 Players</option>
               </select>
