@@ -57,6 +57,8 @@ services:
     build: ./tournament
     container_name: celery_worker
     command: celery -A pong_project worker -l info
+    env_file:
+      - .env
     volumes:
       - ./tournament/pong_back:/app
     networks:
@@ -70,6 +72,8 @@ services:
     build: ./tournament
     container_name: celery_beat
     command: celery -A pong_project beat -l info
+    env_file:
+      - .env
     volumes:
       - ./tournament/pong_back:/app
     networks:

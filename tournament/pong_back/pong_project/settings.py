@@ -172,6 +172,12 @@ CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+# Asegúrate de que BASE_DIR esté definido correctamente
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Celery Beat Schedule filename
+CELERY_BEAT_SCHEDULE_FILENAME = os.path.join(BASE_DIR, 'celery-beat-schedule')
+# Celery Worker State DB
+CELERY_WORKER_STATE_DB = os.path.join(BASE_DIR, 'celery-worker-state')
 
 
 # Internationalization
