@@ -4,9 +4,9 @@ from . import views
 urlpatterns = [
     path("players/", views.player_list, name='player_list'),
     path("allmatch/", views.MatchList.as_view(), name='match_list'),
-    path("waitingroom/", views.get_waitroom, name='getWaitroom'),
+    path("waitingroom/info/<str:genId>/", views.getWaitRoom.as_view(), name='getWaitroom'),
     path("waitingroom/listopen/", views.ListWaitRoom.as_view(), name='getWaitroom'),
-    path("waitingroom/create/", views.create_waitroom, name='createWaitroom'),
+    path("waitingroom/create/", views.createWaitroom.as_view(), name='createWaitroom'),
     path("waitingroom/join/<str:pk>/", views.join_waitroom, name='joinWaitroom'),
     path("waitingroom/delete/<str:pk>/", views.delete_waitroom, name='deleteWaitroom'),
     path("tournament/create/", views.create_tournament, name='createTournament'),

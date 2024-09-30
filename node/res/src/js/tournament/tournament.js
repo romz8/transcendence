@@ -66,7 +66,7 @@ async function renderLoop(id, container) {
     
     // Check if state has changed
     const auth = await getAuth();
-    console.log("Auth is", auth);
+    // console.log("Auth is", auth);
     const username = auth.username;
     if (resp.state !== state) {
         state = resp.state;
@@ -119,7 +119,7 @@ async function renderWaiting(id, username, container) {
 async function fetchPlayers(id) {
     try {
         const players = await getPlayerListTournament(id);
-        console.log(players)
+        // console.log(players)
         if (!players) {
             console.log("empty tournament player list");
             return;

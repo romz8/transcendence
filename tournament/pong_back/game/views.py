@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.views.generic import ListView
 from .models import Users, Match, WaitRoom, Tournament, Tourparticipation
-from .serializer import CustomUserSerializer, MatchSerializer, MatchDetailSerializer, RoomSerializer, TournamentSerializer, TournamentDetailSerializer, ParticipSerializer, ParticipDetailSerializer
+from .serializer import CustomUserSerializer, MatchSerializer, MatchDetailSerializer, RoomSerializer, RoomDetailSerializer, TournamentSerializer, TournamentDetailSerializer, ParticipSerializer, ParticipDetailSerializer
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,7 +11,7 @@ from rest_framework import status
 from django.db import transaction
 from rest_framework.exceptions import ValidationError, NotFound
 import logging, uuid, random
-from rest_framework.generics import ListAPIView, RetrieveAPIView, UpdateAPIView, DestroyAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView, UpdateAPIView, DestroyAPIView
 logger = logging.getLogger(__name__)
 
 # Create your views here.
@@ -39,26 +39,24 @@ class MatchList(ListAPIView):
     queryset = Match.objects.all()
     serializer_class = MatchDetailSerializer
 
-@api_view(['POST'])
-def create_waitroom(request):
-    owner = request.user
-    if WaitRoom.objects.filter(owner=owner).exists():
-        roomid = WaitRoom.objects.filter(owner=owner).first().genId
-        return(Response({"details":"there is already a waitroom", "genId": roomid}, status=status.HTTP_406_NOT_ACCEPTABLE)) #not sure on the content
-    wait_room = WaitRoom.objects.create(owner=owner)
-    wait_room.save()
-    serialized = RoomSerializer(wait_room)
-    
-    return (Response(serialized.data, status=status.HTTP_201_CREATED)) #is deserialized data necessary ?
+class createWaitroom(CreateAPIView):
+    queryset = WaitRoom.objects.all()
+    serializer_class = RoomSerializer
 
-@api_view(['GET']) #CAN BE REPLACED BY GENERIC CONCRETE ON RETRIEVE
-def get_waitroom(request):
-    owner = request.user
-    room_search = WaitRoom.objects.filter(owner=owner).first()
-    if not room_search:
-        return(Response(status=status.HTTP_404_NOT_FOUND))
-    serialized = RoomSerializer(room_search)
-    return(Response(serialized.data, status=status.HTTP_200_OK))
+    def perform_create(self, serializer):
+        owner = self.request.user
+        serializer.save(owner=owner,attendee=None)
+
+
+class getWaitRoom(RetrieveAPIView):
+    '''
+    return a room instance per its genId
+    '''
+    queryset = WaitRoom.objects.all()
+    serializer_class = RoomDetailSerializer
+    lookup_field = "genId"
+
+
 
 
 class ListWaitRoom(ListAPIView):

@@ -48,7 +48,9 @@ class Friends(models.Model):
 class Tournament(models.Model):
     STATE_CHOICES = [('registering', 'Registering'),('ongoing', 'Ongoing'),('finished', 'Finished')]
     
-    winner = models.ForeignKey(Users, models.DO_NOTHING, db_column='winnerid', blank=True, null=True)
+    winner = models.ForeignKey(Users, models.DO_NOTHING, db_column='winnerid', blank=True, null=True, related_name="winner")
+    runner_up = models.ForeignKey(Users, models.DO_NOTHING, db_column='runneruprid', blank=True, null=True, related_name="loser")
+    final_score = models.CharField(max_length=100, null=True, blank=True)
     datetourn = models.DateTimeField(auto_now_add=True, blank=False, null=False)
     state = models.CharField(max_length=50, default="registering", choices=STATE_CHOICES)
     size = models.IntegerField(default=4, choices=[(4,'4'),(8, '8')])
@@ -118,7 +120,7 @@ class Match(models.Model):
     score_p1 = models.IntegerField(default=0)
     score_p2 = models.IntegerField(default=0)
     state = models.CharField(max_length=100, default="waiting", choices=STATE_CHOICES)
-
+    game_id = models.CharField(max_length=36, unique=False, editable=False) #ISSUE FOR TOURNAMENT AT CREATION IF NOT TURNED OFF
     #used four tournament only
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, db_column = "tournamentid", blank=True, null=True)
     round=models.IntegerField(default=0, null=True, blank=True)
@@ -128,10 +130,10 @@ class Match(models.Model):
         return f"Game id {self.pk} between {self.player1} and {self.player2} on {self.game_date}"
 
     class Meta:
-        ordering = ['game_date']
-        unique_together = ["player1", "player2", "game_date", "tournament"]
         managed = True
         db_table = 'match'
+        ordering = ['game_date']
+        unique_together = ["player1", "player2", "game_date", "tournament"]
     
     def clean(self):
         # Allow both players to be None (future matches in Tourbament Sequence)
@@ -149,16 +151,14 @@ def default_expire_at():
     return (timezone.now() + timedelta(minutes=3))
 
 class WaitRoom(models.Model):
-    owner = models.OneToOneField(Users, on_delete=models.CASCADE, related_name="owner_room", null=True, blank=True, unique=True) #for migration, later put it unique
-    attendee = models.OneToOneField(Users, on_delete=models.CASCADE, related_name="attending_room", null=True, blank=True, unique=True)
-    genId = models.CharField(max_length=16, unique=True, editable=False)
+    owner = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="owner_room", null=True, blank=True) #for migration, later put it unique
+    attendee = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="attending_room", null=True, blank=True)
+    genId = models.CharField(max_length=36, unique=True, editable=False)
     expire_at = models.DateTimeField(default=default_expire_at)
-
+    
     class Meta:
-        unique_together = ['owner', 'attendee']
         managed = True
         db_table = 'waitroom'
-    
     def __str__(self):
         return f"Room {self.genId} (Owner: {self.owner}, Attendee: {self.attendee})"
     
@@ -168,15 +168,12 @@ class WaitRoom(models.Model):
 
     def generate_unique_id(self):
         while True:
-            temp = "game_" + uuid.uuid4().hex[:10]
+            temp = "g-" + uuid.uuid4().hex
             if not WaitRoom.objects.filter(genId=temp).exists():
                 return temp
     
     @transaction.atomic
     def join_room(self, user):
-        other_room = WaitRoom.objects.filter(owner=user).first()
-        if other_room is not None:
-            raise ValidationError("Can not join a room while hosting one")
         room = WaitRoom.objects.select_for_update().get(genId=self.genId)
         if room.attendee is not None:
             raise ValidationError("Someone just joined this room")

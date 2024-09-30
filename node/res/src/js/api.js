@@ -68,7 +68,7 @@ export async function getWaitRoom(){
         let resp = await fetchWithAuth(`http://${DN}:8000/game/waitingroom/`);
         if (resp.ok){
             let json = await resp.json();
-            console.log("from json ", json);
+            // console.log("from json ", json);
             localStorage.setItem('waitroomId', json.genId); //to delete later on - only debug
             return json;
         }
@@ -93,7 +93,7 @@ export async function getListWaitRoom(){
         let resp = await fetchWithAuth(`http://${DN}:8000/game/waitingroom/listopen/`,{cache:'no-cache'});
         if (resp.ok){
             let json = await resp.json();
-            console.log("from json ", json);
+            // console.log("from json ", json);
             return json;
         }
         else if (resp.status === 404) {
@@ -190,7 +190,7 @@ export async function getListTournament(){
         let resp = await fetchWithAuth(`http://${DN}:8000/game/tournament/openlist/`,{cache:'no-cache'});
         if (resp.ok){
             let json = await resp.json();
-            console.log("from json ", json);
+            // console.log("from json ", json);
             return json;
         }
         else if (resp.status === 404) {
@@ -259,14 +259,18 @@ export async function joinTournament(Id){
     }
 }
 
+var tester = 0;
+
 export async function getTournament(Id){
     try{
 
         let resp = await fetchWithAuth(`http://${DN}:8000/game/tournament/${Id}`);
-        console.log(resp.status)
+        // console.log(resp.status)
         if (resp.ok){
             let json = await resp.json();
-            console.log("from json ", json);
+            if (tester == 0)
+                console.log("from json ", json);
+            tester++;
             return json;
         }
         else if (resp.status === 404) {
@@ -288,7 +292,7 @@ export async function getPlayerListTournament(Id) {
     try {
         const response = await fetchWithAuth(`http://${DN}:8000/game/tournament/${Id}/participants/`);
         const players = await response.json();
-        console.log("in list playe api call reuslt is : ", players);
+        // console.log("in list playe api call reuslt is : ", players);
         return players;
     } catch (error) {
         console.error('Error fetching players:', error);
@@ -300,7 +304,7 @@ export async function getMatchesListTournament(Id) {
     try {
         const response = await fetchWithAuth(`http://${DN}:8000/game/tournament/${Id}/matches/`);
         const players = await response.json();
-        console.log("in list playe api call reuslt is : ", players);
+        // console.log("in list playe api call reuslt is : ", players);
         return players;
     } catch (error) {
         console.error('Error fetching players:', error);
@@ -312,7 +316,7 @@ export async function getPlayerTournnamentActive(id){
     try {
         const response = await fetchWithAuth(`http://${DN}:8000/game/tournament/${id}/is_active/`);
         const players = await response.json();
-        console.log("in list playe api call reuslt is : ", players);
+        // console.log("in list playe api call reuslt is : ", players);
         return players;
     } catch (error) {
         console.error('Error fetching players:', error);
@@ -421,7 +425,7 @@ async function fetchWithAuth(url, options = {}){
     let headers = options.headers || {}; //here we either create empty headers or use the on in options if passed
     headers['Authorization'] =`Bearer ${token}`;
     options.headers = headers;
-    console.log("in fetch with AUth url is : " + url);
+    // console.log("in fetch with AUth url is : " + url);
     let resp = await fetch(url, options);
     if (resp.status == 401){
         console.log("refreshig token in fetch wrapper");
@@ -431,6 +435,7 @@ async function fetchWithAuth(url, options = {}){
         options.headers = headers;
         resp = await fetch(url, options);
     }
+    let testing = resp.status
     return (resp);
 }
 
@@ -444,7 +449,7 @@ export async function getAuth(){
         if (resp.ok){
             let json = await resp.json();
             let txt_rep = JSON.stringify(json);
-            console.log("json is : " + txt_rep);
+            // console.log("json is : " + txt_rep);
             return json;
         }
         else {

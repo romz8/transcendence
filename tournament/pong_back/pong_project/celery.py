@@ -15,7 +15,7 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     'check-waitroom-expiry': {
         'task': 'game.tasks.clear_expired_waitrooms',
-        'schedule': crontab(minute='*/3'),  # Every minutes
+        'schedule': crontab(minute='*'),  # Every minutes
     },
     'manage-ai-players': {
         'task': 'game.tasks.manage_full_ai_match',

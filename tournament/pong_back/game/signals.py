@@ -12,7 +12,7 @@ Block_url = os.getenv('API_URL_BLOCKCHAIN')
 
 @receiver(post_save, sender=Match)
 def update_match_tournament(sender, instance, **kwargs):
-    if instance.state != "finished":
+    if instance.state != "finished" or instance.tournament is None:
         return
     try:
         winner = instance.player1 if instance.score_p1 > instance.score_p2 else instance.player2
@@ -48,8 +48,12 @@ def build_bracket_tournament(sender, instance, created,**kwargs):
     if hasattr(instance, '_signal_handling_in_progress') and instance._signal_handling_in_progress:
         return
     instance._signal_handling_in_progress = True
+    logger.info("****************************************************************")
+    logger.info("****************************************************************")
     if(instance.state == "registering") and (instance.n_registered == instance.size):
         try:
+            logger.info("****************************************************************")
+            logger.info("****************************************************************")
             tour_obj = TournamentSerie(instance.id, instance.size)
             players = Tourparticipation.objects.filter(tournament = instance)
             for p in players:

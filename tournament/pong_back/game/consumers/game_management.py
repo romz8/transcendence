@@ -1,13 +1,8 @@
-import random
-import asyncio
-import logging
-import json
-from .rooms import gamestatus
+import random, asyncio, logging, json
 
 logger = logging.getLogger(__name__)
 
 PADDING = 50
-ENDSCORE = 3
 MESSAGE_DURATION = 2000
 PITCHWIDTH = 600
 PITCHHEIGHT = 400
@@ -27,33 +22,49 @@ init = {
     'ballY': PITCHHEIGHT / 2 + PADDING,
     'ballRadius': 5,
     'ballSpeedX': BALL_SPEED,
-    'ballSpeedY': BALL_SPEED,   
-    'endscore': ENDSCORE,
+    'ballSpeedY': BALL_SPEED,
 }
 
 BOTTOM_BOUNDARY = PITCHHEIGHT + PADDING - init['padHeight']
 
+class GameSubject:
+    """Building the Subject of Observer design pattern - add/remove observer objs and pub method"""
+    def __init__(self):
+        self._observers = []
+    
+    def register_observer(self, obs):
+        self._observers.append(obs)
 
+    def unregister_observer(self, obs):
+        self._observers.remove(obs)
 
-class GameManager:
-    def __init__(self, room, room_group_name, channel_layer):
-        self.room = room
-        self.room_group_name = room_group_name
-        self.channel_layer = channel_layer #horrible ... will rewrite
-        self.direction = 0
-        self.game_state = {
-            'leftPad': 0,
-            'rightPad': 0,
-            'ballX': 0,
-            'ballY': 0,
-            'ballSpeedX': 0,
-            'ballSpeedY': 0,
-            'leftPadUp': False,
-            'leftPadDown': False,
-            'rightPadUp': False,
-            'rightPadDown': False,
+    async def notify_observer(self, message, event):
+        logger.info(f"Notifying observers: {message}, event: {event}")
+        for obs in self._observers:
+            await obs.broadcast_update(message, event)
+
+class GameManager(GameSubject):
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        """ Making the game a singleton class to allow only one instance for all consumers in a room"""
+        if cls._instance is None:
+            return super(GameManager, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self, room):
+        super().__init__()
+        self.direction = random.randint(1, 4)
+        self.goal = False
+        self.stop = False
+        self.game_state = {'leftPad': 0,'rightPad': 0,
+            'ballX': 0,'ballY': 0,
+            'ballSpeedX': 0,'ballSpeedY': 0,
+            'leftPadUp': False, 'leftPadDown': False,
+            'rightPadUp': False,'rightPadDown': False,
             'padSpeed': 0,
         }
+        self.register_observer(room)
 
     async def set_game_state(self):
         """
@@ -95,133 +106,19 @@ class GameManager:
         - Resets the room's goal state to `False` after a goal is detected.
         """
         time_step = 1/20
-        while not self.room.goal:
+        while not self.goal and not self.stop:
         
             await self.move_pads()
             await self.move_ball()
             await self.check_collision()
             await self.check_goal()
 
-            await self.send_updates()
+            await self.notify_observer("update", self.game_state)
             
             await asyncio.sleep(time_step)
 
         
-        self.room.goal = False
-
-    '''
-    ****************************************************************************
-    BROADCAST GAME EVENTS
-    ****************************************************************************
-    '''
-    # async def broadcast_countdown(self, event):
-    #     """
-    #     Broadcasts a Countdown event to all players in the room. they then alert the front socket
-    #     - Extracts the event type from the incoming event data and sends it as a JSON message to all clients.
-    #     - This function is used for broadcasting general game-related events that do not require specific game state updates
-    #     such as notifications or simple status changes.
-    #     """        
-    #     data = event['event']
-    #     roomstate = event['roomstate']
-    #     players = event['players']
-    #     self.direction = event['direction']
-    #     await self.send(text_data=json.dumps({
-    #         'type': data,
-    #         'roomstate' : roomstate,
-    #         'players': players,
-    #         'direction': self.direction,
-    #     }))
-    
-    async def send_updates(self):
-        """
-        Broadcasts the current game state to all connected clients in the room.
-        - Sends a `broadcast_game_state` event with the latest `game_state` dictionary, which includes the positions of the ball and paddles.
-        - Ensures that all players receive real-time updates on the game state, keeping their displays synchronized.
-        - This function is called during the game loop to maintain consistency across clients.
-        """
-
-        logger.info('entramos en send updates')
-
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'broadcast_game_state',
-                'roomstate' : self.room.state.name,
-                'game_state':self.game_state,
-                'room_channel':self.room_group_name,
-            }   
-            )
-
-    # async def broadcast_game_state(self, event):
-    #     """
-    #     Handler for the broadcast of the current game state to all players in the room.
-    #     - Extracts the `game_state` from the incoming event and sends it to the WebSocket clients.
-    #     - Sends a JSON message containing the positions of the paddles (`leftPad`, `rightPad`) and the ball (`ballX`, `ballY`).
-    #     - Ensures that all clients update their game views according to the latest game state received from the server.
-    #     """
-
-    #     game_state = event['game_state']
-    #     room_id = event['room_channel']
-    #     leftPad = game_state['leftPad']
-    #     rightPad = game_state['rightPad']
-    #     ballX = game_state['ballX']
-    #     ballY = game_state['ballY']
-    #     roomstate = event['roomstate']
-    #     await self.send(text_data=json.dumps({
-    #         'type': 'update',
-    #         'room_channel': room_id,
-    #         'roomstate': roomstate,
-    #         'leftPad': leftPad,
-    #         'rightPad': rightPad,
-    #         'ballX': ballX,
-    #         'ballY': ballY,
-    #     }))
-
-
-    # async def broadcast_goal(self, event):
-    #     """
-    #     Broadcasts a goal event to all players, indicating which player scored and the new direction of the ball.
-
-    #     - Extracts the player who scored and the new ball direction from the incoming event.
-    #     - Sends a JSON message containing the player who scored and the direction for the next round.
-    #     - Ensures that all players are aware of the goal and prepares them for the next round of play.
-    #     """
-    #     logger.info(f"Send message: {event['event']} to {self.role}")
-    #     roomstate = event['roomstate']
-    #     data = event['event']
-    #     player = event['player']
-    #     direction = event['direction']
-    #     score = event['score']
-    #     await self.send(text_data=json.dumps({
-    #         'type': data,
-    #         'roomstate': roomstate,
-    #         'player': player,
-    #         'direction': direction,
-    #         'score' : score,
-    #     }))
-
-    # async def broadcast_reset(self, event):
-    #     """
-    #     Broadcasts a reset event to all players after a goal is scored.   
-    #     - Sends a reset message to all connected clients to inform them that the game state is being reset for the next round.
-    #     - This function helps synchronize the clients by ensuring they are all prepared for the next game state after a goal.
-    #     """
-    #     direction = event['direction']
-    #     roomstate = event['roomstate']
-    #     await self.send(text_data=json.dumps({
-    #         'type': 'reset',
-    #         'state': roomstate,
-    #     }))
-
-    # async def broadcast_hit(self, event):
-    #     """
-    #     Broadcasts a reset event to all players after a goal is scored.   
-    #     - Sends a reset message to all connected clients to inform them that the game state is being reset for the next round.
-    #     - This function helps synchronize the clients by ensuring they are all prepared for the next game state after a goal.
-    #     """
-    #     await self.send(text_data=json.dumps({
-    #         'type': 'hit',
-    #     }))
+        self.goal = False
     
     '''
     ****************************************************************************
@@ -269,7 +166,7 @@ class GameManager:
            self.game_state['ballY'] >= self.game_state['leftPad'] and self.game_state['ballY'] <= self.game_state['leftPad'] + init['padHeight']):
                self.game_state['ballSpeedX'] *= -1
                self.game_state['ballX'] = init['leftPadX'] + init['padWidth'] + init['ballRadius']
-               await self.channel_layer.group_send(self.room_group_name, {'type': 'broadcast_hit','event': 'hit',})
+               await self.notify_observer("hit", "hit")
                await self.increase_speed()
 
 
@@ -279,7 +176,7 @@ class GameManager:
            self.game_state['ballY'] <= self.game_state['rightPad'] + init['padHeight']):
                self.game_state['ballSpeedX'] *= -1
                self.game_state['ballX'] = init['rightPadX'] - init['ballRadius']
-               await self.channel_layer.group_send( self.room_group_name,{'type': 'broadcast_hit','event': 'hit',})
+               await self.notify_observer("hit", "hit")
                await self.increase_speed()
     
     async def check_goal(self):
@@ -287,40 +184,26 @@ class GameManager:
          Checks whether a goal has been scored by the ball crossing either boundary.
          - If the ball crosses the left boundary, increments the right player's score and resets the game state.
          - If the ball crosses the right boundary, increments the left player's score and resets the game state.
-         - Sets the `self.room.goal` flag to `True` to indicate a goal and stop the game loop.
+         - Sets the `self.goal` flag to `True` to indicate a goal and stop the game loop.
          - Broadcasts the goal event, including which player scored and the new direction for the next round, using `broadcast_goal()`.
          - Calls `set_game_state()` to reset the game state after a goal is detected.
          """
         if self.game_state['ballX'] - init['ballRadius'] < PADDING:
             #game_state['ballSpeedX'] *= -1
             await self.set_game_state()
-            self.room.goal = True
-            self.room.score["player2"] +=1
+            self.goal = True
             player = 'player2'
 
         if self.game_state['ballX'] + init['ballRadius'] > PITCHWIDTH + PADDING:
             #game_state['ballSpeedX'] *= -1
             await self.set_game_state()
-            self.room.goal = True
-            self.room.score["player1"] +=1
+            self.goal = True
             player = 'player1'
 
-        if self.room.goal:
-            self.room.direction = random.randint(1, 4)
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    'type': 'broadcast_goal',
-                    'roomstate' : self.room.state.name,
-                    'event': 'goal',
-                    'player': player,
-                    'direction': self.room.direction,
-                    'score':self.room.score,})
-
-            for x in self.room.score.values():
-                if x >= ENDSCORE:
-                    self.room.state = gamestatus.over
-                    #await self.end_with_winner()
+        if self.goal:
+            self.direction = random.randint(1, 4)
+            await self.notify_observer("goal", player)
+            
 
     async def set_key_state(self, data):
         player = data['player']
@@ -341,7 +224,7 @@ class GameManager:
                self.game_state['rightPadDown'] = key_state
         
         await self.move_pads()
-        await self.send_updates()
+        await self.notify_observer("update", self.game_state)
 
     async def increase_speed(self):
        self.game_state['ballSpeedX'] *= 1.2

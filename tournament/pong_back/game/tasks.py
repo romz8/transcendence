@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 @shared_task(bind=True)
 def clear_expired_waitrooms(self):
     try:
-        waitrooms = WaitRoom.objects.filter(attendee=None)
+        waitrooms = WaitRoom.objects.all()
+        #waitrooms = WaitRoom.objects.filter(attendee=None) - if want to clean only empty ones
         now = timezone.now()
         for waitroom in waitrooms:
             try:
