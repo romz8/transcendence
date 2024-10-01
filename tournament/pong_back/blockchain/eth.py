@@ -3,6 +3,8 @@ from django.conf import settings
 import json
 import logging
 
+logger = logging.getLogger(__name__)
+
 # Initialize Web3 
 rpc_url = "https://ethereum-sepolia-rpc.publicnode.com"
 web3 = Web3(Web3.HTTPProvider(rpc_url))
@@ -28,10 +30,10 @@ def set_tournament_result(winner, runner_up, final_score, participant_count):
         max_priority_fee_per_gas = web3.to_wei(1, 'gwei') # Priority fee to include the transaction in the block
         max_fee_per_gas = (5 * base_fee_per_gas) + max_priority_fee_per_gas # Maximum amount you’re willing to pay
 
-        logging.info('---------------------------------------')
-        logging.info(nonce)
-        logging.info(max_fee_per_gas)
-        logging.info(max_priority_fee_per_gas)
+        logger.info('---------------------------------------')
+        logger.info(nonce)
+        logger.info(max_fee_per_gas)
+        logger.info(max_priority_fee_per_gas)
 
 
         unsent_tx = contract.functions.set(winner, runner_up, final_score, participant_count).build_transaction({
@@ -40,10 +42,10 @@ def set_tournament_result(winner, runner_up, final_score, participant_count):
             'maxPriorityFeePerGas': max_priority_fee_per_gas,
             'nonce': nonce,
         })
-        logging.info(unsent_tx)
+        logger.info(unsent_tx)
         signed_tx = web3.eth.account.sign_transaction(unsent_tx, private_key)
-        logging.info('transaction signed')
-        logging.info('---------------------------------------')
+        logger.info('transaction signed')
+        logger.info('---------------------------------------')
 
         tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
         tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)

@@ -19,6 +19,7 @@ const routes = {
 	'/profile': { title: 'Profile', render: profile, auth: true},
 	'/signup': { title: 'Signup', render: signup, auth: false},
 	'/gamebot': { title: 'You will lose', render: gameai, auth: true},
+	'/gamebot/:id': { title: 'You will lose', render: gameai, auth: true},
 	'/waitroom': { title: 'HAVE FUN', render: waitroom, auth: true},
 	'/waitroom/create': { title: 'HAVE FUN', render: waitroom, auth: true},
 	'/waitroom/join': { title: 'HAVE FUN', render: waitroom, auth: true},

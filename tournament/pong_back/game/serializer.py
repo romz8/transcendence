@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
-        fields = ['id', 'alias', 'campus', 'intra']
+        fields = ['id', 'alias', 'campus', 'intra', 'is_ai']
 
 class MatchSerializer(serializers.ModelSerializer):
     class Meta:

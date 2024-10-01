@@ -48,12 +48,8 @@ def build_bracket_tournament(sender, instance, created,**kwargs):
     if hasattr(instance, '_signal_handling_in_progress') and instance._signal_handling_in_progress:
         return
     instance._signal_handling_in_progress = True
-    logger.info("****************************************************************")
-    logger.info("****************************************************************")
     if(instance.state == "registering") and (instance.n_registered == instance.size):
         try:
-            logger.info("****************************************************************")
-            logger.info("****************************************************************")
             tour_obj = TournamentSerie(instance.id, instance.size)
             players = Tourparticipation.objects.filter(tournament = instance)
             for p in players:
@@ -81,6 +77,7 @@ def build_bracket_tournament(sender, instance, created,**kwargs):
 
 @receiver(post_save, sender=Tournament)
 def save_tournament_blockchain(sender, instance, created, **kwargs):
+    logger.info(f"ENTERING BLOCKCHAIN SAVE TOURNAMENT with block url {Block_url}")
     if created:
         return
     if instance.state != "finished":
@@ -90,11 +87,12 @@ def save_tournament_blockchain(sender, instance, created, **kwargs):
         "final_score" : instance.final_score,
         "participant_count" : instance.n_humans } 
     try:
-        response = requests.post(Block_url, payload)
-        if response.status == 200 or response.status == 201:
-            logger.info("Tournament result successfully posted to blockchain.")
-        else:
-            logger.error(f"Failed to post tournament result to blockchain. Status code: {response.status_code}, Response: {response.text}")
+        logger.info(f"IT SHOULD SAVE TO BCKCHAIN WITH {payload} BUT WE ARE SAVING GAS")
+        # response = requests.post(Block_url, payload)
+        # if response.status == 200 or response.status == 201:
+        #     logger.info("Tournament result successfully posted to blockchain.")
+        # else:
+        #     logger.error(f"Failed to post tournament result to blockchain. Status code: {response.status_code}, Response: {response.text}")
     except Exception as e:
         logger.error(f"Exception occurred while posting to blockchain: {str(e)}")
 

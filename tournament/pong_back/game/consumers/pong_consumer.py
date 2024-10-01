@@ -3,7 +3,7 @@ from .rooms import Room, gamestatus
 from game.models import WaitRoom, Users, Match, Tourparticipation, Tournament
 from channels.db import database_sync_to_async
 import logging, asyncio, random
-import json
+import json, time
 from urllib.parse import parse_qs
 from rest_framework_simplejwt.tokens import UntypedToken
 #from django.contrib.auth.models import User
@@ -139,7 +139,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             message = "You left before the game start"
         await self.close_with_error(4444, message)
         logger.info(f" **** in disconnect consumer mthds we have {state.name} and {message}")
-        await self.cleanup_room()
+        #await self.cleanup_room()
 
     
     async def cleanup_room(self, timeout=30):
@@ -203,7 +203,12 @@ class PongConsumer(AsyncWebsocketConsumer):
         rightPad = game_state['rightPad']
         ballX = game_state['ballX']
         ballY = game_state['ballY']
+        ballSpeedX = game_state['ballSpeedX']
+        ballSpeedY = game_state['ballSpeedY']
+        padSpeed = game_state['padSpeed']
         roomstate = event['roomstate']
+        timestamp = int(time.time() * 1000)
+
         await self.send(text_data=json.dumps({
             'type': 'update',
             'room_channel': room_id,
@@ -212,6 +217,10 @@ class PongConsumer(AsyncWebsocketConsumer):
             'rightPad': rightPad,
             'ballX': ballX,
             'ballY': ballY,
+            'ballSpeedX': ballSpeedX,
+            'ballSpeedY': ballSpeedY,
+            'padSp eed': padSpeed,
+            'timestamp': timestamp,
         }))
 
     async def dispatch_goal(self, event):
@@ -312,5 +321,8 @@ class PongConsumer(AsyncWebsocketConsumer):
         for room_id, room in PongConsumer.rooms.items():
             logger.info('*************** Room Display **********************')
             logger.info(f'Room: {room_id}')
+            logger.info(f'game_id is : {room.game_id}')
+            logger.info(f'state is : {room.state}')
             logger.info(f'Players: {room.players}')
             logger.info(f'score is : {room.score}')
+            

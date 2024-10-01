@@ -2,30 +2,33 @@ import random, asyncio, logging, json
 
 logger = logging.getLogger(__name__)
 
-PADDING = 50
+ENDSCORE = 1
 MESSAGE_DURATION = 2000
-PITCHWIDTH = 600
+PITCHWIDTH = 800
 PITCHHEIGHT = 400
-TOP_BOUNDARY = PADDING
-BALL_SPEED = 8
-PAD_SPEED = 12
+BALL_RADIUS = 5
+BALL_SPEED = 3
+PAD_SPEED = 5
+PAD_HEIGHT = 75
+PAD_WIDTH = 10
+BOTTOM_BOUNDARY = PITCHHEIGHT - PAD_HEIGHT
+TOP_BOUNDARY = 0
 
 init = {
-    'padHeight': 80,
-    'padWidth': 10,
+    'padHeight': PAD_HEIGHT,
+    'padWidth': PAD_WIDTH,
     'padSpeed': PAD_SPEED,
-    'leftPadX': PADDING + 10,
-    'leftPadY': PITCHHEIGHT / 2 + PADDING,
-    'rightPadX': PITCHWIDTH + PADDING - 10 - 10,
-    'rightPadY': PITCHHEIGHT / 2 + PADDING,
-    'ballX': PITCHWIDTH / 2 + PADDING,
-    'ballY': PITCHHEIGHT / 2 + PADDING,
-    'ballRadius': 5,
+    'leftPadX': 0,
+    'leftPadY': PITCHHEIGHT / 2 - PAD_HEIGHT / 2,
+    'rightPadX': 790,
+    'rightPadY': PITCHHEIGHT / 2 - PAD_HEIGHT / 2,
+    'ballX': PITCHWIDTH / 2,
+    'ballY': PITCHHEIGHT / 2,
+    'ballRadius': BALL_RADIUS,
     'ballSpeedX': BALL_SPEED,
-    'ballSpeedY': BALL_SPEED,
+    'ballSpeedY': BALL_SPEED,   
+    'endscore': ENDSCORE,
 }
-
-BOTTOM_BOUNDARY = PITCHHEIGHT + PADDING - init['padHeight']
 
 class GameSubject:
     """Building the Subject of Observer design pattern - add/remove observer objs and pub method"""
@@ -105,7 +108,7 @@ class GameManager(GameSubject):
         - The loop runs at approximately 60 frames per second (`await asyncio.sleep(1 / 60)`), ensuring smooth gameplay.
         - Resets the room's goal state to `False` after a goal is detected.
         """
-        time_step = 1/20
+        time_step = 1/60
         while not self.goal and not self.stop:
         
             await self.move_pads()
@@ -158,16 +161,16 @@ class GameManager(GameSubject):
     async def check_collision(self):
         
         #wall
-        if self.game_state['ballY'] + init['ballRadius'] >= PITCHHEIGHT + PADDING or self.game_state['ballY'] - init['ballRadius'] <= PADDING: 
-           self.game_state['ballSpeedY'] *= -1
+        if  self.game_state['ballY'] >= PITCHHEIGHT or self.game_state['ballY'] <= 0: 
+            self.game_state['ballSpeedY'] *= -1
 
         #left pad
-        if  (self.game_state['ballX'] - init['ballRadius'] <= init['leftPadX'] + init['padWidth'] and \
-           self.game_state['ballY'] >= self.game_state['leftPad'] and self.game_state['ballY'] <= self.game_state['leftPad'] + init['padHeight']):
-               self.game_state['ballSpeedX'] *= -1
-               self.game_state['ballX'] = init['leftPadX'] + init['padWidth'] + init['ballRadius']
-               await self.notify_observer("hit", "hit")
-               await self.increase_speed()
+        if  (self.game_state['ballX'] - init['ballRadius'] <= init['leftPadX'] + init['padWidth'] and
+            self.game_state['ballY'] >= self.game_state['leftPad'] and self.game_state['ballY'] <= self.game_state['leftPad'] + init['padHeight']):
+                self.game_state['ballSpeedX'] *= -1
+                self.game_state['ballX'] = init['leftPadX'] + init['padWidth'] + init['ballRadius']
+                #await self.notify_observer("hit", "hit")
+                await self.increase_speed()
 
 
         #right pad
@@ -176,9 +179,9 @@ class GameManager(GameSubject):
            self.game_state['ballY'] <= self.game_state['rightPad'] + init['padHeight']):
                self.game_state['ballSpeedX'] *= -1
                self.game_state['ballX'] = init['rightPadX'] - init['ballRadius']
-               await self.notify_observer("hit", "hit")
                await self.increase_speed()
-    
+                #await self.notify_observer("hit", "hit")
+
     async def check_goal(self):
         """
          Checks whether a goal has been scored by the ball crossing either boundary.
@@ -188,13 +191,13 @@ class GameManager(GameSubject):
          - Broadcasts the goal event, including which player scored and the new direction for the next round, using `broadcast_goal()`.
          - Calls `set_game_state()` to reset the game state after a goal is detected.
          """
-        if self.game_state['ballX'] - init['ballRadius'] < PADDING:
+        if self.game_state['ballX'] <= 0:
             #game_state['ballSpeedX'] *= -1
             await self.set_game_state()
             self.goal = True
             player = 'player2'
 
-        if self.game_state['ballX'] + init['ballRadius'] > PITCHWIDTH + PADDING:
+        if  self.game_state['ballX'] >= PITCHWIDTH - BALL_RADIUS:
             #game_state['ballSpeedX'] *= -1
             await self.set_game_state()
             self.goal = True

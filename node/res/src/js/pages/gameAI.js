@@ -1,4 +1,8 @@
 import { displayCountdown } from "../game/gameDisplay";
+import { router } from "../routes";
+import { getCookie } from "../user_login";
+
+let gameid = -1;
 
 class PongAI extends HTMLElement {
     constructor() {
@@ -30,6 +34,7 @@ class PongAI extends HTMLElement {
     }
 
     async connectedCallback() {
+
         this.innerHTML = /*html*/`
         <style>
         h1 {  
@@ -236,17 +241,50 @@ class PongAI extends HTMLElement {
         await gameLoop();
     }
 
+    fetchResult(){
+        const access = getCookie('token');
+        const infoBody = JSON.stringify({"score_ai": this.leftScore,"score_user": this.rightScore})
+        fetch(`http://localhost:8000/game/tournament/${gameid[0]}/match_ai/`, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + access,
+                'Content-Type': 'application/json'
+            },
+            body: infoBody
+        })
+        .then(response => {
+            if (!response.ok)
+                throw new Error('Network response was not ok ' + response.statusText);
+            return response.json();
+        })
+        .then(data => {
+            history.pushState(null,"",`/tournament/${gameid[1]}`);
+            router();
+        })
+        .catch(error => 
+        {
+            history.pushState(null,"",`/tournament/${gameid[1]}`);
+            router();
+        });
+    }
+
     checkWinner(){
         this.palyer1score.textContent = `Score: ${this.leftScore}`
         this.palyer2score.textContent = `Score: ${this.rightScore}`
-        if (this.leftScore == 5 )
+        if (this.leftScore == 1 )
         {
+            if (gameid != -1)
+                this.fetchResult();
             alert("AI WON GIT GUD")
+            this.stopGame()
             return true;
         }
-        else if (this.rightScore == 5 )
+        else if (this.rightScore == 1 )
         {
+            if (gameid != -1)
+                this.fetchResult();
             alert ("LUCKY GUY YOU WON")
+            this.stopGame()
             return true;
         }
         return false;
@@ -324,6 +362,13 @@ class PongAI extends HTMLElement {
 
 customElements.define('pong-ai', PongAI);
 
-export default function gameai () {
+export default function gameai (id) {
+    if (id)
+    {
+        // gameid = id;
+        let test = id.id.split('-');
+        if (test)
+            gameid = test;
+    }
     return ('<pong-ai></pong-ai>');
 }

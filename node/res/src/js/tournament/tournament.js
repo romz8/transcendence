@@ -71,11 +71,11 @@ async function renderLoop(id, container) {
     if (resp.state !== state) {
         state = resp.state;
         if (resp.state === "ongoing") {
-            renderActiveTournament(id, username, container);
+            await renderActiveTournament(id, username, container);
         } else if (resp.state === "registering") {
-            renderWaiting(id, username, container);
+            await renderWaiting(id, username, container);
         } else {
-            renderTournamentOver(id, username);
+            await renderTournamentOver(id, username, container);
         }
     } 
     else {
@@ -229,9 +229,9 @@ async function updateRenderActive(id){
 
 }
 
-async function renderTournamentOver(id,username) {
+async function renderTournamentOver(id, username, container) {
     console.log("tournament is over");
-    renderActiveTournament(id, username);
+    renderActiveTournament(id, username, container);
     updateRenderActive(id);
     const data = await getTournament(id);
     console.log("end of toournament data are", data);
@@ -296,11 +296,18 @@ function displayBanner(data, id, container) {
                 <button class="btn btn-primary ml-2" id="startGameButton">Play</button>
             </div>
         `;
+        console.error(data)
         let gameButton = document.getElementById("startGameButton");
         gameButton.addEventListener("click",async ()=>{
             //const resp = await putMatchTest(data.match_id); //*********************** FOR TEST ONLy ********/
             //console.log("result is : ", resp); //to test only
-            history.pushState(null,"",`/game/${data.match_id}-${id}`);
+            let ruta = null;
+            if (data.is_ai == true)
+                ruta = 'gamebot'
+            else
+                ruta = 'game'
+            // console.error(`/${ruta}/${data.match_id}-${id}`);
+            history.pushState(null,"",`/${ruta}/${data.match_id}-${id}`);
             router();
         })
     } else if (data.status === 'eliminated') {
