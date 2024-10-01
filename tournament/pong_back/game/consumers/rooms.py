@@ -233,71 +233,52 @@ class Room(GameObserver):
         `Match` model. It is called when the game ends, either due to a player winning 
         or forfeiting.
         '''
-        logger.info("=================================================================")
-        logger.info(f"SAVING TO DB : {self.game_id}")
-        logger.info(f"STATE IS : {self.state}")
-        logger.info("=================================================================")
+        logger.info(f"========= SAVING TO DB : {self.game_id} as Tournament :{ self.tournament_mode} and state {self.state} ========")
+        
         if self.state not in  [gamestatus.over, gamestatus.quit]:
             return
         user_player = {}
         for user_id, info in self.players.items():
-            user_player[info['role']] = user_id
-        try:
-            user_p1 = await database_sync_to_async(Users.objects.get)(id=user_player['player1'])
-            user_p2 = await database_sync_to_async(Users.objects.get)(id=user_player['player2'])
-
-            if self.tournament_mode:
-                try:
-                    await self.save_tournament_db(user_p1, user_p2)
-                except Exception as e:
-                    logger.error(f"Issue while saving match as tournament game {str(e)}")
-            else:
+            user_player[info['role']]= {'id' : user_id, 'score' :self.score[info['role']], 'name' : info['playername']}
+        if self.tournament_mode:
+            try:
+                await self.save_tournament_db(user_player)
+            except Exception as e:
+                logger.error(f"Issue while saving match as tournament game {str(e)}")
+        else:
+            try:
+                user_p1 = await database_sync_to_async(Users.objects.get)(id=user_player['player1']['id'])
+                user_p2 = await database_sync_to_async(Users.objects.get)(id=user_player['player2']['id'])
                 m = await database_sync_to_async(Match.objects.create)(player1=user_p1, player2=user_p2, \
                 score_p1=self.score['player1'], score_p2=self.score['player2'], game_id= self.game_id, state="finished")
                 logger.info(f"***** Game SAVED TO DB with id {m.id} - players {m.player1} vs {m.player2} / score : {m.score_p1} - {m.score_p2}")
-        except Users.DoesNotExist:
-            logger.error("****Error saving game to database: User not found")
+            except Users.DoesNotExist:
+                logger.error("****Error saving game to database: User not found")
        
         
-    async def save_tournament_db(self, user_p1, user_p2):
+    async def save_tournament_db(self, user_player):
         try:
+            inverted = False
             tag, tourid = self.game_id.split("-")
             logger.info(f"*** DB SAVE - TOURNAMENT : {tourid} - tag {tag}")
             tour = await database_sync_to_async(Tournament.objects.get)(id=tourid)
             match = await database_sync_to_async(Match.objects.get)(id = tag, tournament=tour)
             match_player1 = await database_sync_to_async(lambda: match.player1)()
-            match_player2 = await database_sync_to_async(lambda: match.player2)()
-            if match_player1 == user_p1:
-                match.score_p1=self.score['player1']    
-                match.score_p2=self.score['player2']
-                loser = user_p1 if self.score['player1'] < self.score['player2'] else user_p2
-            else:
-                match.score_p1=self.score['player2']
-                match.score_p2=self.score['player1']
-                loser = user_p2 if self.score['player2'] < self.score['player1'] else user_p1
-            ''' ALMOST DONE REFACTO BELOW '''
-            # if match_player1 != user_p1:
-            #     logger.info(f"********** inveted room to player *************")
-            #     logger.info(f"pre-manip we have **** p1 : {user_p1}- p2 : {user_p2} score {self.score['player1']} - {self.score['player2']}")
-            #     logger.info(f"but in match we have p1 {match_player1}: p2 : {match_player2}")
-            #     temp = self.score['player1']
-            #     self.score['player1'] = self.score['player2']
-            #     self.score['player2'] = temp
-            #     user_p2 = user_p1
-            #     user_p1 = match_player1
-            # loser = user_p2 if self.score['player2'] < self.score['player1'] else user_p1
+     
+            if match_player1.id != user_player['player1']['id']:
+                inverted = True
+                temp = user_player['player1']
+                user_player['player1'] = user_player['player2']
+                user_player['player2'] = temp
 
-            # logger.info(f"POST-manip we have **** p1 : {user_p1}- p2 : {user_p2} score {self.score['player1']} - {self.score['player2']}")    
-            # logger.info(f"post-manip loser in ROOM is {self.loser} and in tournament inverted is {loser}")
-            # logger.info(f"post-manip we are going to save : p1 {match_player1}: p2 : {match_player2} with score {self.score['player1']} - {self.score['player2']}")
-            #match.score_p1 = self.score['player1']
-            #match.score_p2 = self.score['player2']
-            
+            match.score_p1 = user_player['player1']['score']
+            match.score_p2 = user_player['player2']['score']
+            loser = user_player['player1']['id'] if user_player['player1']['score'] < user_player['player2']['score'] else user_player['player2']['id']
+            loser_instance = await database_sync_to_async(Users.objects.get)(id=loser)
             match.state="finished"
-
             match.game_id = self.game_id
             await database_sync_to_async(match.save)()
-            loser_particip = await database_sync_to_async(Tourparticipation.objects.get)(userid=loser, tournament=tour)
+            loser_particip = await database_sync_to_async(Tourparticipation.objects.get)(userid=loser_instance, tournament=tour)
             loser_particip.is_eliminated = True
             await database_sync_to_async(loser_particip.save)()
         except Match.DoesNotExist:

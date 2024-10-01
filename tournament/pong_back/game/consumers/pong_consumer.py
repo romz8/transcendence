@@ -48,7 +48,6 @@ class PongConsumer(AsyncWebsocketConsumer):
             self.close_with_error(4000, 'User not authenticated')
             return
         self.user = user
-        self.game_id = self.scope['url_route']['kwargs']['game_id']
         
         logger.info("** showing the roooms**")
         self.display()
@@ -69,28 +68,41 @@ class PongConsumer(AsyncWebsocketConsumer):
             self.display()
         except Exception as e:
             logger.error(f"exception encountered is {str(e)}")
-            await self.close_with_error(5000, str(e))
+            await self.close_with_error(3088, str(e))
         
 
     async def game_routing(self):
         try :
-            if (self.game_id.startswith("g-")):
-                waitroom = await database_sync_to_async(WaitRoom.objects.get)(genId=self.game_id)
-            else:
+            full_path = self.scope['path']
+            if '/g/' in full_path:
+                game_id = self.scope['url_route']['kwargs']['game_id']
+                waitroom = await database_sync_to_async(WaitRoom.objects.get)(genId = game_id)
+                self.game_id = game_id
+                
+                m = await database_sync_to_async(Match.objects.filter(game_id=self.game_id).first)()
+                if m is not None and m.state == "finished":
+                    raise ValueError("this Game has been played in the past")
+           
+            elif '/t/' in full_path:
+                tour_id = self.scope['url_route']['kwargs']['tour_id']
+                match_id = self.scope['url_route']['kwargs']['match_id']
                 self.tournament_mode = True
-                id_url = self.game_id.split("-")[1] if self.game_id.find('-') != -1 else None
-                tour = await database_sync_to_async(Tournament.objects.get)(id=id_url)
-            #m = await database_sync_to_async(Match.objects.filter(game_id=self.game_id).first)()
-            # if m is not None:
-            #   await self.close_with_error(4001, 'this game has been played in the past')
+                tour = await database_sync_to_async(Tournament.objects.get)(id=tour_id)
+                match = await database_sync_to_async(Match.objects.get)(id = match_id, tournament = tour)
+                self.game_id = f"{match_id}-{tour_id}"
+
+                if match.state == "finished":
+                    raise ValueError("this tournament Game has been played already")
+            else:
+                raise ValueError("Incorrect URL Routing to Game")
+                
         except WaitRoom.DoesNotExist:
             await self.close_with_error(4001, 'Waitroom for Game not found')
             return
         except Tournament.DoesNotExist:
-            await self.close_with_error(4001, 'Tournament for Game not found - not coming from OK path')
+            await self.close_with_error(4001, 'Tournament for Game not found')
             return
 
-    
     async def init_player(self):
         if self.user.id in self.room.players.keys():
             if self.room.players[self.user.id]['connected'] == True:

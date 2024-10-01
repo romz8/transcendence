@@ -104,7 +104,7 @@ async function renderLobby(){
             if (resp) {
                 // Handle successful join
                 console.log('Joined room:', resp);
-                history.pushState(null, "", "/game/" + selectedRoomId);
+                history.pushState(null, "", "/lobby/" + selectedRoomId);
                 router();
             } else {
                 // Handle join failure
@@ -163,7 +163,7 @@ class Waitroom extends HTMLElement {
                 resp = await createWaitRoom();
                 let gameId = resp.genId;
                 console.log("gameId is : ", gameId);
-                history.pushState(null,"","/game/" + gameId);
+                history.pushState(null,"","/lobby/" + gameId);
                 router();
             break;
             case "/waitroom/join":

@@ -21,6 +21,9 @@ class Users(AbstractUser):
         managed = True
         db_table = 'users'
 
+    def __str__(self):
+        return f"user id {self.id} aka {self.alias}" 
+
 class UserStatus(models.Model):
     users = models.OneToOneField(Users, primary_key=True, on_delete=models.CASCADE)
     is_online = models.BooleanField(default=False)
@@ -43,7 +46,6 @@ class Friends(models.Model):
 
     def __str__(self):
         return f'{self.usersid1} - {self.usersid2}'
-
 
 class Tournament(models.Model):
     STATE_CHOICES = [('registering', 'Registering'),('ongoing', 'Ongoing'),('finished', 'Finished')]
@@ -130,7 +132,7 @@ class Match(models.Model):
         return f"Game id {self.pk} between {self.player1} and {self.player2} on {self.game_date}"
 
     class Meta:
-        managed = True
+        managed=True
         db_table = 'match'
         ordering = ['game_date']
         unique_together = ["player1", "player2", "game_date", "tournament"]
@@ -157,8 +159,9 @@ class WaitRoom(models.Model):
     expire_at = models.DateTimeField(default=default_expire_at)
     
     class Meta:
-        managed = True
+        managed=True
         db_table = 'waitroom'
+    
     def __str__(self):
         return f"Room {self.genId} (Owner: {self.owner}, Attendee: {self.attendee})"
     
@@ -168,8 +171,8 @@ class WaitRoom(models.Model):
 
     def generate_unique_id(self):
         while True:
-            temp = "g-" + uuid.uuid4().hex
-            if not WaitRoom.objects.filter(genId=temp).exists():
+            temp = uuid.uuid4().hex
+            if not WaitRoom.objects.filter(genId=temp).exists() and not Match.objects.filter(game_id=temp).exists():
                 return temp
     
     @transaction.atomic

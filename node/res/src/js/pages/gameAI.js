@@ -366,9 +366,10 @@ export default function gameai (id) {
     if (id)
     {
         // gameid = id;
-        let test = id.id.split('-');
+        let test = id.id.split('/');
+        console.log(test);
         if (test)
-            gameid = test;
+            gameid = test[1].split('-');
     }
     return ('<pong-ai></pong-ai>');
 }

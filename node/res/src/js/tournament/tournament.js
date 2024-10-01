@@ -306,8 +306,7 @@ function displayBanner(data, id, container) {
                 ruta = 'gamebot'
             else
                 ruta = 'game'
-            // console.error(`/${ruta}/${data.match_id}-${id}`);
-            history.pushState(null,"",`/${ruta}/${data.match_id}-${id}`);
+            history.pushState(null,"",`/${ruta}/t/${data.match_id}-${id}`);
             router();
         })
     } else if (data.status === 'eliminated') {

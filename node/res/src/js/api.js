@@ -62,20 +62,20 @@ export async function postPlayer(formData){
     }
 }
 
-export async function getWaitRoom(){
+export async function getWaitRoom(id){
     try{
 
-        let resp = await fetchWithAuth(`http://${DN}:8000/game/waitingroom/`);
+        let resp = await fetchWithAuth(`http://${DN}:8000/game/waitingroom/info/${id}`);
         if (resp.ok){
             let json = await resp.json();
-            // console.log("from json ", json);
+            console.log("from json ", json);
             localStorage.setItem('waitroomId', json.genId); //to delete later on - only debug
             return json;
         }
         else if (resp.status === 404) {
             console.log("Wait room not found");
             localStorage.removeItem('waitroomId'); // Clean up if room not found
-            return null;
+            return {"error":"Waitroom not Found"};
         }
         else {
             return null;
@@ -460,5 +460,32 @@ export async function getAuth(){
     catch (error){
         console.log("Error fetching authentication", error);
         return [];
+    }
+}
+
+export async function leaveWaitRoom(){
+    try{
+        let payload = {'method':'DELETE', headers: {'Content-Type':'application/json'}};
+        const roomId = localStorage.getItem('waitroomId');
+        console.log("roomId is : ", roomId);
+        if (!roomId){
+            return null;
+        }
+        let endpoint = `http://${DN}:8000/game/waitingroom/delete/${roomId}/`;
+        console.log("delete path is ", endpoint);
+        let resp = await fetchWithAuth(endpoint, payload);
+        if (resp.ok){
+            let json = await resp.json();
+            localStorage.removeItem("waitroomId");
+            return json;
+        }
+        else{
+            let error_txt = await resp.text();
+            console.log("issue on deleting the ressrouce", error_txt);
+        }
+    }
+    catch(error)
+    {
+        console.log("Caught Error : ", error);
     }
 }

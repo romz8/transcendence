@@ -94,9 +94,12 @@ ASGI_APPLICATION = 'pong_project.asgi.application'
 
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        'BACKEND': 'channels_redis.core.RedisChannelLayer', 'CONFIG': {
+        "hosts": [("redis://redis:6379/1")],  # This points to Redis database 1 [16 b in k-v store of Redis queues]
+        },
     },
 }
+
 
 
 # Database
