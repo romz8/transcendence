@@ -136,7 +136,7 @@ export async function createWaitRoom(){
 export async function joinWaitRoom(roomId){
     try{
         let payload = {"method":"PUT", headers:{"Content-Type":"application/json"}};
-        let endpoint = `http://${DN}:8000/game/waitingroom/join/${roomId}/`;
+        let endpoint = `http://${DN}:8000/game/waitingroom/${roomId}/`;
         let resp = await fetchWithAuth(endpoint, payload);
         console.log("resp is : ", resp);
         if (resp.ok){
@@ -163,7 +163,7 @@ export async function deleteWaitRoom(){
         if (!roomId){
             return null;
         }
-        let endpoint = `http://${DN}:8000/game/waitingroom/delete/${roomId}/`;
+        let endpoint = `http://${DN}:8000/game/waitingroom/${roomId}/`;
         console.log("delete path is ", endpoint);
         let resp = await fetchWithAuth(endpoint, payload);
         if (resp.ok){

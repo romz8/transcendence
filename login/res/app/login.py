@@ -47,7 +47,18 @@ import requests
 from io import BytesIO
 
 def download_and_save_image(user, url):
-    response = requests.get(url)
+    try:
+        response = requests.get(url)
+    except Exception as e:
+        animal = random.choice(["penguin.jpeg", "cat.jpeg", "chicken.jpeg"])
+        random_mesh = img_name_gen()
+        imgcontentpath = f"{str(Path(__file__).resolve().parent.parent)}/media/def/{animal}"
+        with open(imgcontentpath, 'rb') as file:
+            content = file.read()
+        img = f"{user.username}{random_mesh}.jpeg"
+        user.img.save(img, ContentFile(content), save=True)
+        user.save()
+        return {'status': 'error intra'}
     
     if response.status_code == 200:
         ext = url.split('.')[-1]
@@ -71,21 +82,27 @@ def download_and_save_image(user, url):
     return {'status': 'error'}
 
 def insertLogin(tokken):
-    response = get42('/v2/me', None, tokken)
-    if response.status_code == 200:
-        body = response.json()
-        exist = Users.objects.filter(intra_id=body.get('id')).exists()
-        if not exist:
-            user = Users(intra_id=body.get('id'), username=f'42-{body.get('login')}', alias=body.get('login'),
-                        intra=True, first_name=body.get('first_name'), last_name=body.get('last_name'),
-                        campus=body.get('campus')[0].get('name'))
-            value = download_and_save_image(user, body.get('image').get('link'))
-            if value["status"] == 'error':
-                return AnonymousUser()
-            user.save()
-            return user
-        return Users.objects.get(intra_id=body.get('id'))
-    else:
+    try:
+        response = get42('/v2/me', None, tokken)
+        if response.status_code == 200:
+            body = response.json()
+            exist = Users.objects.filter(intra_id=body.get('id')).exists()
+            if not exist:
+                user = Users(intra_id=body.get('id'), username=f'42-{body.get('login')}', alias=body.get('login'),
+                            intra=True, first_name=body.get('first_name'), last_name=body.get('last_name'),
+                            campus=body.get('campus')[0].get('name'))
+                value = download_and_save_image(user, body.get('image').get('link'))
+                if value["status"] == 'error':
+                    return AnonymousUser()
+                if value["status"] == 'error intra':
+                    return user
+                user.save()
+                return user
+            return Users.objects.get(intra_id=body.get('id'))
+        else:
+            return AnonymousUser()
+    except Exception as e:
+        logger.info(str(e))
         return AnonymousUser()
 
 @api_view(['POST'])

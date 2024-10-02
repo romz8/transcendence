@@ -7,5 +7,5 @@ websocket_urlpatterns = [
     #classic games path
     path('ws/pingpong/g/<str:game_id>/', PongConsumer.as_asgi()),
     #tournament game path
-    path("ws/pingpong/t/<int:match_id>-<int:tour_id>/", PongConsumer.as_asgi())
+    path("ws/pingpong/t/<str:match_id>-<str:tour_id>/", PongConsumer.as_asgi())
 ]

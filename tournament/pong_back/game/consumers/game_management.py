@@ -169,7 +169,6 @@ class GameManager(GameSubject):
             self.game_state['ballY'] >= self.game_state['leftPad'] and self.game_state['ballY'] <= self.game_state['leftPad'] + init['padHeight']):
                 self.game_state['ballSpeedX'] *= -1
                 self.game_state['ballX'] = init['leftPadX'] + init['padWidth'] + init['ballRadius']
-                #await self.notify_observer("hit", "hit")
                 await self.increase_speed()
 
 
@@ -180,7 +179,6 @@ class GameManager(GameSubject):
                self.game_state['ballSpeedX'] *= -1
                self.game_state['ballX'] = init['rightPadX'] - init['ballRadius']
                await self.increase_speed()
-                #await self.notify_observer("hit", "hit")
 
     async def check_goal(self):
         """
@@ -192,13 +190,11 @@ class GameManager(GameSubject):
          - Calls `set_game_state()` to reset the game state after a goal is detected.
          """
         if self.game_state['ballX'] <= 0:
-            #game_state['ballSpeedX'] *= -1
             await self.set_game_state()
             self.goal = True
             player = 'player2'
 
         if  self.game_state['ballX'] >= PITCHWIDTH - BALL_RADIUS:
-            #game_state['ballSpeedX'] *= -1
             await self.set_game_state()
             self.goal = True
             player = 'player1'

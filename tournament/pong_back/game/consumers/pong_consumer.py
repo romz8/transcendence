@@ -6,18 +6,17 @@ import logging, asyncio, random
 import json, time
 from urllib.parse import parse_qs
 from rest_framework_simplejwt.tokens import UntypedToken
-#from django.contrib.auth.models import User
 from .game_management import GameManager, init
 
 logger = logging.getLogger(__name__)
 
-'''
-    asynchronous WebSocket consumer that manages the lifecycle of the pong game
 
-    Attributes:
-        rooms (dict): A class-level dictionary to track active game rooms.
-    '''
 class PongConsumer(AsyncWebsocketConsumer):
+    '''
+    async webSocket consumer that manages the lifecycle of the pong game
+    Attributes:
+        rooms (dict): A class-level dictionary to track and centralize active game rooms.
+    '''
     rooms = {}
 
     def __init__(self, *args, **kwargs):
@@ -27,7 +26,6 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.room = None
         self.role = None
         self.playername = None
-        self.active = False
         self.tournament_mode = False
     
     async def connect(self):
@@ -35,13 +33,9 @@ class PongConsumer(AsyncWebsocketConsumer):
         Handles a new WebSocket connection.
         Steps:
         1. Validates user authentication, 
-        2. the game ID from the URL route.
-        3. Attempts to retrieve the corresponding `WaitRoom` object from the database.
-        3.b. if not, check that comes from a tournametn (0x game_id)
-        4. Checks if the game room already exists or creates a new one.
-        5. Verifies if the user is already in the game or if the game room is full.
-        6. Assigns the player a role and sets up the game state.
-        7. Adds the player to the room and sends initialization data to the frontend.
+        2. handle and check routing based on url
+        3. init player (handle its room allocation and connection to rool and channel_layer)
+        4. return succesful init message to ws or return error 
         '''
         user = self.scope.get('user', None)
         if user is None or not user.is_authenticated:
@@ -60,11 +54,8 @@ class PongConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps({'type':gamestatus.init.name,'role': self.role,
             'playerName': self.playername,'init': init,}))
 
-            self.room.create_point() #SHOULD IT BE HERE OR IN ROOM ???????????????????
-            logger.info("=================================================================")
-            logger.info(f"CONNECTION MADE IN {self.game_id} from player {self.room.players[self.user.id]}")
-            logger.info(f"GAME_ID : {self.game_id} and CHANNEL NAME : {self.channel_name}")
-            logger.info("=================================================================")
+            self.room.create_game()
+            logger.info(f"== *** === CONNECTION MADE IN {self.game_id} from player {self.room.players[self.user.id]}")
             self.display()
         except Exception as e:
             logger.error(f"exception encountered is {str(e)}")
@@ -72,10 +63,14 @@ class PongConsumer(AsyncWebsocketConsumer):
         
 
     async def game_routing(self):
+        """
+        1.check for game or tournament path attributes
+        2. extract respectiv attribute and check if path validate (waitroom, tournament, not played before)
+        """
         try :
             full_path = self.scope['path']
             if '/g/' in full_path:
-                game_id = self.scope['url_route']['kwargs']['game_id']
+                game_id = self.scope['url_route']['kwargs'].get('game_id')
                 waitroom = await database_sync_to_async(WaitRoom.objects.get)(genId = game_id)
                 self.game_id = game_id
                 
@@ -84,8 +79,10 @@ class PongConsumer(AsyncWebsocketConsumer):
                     raise ValueError("this Game has been played in the past")
            
             elif '/t/' in full_path:
-                tour_id = self.scope['url_route']['kwargs']['tour_id']
-                match_id = self.scope['url_route']['kwargs']['match_id']
+                tour_id = self.scope['url_route']['kwargs'].get('tour_id', None)
+                match_id = self.scope['url_route']['kwargs'].get('match_id', None)
+                if tour_id is None or match_id is None:
+                    raise ValueError("incorrect Tournament Url Structure")
                 self.tournament_mode = True
                 tour = await database_sync_to_async(Tournament.objects.get)(id=tour_id)
                 match = await database_sync_to_async(Match.objects.get)(id = match_id, tournament = tour)
@@ -104,6 +101,12 @@ class PongConsumer(AsyncWebsocketConsumer):
             return
 
     async def init_player(self):
+        '''
+        handle player state in the game :
+        1. check if the player has been allocated to room -> if so and connected state :
+            close ws duplicate,otherwise try to reconnect, if failure return issue and close ws
+        2. otherwise verify the room is not full, if not accept ws connetino add player to room and channel_layer
+        '''
         if self.user.id in self.room.players.keys():
             if self.room.players[self.user.id]['connected'] == True:
                 await self.close_with_error(4002, 'User already in the game')
@@ -121,10 +124,17 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.playername = await self.get_player()
         self.room.add_player(self.channel_name, self.user.id, self.playername)
         await self.channel_layer.group_add(self.game_id, self.channel_name)
-        self.active = True
         self.role = self.room.get_player_role(self.user.id)
         
     async def room_allocation(self):
+        """
+        Allocates a player to a game room based on game ID.
+        1. If the game ID exists in the active rooms:
+            - Check if the game has ended (either 'over' or 'quit') and close the WebSocket if necessary.
+        2. If the game ID does not exist:
+            - Create a new room and allocate the player to that room.
+        3. Assign the room instance to the 'room' attribute.
+        """
         if self.game_id in PongConsumer.rooms:
             if PongConsumer.rooms[self.game_id].state == gamestatus.over:
                 await self.close_with_error(4007, 'Game has been played already')
@@ -151,14 +161,12 @@ class PongConsumer(AsyncWebsocketConsumer):
             message = "You left before the game start"
         await self.close_with_error(4444, message)
         logger.info(f" **** in disconnect consumer mthds we have {state.name} and {message}")
-        #await self.cleanup_room()
+        await self.cleanup_room()
 
     
     async def cleanup_room(self, timeout=30):
         '''
         if room is empty, deletes the room and removes it from the class-level dictionary.
-        if Waitroom id exists, deletes the waitroom
-        concept : wheter player 1 is quitting or player 2 is quitting, the room will be deleted
         '''
         if self.game_id not in PongConsumer.rooms:
             return 
@@ -170,8 +178,10 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.display()
 
     async def receive(self, text_data):
+        """
+        handle incoming message from ws -> check if quit, otherwise pass to room centralized handler
+        """
         data = json.loads(text_data)
-        #logger.info(f'Received message: {data}from player: {self.role}')
 
         if 'logout' in data and data['logout'] == True:
             logger.info('Logout received')
@@ -184,10 +194,9 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     async def dispatch_countdown(self, event):
         """
-        NEWLY ADDED BEFORE WAS IN GAMEMANAGER
-        Broadcasts a Countdown event to all players in the room. they then alert the front socket
+        dispath to the front socket the poinrt countdown
         - Extracts the event type from the incoming event data and sends it as a JSON message to all clients.
-        - This function is used for broadcasting general game-related events that do not require specific game state updates
+        - general game-related events that do not require specific game state updates
         such as notifications or simple status changes.
         """        
         data = event['event']
@@ -203,10 +212,9 @@ class PongConsumer(AsyncWebsocketConsumer):
     
     async def dispatch_game_state(self, event):
         """
-        Handler for the broadcast of the current game state to all players in the room.
-        - Extracts the game_state from the incoming event and sends it to the WebSocket clients.
-        - Sends a JSON message containing the positions of the paddles (leftPad, rightPad) and the ball (ballX, ballY).
-        - Ensures that all clients update their game views according to the latest game state received from the server.
+        dipatch locally to WS the current game state.
+        Sends a JSON message with the positions of paddles and ball, ball speeds, and the room state.
+        Ensures that all connected clients synchronize their game view with the latest state from the server.
         """
         logger.info(f"DISPATCH RECEIVE IS {event}")
         game_state = event['game_state']
@@ -237,11 +245,9 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     async def dispatch_goal(self, event):
         """
-        Broadcasts a goal event to all players, indicating which player scored and the new direction of the ball.
-
-        - Extracts the player who scored and the new ball direction from the incoming event.
-        - Sends a JSON message containing the player who scored and the direction for the next round.
-        - Ensures that all players are aware of the goal and prepares them for the next round of play.
+        Sends a goal event to the current WebSocket connection.
+        - Sends a JSON message with the player who scored, the updated score, and the direction for the next round.
+        - Notifies the client that a goal has been scored to prepare for the next round of play.
         """
         logger.info(f"Send message: {event['event']} to {self.role}")
         roomstate = event['roomstate']
@@ -256,9 +262,9 @@ class PongConsumer(AsyncWebsocketConsumer):
         }))
     async def dispatch_reset(self, event):
         """
-        Broadcasts a reset event to all players after a goal is scored.   
-        - Sends a reset message to all connected clients to inform them that the game state is being reset for the next round.
-        - This function helps synchronize the clients by ensuring they are all prepared for the next game state after a goal.
+        Sends a reset event to the current WebSocket connection.
+        - Sends a message to inform the client that the game state is being reset for the next round.
+        - Ensures the client is synchronized with the upcoming game state after a goal is scored.
         """
         logger.info(f"Now in DISPATCH_RESET sending for {self.role}")
         direction = event['direction']
@@ -267,24 +273,13 @@ class PongConsumer(AsyncWebsocketConsumer):
             'type': 'reset',
             'state': roomstate,
         }))
-
-    async def dispatch_hit(self, event):
-        """
-        Broadcasts a reset event to all players after a goal is scored.   
-        - Sends a reset message to all connected clients to inform them that the game state is being reset for the next round.
-        - This function helps synchronize the clients by ensuring they are all prepared for the next game state after a goal.
-        """
-        await self.send(text_data=json.dumps({
-            'type': 'hit',
-        }))
         
     async def game_over(self, event):
-        '''
-        Handles the "game over" event and notifies the client.
-        This method sends the game result (winner, loser, final scores) to the client, 
-        depending on the game state and then cleans up by discarding the channel layer 
-        group and closing the WebSocket connection.
-        '''
+        """
+        Sends a 'game over' event to the current WebSocket connection.
+        - Sends the final game result, including the winner, loser, and final scores, to the client.
+        - Cleans up by removing the client from the channel layer group and closing the WebSocket connection.
+        """
         logger.info("*** IN GAME OVER MESSAGE *****")
         try:
             score = event['score']
@@ -312,6 +307,11 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_player(self):
+        """
+         Retrieves the player's alias from the database.
+         - Fetches the alias associated with the current user ID.
+         - If the user profile does not exist, returns 'Unknown'.
+         """
         try:
             return Users.objects.get(id=self.user.id).alias
         except Users.DoesNotExist:

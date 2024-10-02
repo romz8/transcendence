@@ -1,5 +1,5 @@
 
-import asyncio, logging, random #quit random after refacto
+import asyncio, logging, random
 from enum import Enum
 import abc
 from .game_management import GameManager, ENDSCORE
@@ -36,6 +36,8 @@ class Room(GameObserver):
         self.tournament_mode = mode
         self.ENDSCORE = ENDSCORE
         self.disconnect = set()
+        self.is_saved = False
+        self.lock = asyncio.Lock()
 
 
     def add_player(self, channel_name, user_id, playername):
@@ -88,7 +90,7 @@ class Room(GameObserver):
         logger.info(f" ***** in isfull mthds we have players {self.players} and discnt {self.disconnect}")
         return len(self.players) >= 2 and len(self.disconnet) == 0
 
-    def create_point(self):
+    def create_game(self):
         if self.game is not None:
             self.game.stop = True
             self.game.unregister_observer(self)
@@ -103,15 +105,13 @@ class Room(GameObserver):
             if self.state == gamestatus.over:
                 await self.end_with_winner()
             return
+        
         if message == "update":
             await self.channel_layer.group_send(self.game_id,{
                     'type': 'dispatch_game_state',
                     'roomstate' : self.state.name,
                     'game_state': event,
                     'room_channel':self.game_id,})
-        if message == "hit":
-            await self.channel_layer.group_send( self.game_id,{
-                'type': 'dispatch_hit','event': 'hit',})
 
         if message == "goal":
             self.score[event] += 1
@@ -126,13 +126,12 @@ class Room(GameObserver):
                     'roomstate' : self.state.name,
                     'event': 'goal',
                     'player': event,
-                    #'direction': event,
                     'score':self.score,})
 
             # for x in self.score.values():
             #     if x >= self.ENDSCORE:
             #         self.state = gamestatus.over
-    
+
     async def broadcast_countdown(self):
         logger.info(f"SERVER SENDING COUNTDOWN {self.state.name}")
         await self.channel_layer.group_send(self.game_id,{
@@ -233,32 +232,35 @@ class Room(GameObserver):
         `Match` model. It is called when the game ends, either due to a player winning 
         or forfeiting.
         '''
-        logger.info(f"========= SAVING TO DB : {self.game_id} as Tournament :{ self.tournament_mode} and state {self.state} ========")
-        
-        if self.state not in  [gamestatus.over, gamestatus.quit]:
-            return
-        user_player = {}
-        for user_id, info in self.players.items():
-            user_player[info['role']]= {'id' : user_id, 'score' :self.score[info['role']], 'name' : info['playername']}
-        if self.tournament_mode:
-            try:
-                await self.save_tournament_db(user_player)
-            except Exception as e:
-                logger.error(f"Issue while saving match as tournament game {str(e)}")
-        else:
-            try:
-                user_p1 = await database_sync_to_async(Users.objects.get)(id=user_player['player1']['id'])
-                user_p2 = await database_sync_to_async(Users.objects.get)(id=user_player['player2']['id'])
-                m = await database_sync_to_async(Match.objects.create)(player1=user_p1, player2=user_p2, \
-                score_p1=self.score['player1'], score_p2=self.score['player2'], game_id= self.game_id, state="finished")
-                logger.info(f"***** Game SAVED TO DB with id {m.id} - players {m.player1} vs {m.player2} / score : {m.score_p1} - {m.score_p2}")
-            except Users.DoesNotExist:
-                logger.error("****Error saving game to database: User not found")
-       
-        
+        if self.is_saved:
+            return 
+        async with self.lock:
+            logger.info(f"========= SAVING TO DB : {self.game_id} as Tournament :{ self.tournament_mode} state {self.state}, save flag {self.is_saved} ========")
+
+            if self.state not in  [gamestatus.over, gamestatus.quit]:
+                return
+            user_player = {}
+            for user_id, info in self.players.items():
+                user_player[info['role']]= {'id' : user_id, 'score' :self.score[info['role']], 'name' : info['playername']}
+            if self.tournament_mode:
+                try:
+                    await self.save_tournament_db(user_player)
+                except Exception as e:
+                    logger.error(f"Issue while saving match as tournament game {str(e)}")
+            else:
+                try:
+                    user_p1 = await database_sync_to_async(Users.objects.get)(id=user_player['player1']['id'])
+                    user_p2 = await database_sync_to_async(Users.objects.get)(id=user_player['player2']['id'])
+                    m = await database_sync_to_async(Match.objects.create)(player1=user_p1, player2=user_p2, \
+                    score_p1=self.score['player1'], score_p2=self.score['player2'], game_id= self.game_id, state="finished")
+                    logger.info(f"***** Game SAVED TO DB with id {m.id} - players {m.player1} vs {m.player2} / score : {m.score_p1} - {m.score_p2}")
+                except Users.DoesNotExist:
+                    logger.error("****Error saving game to database: User not found")
+            self.is_saved = True
+            logger.info(f"=== GAME SAVED with flag {self.is_saved}")
+    
     async def save_tournament_db(self, user_player):
         try:
-            inverted = False
             tag, tourid = self.game_id.split("-")
             logger.info(f"*** DB SAVE - TOURNAMENT : {tourid} - tag {tag}")
             tour = await database_sync_to_async(Tournament.objects.get)(id=tourid)
@@ -266,7 +268,6 @@ class Room(GameObserver):
             match_player1 = await database_sync_to_async(lambda: match.player1)()
      
             if match_player1.id != user_player['player1']['id']:
-                inverted = True
                 temp = user_player['player1']
                 user_player['player1'] = user_player['player2']
                 user_player['player2'] = temp
