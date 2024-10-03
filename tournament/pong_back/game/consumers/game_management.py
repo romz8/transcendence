@@ -2,7 +2,7 @@ import random, asyncio, logging, json
 
 logger = logging.getLogger(__name__)
 
-ENDSCORE = 1
+ENDSCORE = 2
 MESSAGE_DURATION = 2000
 PITCHWIDTH = 800
 PITCHHEIGHT = 400

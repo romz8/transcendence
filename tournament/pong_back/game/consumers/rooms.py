@@ -1,5 +1,5 @@
 
-import asyncio, logging, random
+import asyncio, logging, random #quit random after refacto
 from enum import Enum
 import abc
 from .game_management import GameManager, ENDSCORE
@@ -9,47 +9,50 @@ from asgiref.sync import async_to_sync
 
 logger = logging.getLogger(__name__)
 gamestatus = Enum('gamestatus', ['init', 'waiting', 'playing', 'over', 'quit', 'close'])
+state_transition = {
+    gamestatus.init : [gamestatus.waiting],
+    gamestatus.waiting : [gamestatus.playing, gamestatus.quit],
+    gamestatus.playing : [ gamestatus.over, gamestatus.quit],
+    gamestatus.over : [],
+    gamestatus.quit : [],}
 
 class GameObserver(abc.ABC):
     
     @abc.abstractmethod
-    def broadcast_update(self, *args, **kwrags): #possible if not sure of variable implemenation ?
+    def broadcast_update(self, *args, **kwrags):
         pass
 
 class Room(GameObserver):
-    def __init__(self, game_id, channel_layer, mode):
+    def __init__(self, game_id, channel_layer, mode, time):
         self.game_id = game_id
         self.channel_layer = channel_layer
+        self.init_time = time
         self.players = {}
         self.score = {}
-        self.player_display = {} #necesary ?
+        self.player_display = {}
         self.state = gamestatus.init
         self.ready_players = set()
         self.winner = None
         self.loser = None
         self.start_received = False
-        self.direction = 0 #necessary ?
-        self.goal = False #necessary ?
-        self.tournament_mode = False #change the init logic
-        self.goal_messages = 0
+        self.tournament_mode = False 
         self.game = None
         self.tournament_mode = mode
-        self.ENDSCORE = ENDSCORE
         self.disconnect = set()
         self.is_saved = False
         self.lock = asyncio.Lock()
 
 
-    def add_player(self, channel_name, user_id, playername):
+    async def add_player(self, channel_name, user_id, playername):
         if self.state == gamestatus.init:
-            self.state = gamestatus.waiting
+            await self.set_state(gamestatus.waiting)
             role = 'player1'
         elif self.state == gamestatus.waiting:
             if user_id in self.players:
                 logger.info("*** == *** adding a player that is actually reconnecting")                                                                                                                                                    
                 return 
-            self.state = gamestatus.playing
-            role =  'player2'  #WE SHOULD NOT ADD A PLAYER IF WE ARE RECONNECTING THEN !! 
+            await self.set_state(gamestatus.playing)
+            role =  'player2'  #WE SHOULD NOT ADD A PLAYER IF WE ARE RECONNECTING THEN 
         
         self.players[user_id] = {'role': role, 'user_id': user_id, 
         'playername': playername, 'connected' : True, 
@@ -66,7 +69,7 @@ class Room(GameObserver):
             self.players[user_id]['connected'] = False
             logger.info(f"Player {self.players[user_id]['playername']} marked as disconnected")
         if self.state == gamestatus.playing:
-            self.state = gamestatus.quit
+            await self.set_state(gamestatus.quit)
             self.loser = self.players[user_id]['role']
             await self.notify_over_quit()
         logger.info(f"Disconnect Storage is {self.disconnect} and game state is {self.state}")
@@ -79,6 +82,7 @@ class Room(GameObserver):
             logger.info(f"** reconnect success** Disconnect Storage is {self.disconnect} and players is {self.players}")
             return (True)
         else:
+            logger.warning(f"Reconnect failed for player {user_id}. Game state is {self.state}")
             return (False)
 
     def get_player_role(self, id):
@@ -105,19 +109,19 @@ class Room(GameObserver):
             if self.state == gamestatus.over:
                 await self.end_with_winner()
             return
-        
         if message == "update":
             await self.channel_layer.group_send(self.game_id,{
                     'type': 'dispatch_game_state',
                     'roomstate' : self.state.name,
                     'game_state': event,
                     'room_channel':self.game_id,})
+        
 
         if message == "goal":
             self.score[event] += 1
             for x in self.score.values():
-                if x >= self.ENDSCORE:
-                    self.state = gamestatus.over
+                if x >= ENDSCORE:
+                    await self.set_state(gamestatus.over)
             if self.state == gamestatus.over:
                 await self.end_with_winner()
             else:
@@ -126,12 +130,9 @@ class Room(GameObserver):
                     'roomstate' : self.state.name,
                     'event': 'goal',
                     'player': event,
+                    #'direction': event,
                     'score':self.score,})
-
-            # for x in self.score.values():
-            #     if x >= self.ENDSCORE:
-            #         self.state = gamestatus.over
-
+    
     async def broadcast_countdown(self):
         logger.info(f"SERVER SENDING COUNTDOWN {self.state.name}")
         await self.channel_layer.group_send(self.game_id,{
@@ -191,7 +192,7 @@ class Room(GameObserver):
         of the game outcome.
         '''
         
-        self.winner = [k for k,v in self.score.items() if v >= self.ENDSCORE ][0]
+        self.winner = [k for k,v in self.score.items() if v >= ENDSCORE ][0]
         self.loser = 'player2' if self.winner == 'player1' else 'player1'
         await self.game_to_db()
         logger.info(f"ENDING with WINNER player :{self.winner} with state {self.state}")
@@ -216,7 +217,7 @@ class Room(GameObserver):
             self.game.stop = True
         self.winner = 'player1' if self.loser == 'player2' else 'player2'
         self.score[self.loser] = 0
-        self.score[self.winner] = self.ENDSCORE
+        self.score[self.winner] = ENDSCORE
         await self.game_to_db()
         logger.info(f'NOTIFY QUIT with state {self.state } :quitter{self.loser} and winner {self.winner}')
         await self.channel_layer.group_send(self.game_id, {
@@ -224,8 +225,6 @@ class Room(GameObserver):
                 'winner':self.winner, 'loser':self.loser, 
                 'roomstate': self.state.name,})
   
-
-
     async def game_to_db(self):
         '''
         This method records the final scores and the participants of the game into the 
@@ -237,7 +236,7 @@ class Room(GameObserver):
         async with self.lock:
             logger.info(f"========= SAVING TO DB : {self.game_id} as Tournament :{ self.tournament_mode} state {self.state}, save flag {self.is_saved} ========")
 
-            if self.state not in  [gamestatus.over, gamestatus.quit]:
+            if self.state not in [gamestatus.over, gamestatus.quit]:
                 return
             user_player = {}
             for user_id, info in self.players.items():
@@ -288,5 +287,13 @@ class Room(GameObserver):
             raise(f"**** Error saving game to database: Tournament not found with input: {tourid}")
         except Tourparticipation.DoesNotExist:
             raise(f"**** Error saving game to database:Loser not found {loser}")
-
+    
+    
+# *************************************** getters, setters asyncio state *************************
+    async def set_state(self, next_state):
+        async with self.lock:
+            if next_state in state_transition[self.state]:
+                self.state = next_state
+            else:
+                logger.info("****** WRONG STATE TRANSITION **************")
 

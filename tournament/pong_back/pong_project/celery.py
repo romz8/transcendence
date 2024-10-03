@@ -18,6 +18,7 @@ app.autodiscover_tasks()
 # Configuraciones específicas para Celery Beat y Celery Worker
 app.conf.beat_schedule_filename = settings.CELERY_BEAT_SCHEDULE_FILENAME
 
+# Define a schedule for Celery Beat -> added 
 app.conf.beat_schedule = {
     'check-waitroom-expiry': {
         'task': 'game.tasks.clear_expired_waitrooms',
@@ -25,7 +26,11 @@ app.conf.beat_schedule = {
     },
     'manage-ai-players': {
         'task': 'game.tasks.manage_full_ai_match',
-        'schedule': crontab(minute='*/3'),  # Every minutes
+        'schedule': crontab(minute='*'),  # Every minutes
+    },
+    'clear-inactive-gameroom' : {
+        'task' : 'game.tasks.clear_inactive_gameroom',
+        'schedule': crontab(minute='*'),  # Every minutes
     },
 }
 

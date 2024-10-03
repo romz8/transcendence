@@ -50,10 +50,9 @@ class PongConsumer(AsyncWebsocketConsumer):
             await self.game_routing()
             await self.room_allocation()
             await self.init_player()
-        
+
             await self.send(text_data=json.dumps({'type':gamestatus.init.name,'role': self.role,
             'playerName': self.playername,'init': init,}))
-
             self.room.create_game()
             logger.info(f"== *** === CONNECTION MADE IN {self.game_id} from player {self.room.players[self.user.id]}")
             self.display()
@@ -76,7 +75,8 @@ class PongConsumer(AsyncWebsocketConsumer):
                 
                 m = await database_sync_to_async(Match.objects.filter(game_id=self.game_id).first)()
                 if m is not None and m.state == "finished":
-                    raise ValueError("this Game has been played in the past")
+                    if self.game_id not in PongConsumer.rooms:
+                        raise ValueError("this Game has been played in the past")
            
             elif '/t/' in full_path:
                 tour_id = self.scope['url_route']['kwargs'].get('tour_id', None)
@@ -122,7 +122,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             return
         await self.accept()
         self.playername = await self.get_player()
-        self.room.add_player(self.channel_name, self.user.id, self.playername)
+        await self.room.add_player(self.channel_name, self.user.id, self.playername)
         await self.channel_layer.group_add(self.game_id, self.channel_name)
         self.role = self.room.get_player_role(self.user.id)
         
@@ -135,16 +135,17 @@ class PongConsumer(AsyncWebsocketConsumer):
             - Create a new room and allocate the player to that room.
         3. Assign the room instance to the 'room' attribute.
         """
+
         if self.game_id in PongConsumer.rooms:
-            if PongConsumer.rooms[self.game_id].state == gamestatus.over:
-                await self.close_with_error(4007, 'Game has been played already')
+            self.room = PongConsumer.rooms[self.game_id] #TRY IT HERE FOR THE NONETYPE ISSUE
+            if self.room.state == gamestatus.over:
+                await self.close_with_error(4007, f'{self.user.alias} : Game has been played already')
                 return
-            elif PongConsumer.rooms[self.game_id].state == gamestatus.quit:
-                self.room = PongConsumer.rooms[self.game_id]
-                await self.close_with_error(4444, 'Game was quit')
+            elif self.room.state == gamestatus.quit:
+                await self.close_with_error(4444, f'{self.user.alias} : You left the Game!')
                 return
         else: 
-            PongConsumer.rooms[self.game_id] = Room(self.game_id, self.channel_layer, self.tournament_mode)
+            PongConsumer.rooms[self.game_id] = Room(self.game_id, self.channel_layer, self.tournament_mode, time.time())
         self.room = PongConsumer.rooms[self.game_id]
 
     async def disconnect(self, close_code):
@@ -154,28 +155,21 @@ class PongConsumer(AsyncWebsocketConsumer):
         the game is in progress) or closes the game room. It also notifies all players 
         of the disconnection and cleans up the room if empty.
         '''
+        logger.info(f"IN DISCONNECT for {self.user}")
+        if self.room is None:
+            logger.error(f"Room is None, unable to disconnect player {self.user}")
+            await self.close_with_error(4005, "Room not found during disconnect")
+            return
         state = await self.room.disconnect_player(self.user.id)
         if state == gamestatus.quit:
             message = "You left the Game and lost"
         else:
             message = "You left before the game start"
         await self.close_with_error(4444, message)
-        logger.info(f" **** in disconnect consumer mthds we have {state.name} and {message}")
-        await self.cleanup_room()
+        logger.info(f" **** in disconnect mthd consumer for {self.user} : we have {state.name} and {message}")
+        logger.info(f"AFTER DISCONNET for {self.user} - we have players : {self.room.players}")
+        #await self.cleanup_room()
 
-    
-    async def cleanup_room(self, timeout=30):
-        '''
-        if room is empty, deletes the room and removes it from the class-level dictionary.
-        '''
-        if self.game_id not in PongConsumer.rooms:
-            return 
-        if len(self.room.players) == 2 and len(self.room.disconnect) == 2:
-            if self.room.state in [gamestatus.quit, gamestatus.over]:
-                await asyncio.sleep(timeout)
-                del PongConsumer.rooms[self.game_id]
-                logger.info(f'********** Room {self.game_id} deleted')
-        self.display()
 
     async def receive(self, text_data):
         """
@@ -305,6 +299,33 @@ class PongConsumer(AsyncWebsocketConsumer):
     
     '''*********************************** UTILS METHODS ********************************************'''
 
+    @classmethod
+    def cleanup_room(cls):
+        '''
+        A garbage-collector-style seeking inactive rooms for more than 60sec. cls function Implemented
+        via Celery task Manager 
+        '''
+        logger.info("*** Arriving in cleanup Room ***")
+        to_delete = set()
+        current_time = time.time()
+        deleted = 0
+
+        for game_id, room in cls.rooms.items():
+            if game_id is None:
+                del room 
+                logger.info(f"**** CLEARED empty Room")
+            if len(room.players) == len(room.disconnect): 
+                elapsed_time = current_time - room.init_time
+                if elapsed_time > 60:
+                    to_delete.add(game_id)
+        
+        for id in to_delete:
+            del cls.rooms[id]
+            deleted += 1
+            logger.info(f"**** CLEARED Room {id}")
+        
+        return (deleted)
+
     @database_sync_to_async
     def get_player(self):
         """
@@ -319,6 +340,9 @@ class PongConsumer(AsyncWebsocketConsumer):
         return "Unknown"
     
     async def close_with_error(self, code, message):
+        """
+        close function syste : accept the connection to return a tailor-made message and code
+        """
         logger.error(f"***** CLOSING ON ERROR {code} - {message} ********")
         await self.accept()
         if code == 4444:
@@ -333,8 +357,11 @@ class PongConsumer(AsyncWebsocketConsumer):
         for room_id, room in PongConsumer.rooms.items():
             logger.info('*************** Room Display **********************')
             logger.info(f'Room: {room_id}')
+            logger.info(f'Created at : {room.init_time}')
             logger.info(f'game_id is : {room.game_id}')
             logger.info(f'state is : {room.state}')
             logger.info(f'Players: {room.players}')
             logger.info(f'score is : {room.score}')
+            logger.info(f'total disconnected is : {len(room.disconnect)}')
+
             

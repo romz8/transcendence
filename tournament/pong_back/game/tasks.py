@@ -3,6 +3,7 @@ from celery.exceptions import Ignore
 from django.utils import timezone
 from django.db import transaction
 from .models import WaitRoom, Match, Tournament, Tourparticipation
+from .consumers.pong_consumer import PongConsumer
 import logging, random
 
 logger = logging.getLogger(__name__)
@@ -52,3 +53,8 @@ def manage_full_ai_match(self):
         logger.error(f"an Issue occurred in Tournament queryet search for AI task : {str(e)}")
         raise e
             
+@shared_task(bind=True)
+def clear_inactive_gameroom(self):
+    
+    total = PongConsumer.cleanup_room()
+    logger.info(f"Task manager cleared {total} inactive room")
