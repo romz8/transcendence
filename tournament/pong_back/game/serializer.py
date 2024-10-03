@@ -38,6 +38,7 @@ class TournamentDetailSerializer(serializers.ModelSerializer):
     Used for detailed view in the getTournament for winnerid
     '''
     winner = CustomUserSerializer(read_only=True)
+    runner_up = CustomUserSerializer(read_only=True)
     
     class Meta:
         model = Tournament

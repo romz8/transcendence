@@ -63,22 +63,6 @@ def modify_match_ai(request, pk):
 # /////////////////////////////////////////////////
 
 
-@api_view(["GET", "POST"])
-def player_list(request):
-    if request.method == "GET":
-        profiles = Users.objects.all()
-        serialized = CustomUserSerializer(profiles, many=True)
-        return Response(serialized.data)
-    
-    elif request.method == "POST":
-        deserialized = CustomUserSerializer(data=request.data)
-        if deserialized.is_valid():
-            deserialized.save()
-            return (Response(deserialized.data, status=status.HTTP_201_CREATED))
-        else:
-            return(Response(deserialized.errors, status=status.HTTP_400_BAD_REQUEST))
-        
-
 class MatchList(ListAPIView):
     serializer_class = MatchDetailSerializer
 
@@ -104,33 +88,36 @@ class getWaitRoom(RetrieveAPIView):
     lookup_field = "genId"
 
 
-
-
 class ListWaitRoom(ListAPIView):
+    '''Listing all the available  waitroom (no attendee yet)'''
     queryset = WaitRoom.objects.all().filter(attendee=None)
     serializer_class = RoomSerializer
 
-@api_view(['PUT'])
-def join_waitroom(request, pk):
-    try:
-        room = get_object_or_404(WaitRoom, genId=pk)
-        match = room.join_room(request.user)
-        serialized = MatchSerializer(match)
-        return (Response(serialized.data, status=status.HTTP_201_CREATED))
-    except ValidationError as e:
-        return (Response({"error":str(e)}, status=status.HTTP_400_BAD_REQUEST))
-    except Exception as e:
-        return (Response({"error":str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR))
+class ManageWaitroom(APIView):
+    '''
+    put method for joining a waitroom. use url id, search for room, intend to join with put
+    delete : same search logic but delete if owner only
+    return corresponding error
+    '''
+    def put(self,request, **kwargs):
+        try:
+            pk = self.kwargs.get('pk')
+            room = get_object_or_404(WaitRoom, genId=pk)
+            matched = room.join_room(request.user)
+            serialized = RoomDetailSerializer(matched)
+            return Response(serialized.data, status=status.HTTP_201_CREATED)
+        except ValidationError as e:
+            return Response({"error":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error":str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['DELETE'])
-def delete_waitroom(request, pk):
-    logger.info("HOLA")
-    room = get_object_or_404(WaitRoom, genId=pk)
-    if room.owner != request.user:
-        return(Response(status=status.HTTP_401_UNAUTHORIZED))
-    room.delete()
-    logger.info("ADIOS")
-    return (Response(status=status.HTTP_204_NO_CONTENT))
+    def delete(self,request, **kwargs):
+        pk = self.kwargs.get('pk')
+        room = get_object_or_404(WaitRoom, genId=pk)
+        if room.owner != request.user:
+            return(Response(status=status.HTTP_401_UNAUTHORIZED))
+        room.delete()
+        return (Response(status=status.HTTP_204_NO_CONTENT))
 
 @api_view(['POST'])
 def create_tournament(request):
@@ -173,7 +160,7 @@ def join_tournament(request, pk):
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         logger.error(f"Error joining tournament: {str(e)}")
-        return Response({"error": "An unexpected error occurred. {}".format(str(e))}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"error": "An unexpected error occurred. {}".format(str(e))}, status=status.HTTP_400_BAD_REQUEST)
 
 class TournamentsOpen(ListAPIView):
     queryset = Tournament.objects.all().filter(state="registering")
@@ -352,7 +339,7 @@ class UserMatchStatusView(APIView):
             return Response({"error": "Tournament not found."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             logger.error(f"Unexpected error in UserMatchStatusView: {str(e)}")
-            return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": "An unexpected error occurred."}, status=status.HTTP_400_BAD_REQUEST)
 
 #************ UTILS FOR TOURNAMENT AND AI CREATION **********************/
 def fill_with_ai(tourn_id):

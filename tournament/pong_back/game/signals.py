@@ -8,7 +8,7 @@ import logging, random, requests, os
 
 logger = logging.getLogger(__name__)
 
-#Block_url = os.getenv('API_URL_BLOCKCHAIN')
+Block_url = os.getenv('API_URL_BLOCKCHAIN')
 
 @receiver(post_save, sender=Match)
 def update_match_tournament(sender, instance, **kwargs):
@@ -75,26 +75,26 @@ def build_bracket_tournament(sender, instance, created,**kwargs):
             # Step 4: Reset the flag to False after operations are complete
             instance._signal_handling_in_progress = False
 
-# @receiver(post_save, sender=Tournament)
-# def save_tournament_blockchain(sender, instance, created, **kwargs):
-#     logger.info(f"ENTERING BLOCKCHAIN SAVE TOURNAMENT with block url {Block_url}")
-#     if created:
-#         return
-#     if instance.state != "finished":
-#         return
-#     payload = { "winner" : instance.winner,
-#         "runner_up" : instance.runner_up,
-#         "final_score" : instance.final_score,
-#         "participant_count" : instance.n_humans } 
-#     try:
-#         logger.info(f"IT SHOULD SAVE TO BCKCHAIN WITH {payload} BUT WE ARE SAVING GAS")
-#         # response = requests.post(Block_url, payload)
-#         # if response.status == 200 or response.status == 201:
-#         #     logger.info("Tournament result successfully posted to blockchain.")
-#         # else:
-#         #     logger.error(f"Failed to post tournament result to blockchain. Status code: {response.status_code}, Response: {response.text}")
-#     except Exception as e:
-#         logger.error(f"Exception occurred while posting to blockchain: {str(e)}")
+@receiver(post_save, sender=Tournament)
+def save_tournament_blockchain(sender, instance, created, **kwargs):
+    logger.info(f"ENTERING BLOCKCHAIN SAVE TOURNAMENT with block url {Block_url}")
+    if created:
+        return
+    if instance.state != "finished":
+        return
+    payload = { "winner" : instance.winner,
+        "runner_up" : instance.runner_up,
+        "final_score" : instance.final_score,
+        "participant_count" : instance.n_humans } 
+    try:
+        logger.info(f"IT SHOULD SAVE TO BCKCHAIN WITH {payload} BUT WE ARE SAVING GAS")
+        # response = requests.post(Block_url, payload)
+        # if response.status == 200 or response.status == 201:
+        #     logger.info("Tournament result successfully posted to blockchain.")
+        # else:
+        #     logger.error(f"Failed to post tournament result to blockchain. Status code: {response.status_code}, Response: {response.text}")
+    except Exception as e:
+        logger.error(f"Exception occurred while posting to blockchain: {str(e)}")
 
 
 

@@ -123,6 +123,7 @@ class Match(models.Model):
     score_p2 = models.IntegerField(default=0)
     state = models.CharField(max_length=100, default="waiting", choices=STATE_CHOICES)
     game_id = models.CharField(max_length=36, unique=False, editable=False) #ISSUE FOR TOURNAMENT AT CREATION IF NOT TURNED OFF
+    
     #used four tournament only
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, db_column = "tournamentid", blank=True, null=True)
     round=models.IntegerField(default=0, null=True, blank=True)
@@ -148,7 +149,6 @@ class Match(models.Model):
         self.clean()
         super(Match, self).save(*args, **kwargs)
 
-#needs to be outside of the class to instantiate default value field
 def default_expire_at():
     return (timezone.now() + timedelta(minutes=3))
 
@@ -165,9 +165,11 @@ class WaitRoom(models.Model):
     def __str__(self):
         return f"Room {self.genId} (Owner: {self.owner}, Attendee: {self.attendee})"
     
-    def cleanGame(self):
+    def clean(self):
         if (self.owner == self.attendee):
-            raise ValidationError("impossible : the 2 players need to be different")
+            raise ValidationError("impossible : 2 players need to be different")
+        if self.expire_at < timezone.now():
+            raise ValidationError("Waitroom Expired")
 
     def generate_unique_id(self):
         while True:
@@ -178,18 +180,18 @@ class WaitRoom(models.Model):
     @transaction.atomic
     def join_room(self, user):
         room = WaitRoom.objects.select_for_update().get(genId=self.genId)
+        if room.expire_at < timezone.now():
+            raise ValidationError("Waitroom Expired")
         if room.attendee is not None:
             raise ValidationError("Someone just joined this room")
+        if room.owner == user:
+            raise ValidationError("You cannot join your own Room")
         room.attendee = user
         room.save()
+        return room
     
     def save(self, *args, **kwargs):
         if not self.genId:
             self.genId = self.generate_unique_id()
-        self.cleanGame()
+        self.clean()
         super(WaitRoom, self).save()
-
-#used for when a user is deleted
-def user_deleted():
-    time = timezone.now()
-    return ("user_deleted on " + str(time))
