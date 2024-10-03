@@ -11,7 +11,7 @@ class Friends extends HTMLElement {
             <main class="container">
 				<div class="col-sm-12 col-md-9 col-lg-6 mx-auto">
 					<div class="mb-5 row">
-						<h1 class="text-center">Friends</h1>
+						<h1 class="text-center" data-bs-toggle="tooltip" data-bs-placement="left" data-bs-title="Tooltip on left">Friends</h1>
 						<p class="text-center">Add, remove, and see your friends status.</p>
 					</div>
 					<form id="add-user-form">
@@ -29,10 +29,14 @@ class Friends extends HTMLElement {
 		`;
 	}
 	async connectedCallback() {
+		/* Load requests and friend list from database */
 		await loadRequests();
 		await loadFriendList();
+
+		/* Generate listener to confirm, reject, and delete new friends */
 		setListenerFriends();
 
+		/* Control submit button to add a new friend */
 		const	addUserForm = document.getElementById('add-user-form');
 		const	addUsername = document.getElementById('add-username');
 		addUserForm.addEventListener('submit', async (e) => {
@@ -61,7 +65,11 @@ class Friends extends HTMLElement {
 				createToast('warning', `Error: ${e}`);
 			}
 		});
-	};
+					/* Initialize bootstrap tooltips */
+					const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+					console.log(tooltipTriggerList);
+					const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+	}
 }
 
 async function	loadRequests() {
@@ -128,14 +136,14 @@ async function	loadFriendList() {
 						<li class="friend-item pe-none px-4 rounded cs-border d-flex justify-content-between align-items-center mb-2" data-friend-username="${friend.username}">
 							<div class="d-flex align-items-center gap-3">
 								<span class="user-status-pill rounded-circle position-relative" style="background-image: url('${friend.img}');">
-									<span class="position-absolute top-0 start-0 translate-middle p-2 ${statusColor} rounded-circle">
+									<span class="position-absolute top-0 start-0 translate-middle p-2 ${statusColor} rounded-circle" data-bs-toggle="tooltip" data-bs-placement="left" data-bs-title="Tooltip on left">
     									<span class="visually-hidden">New alerts</span>
   									</span>
 								</span>
-								<p class="mx-0 my-0 px-0 py-0 fs-5 align-bottom">@${friend.username}</p>
+								<p class="mx-0 my-0 px-0 py-0 fs-5 align-bottom pe-auto" data-bs-toggle="tooltip" data-bs-placement="left" data-bs-title="Tooltip on left">@${friend.username}</p>
 								<p class="mx-0 my-0 px-0 py-0 fs-6 align-bottom secondary-color-subtle">${friend.alias}</p>
 							</div>
-							<i class="fa-regular fa-trash-can fa-lg delete-friend pe-auto"></i>
+							<i class="fa-solid fa-trash-can fa-lg delete-friend pe-auto"></i>
 						</li>	
 					`);
 				}).join('');

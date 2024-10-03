@@ -295,8 +295,8 @@ h1, h2, h3, h4, h5 {
 }
 
 .dropdown-item {
-	padding-top: 5px;
-	padding-bottom: 5px;
+	padding-top: 10px;
+	padding-bottom: 10px;
 }
 
 .dropdown-menu li:hover:first-child a {

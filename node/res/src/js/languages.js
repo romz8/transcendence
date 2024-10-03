@@ -6,10 +6,14 @@ export function generateLangs()
 
 	i18next.init({
 		lng: savedLanguage,
+		fallbackLng: 'en',
 		resources: {
 			en: {
 				translation: {
 					play: 'Play',
+					local_game: 'Local Game',
+					online_game: 'Online Game',
+					tournament: 'Tournament',
 					profile: 'Profile',
 					settings: 'Settings',
 					settings: 'Settings',
@@ -77,6 +81,10 @@ export function generateLangs()
 	{
 		/* Navbar */
 		changeLanguageElementContent(document.getElementById('play-btn'), t('play'));
+		changeLanguageElementContent(document.getElementById('local-game-text'), t('local_game'));
+		changeLanguageElementContent(document.getElementById('online-game-text'), t('online_game'));
+		changeLanguageElementContent(document.getElementById('tournament-text'), t('tournament'));
+
 		changeLanguageElementContent(document.getElementById('profile-btn'), t('profile'));
 
 		changeLanguageElementContent(document.getElementById('settings-text'), t('settings'));

@@ -11,16 +11,21 @@ class NavBar extends HTMLElement {
 		let	optionalElements = '';
 		if (this.hasAttribute('data-authorized')) {
 			optionalElements = /* html */`
-			<li><a href="/tournament" class="nav-link" data-link>Tournament</a></li>
-			<li><a href="/waitroom" class="nav-link" data-link>Play Remote</a></li>
-			<li><a href="/gamebot" id="play-btn" class="nav-link" data-link>Play Local</a></li>
+			<li class="nav-item dropdown">
+				<a id="play-btn" class="nav-link dropdown-toggle" href="" role="button" data-bs-toggle="dropdown" aria-expanded="false">Play</a>
+				<ul class="dropdown-menu dropdown-menu-end">
+					<li><a class="dropdown-item" href="/gamebot" data-link><i class="fa-solid fa-table-tennis-paddle-ball fa-lg me-2"></i><span id="local-game-text">Local game</span></a></li>
+					<li><a class="dropdown-item" href="/waitroom" data-link><i class="fa-solid fa-earth-americas fa-lg me-2"></i><span id="online-game-text">Online game</span></a></li>
+					<li><a class="dropdown-item" href="/tournament" data-link><i class="fa-solid fa-trophy fa-lg me-2"></i><span id="tournament-text">Tournament</span></a></li>
+				</ul>
+			</li>
 			<li class="nav-item dropdown">
 				<a id="profile-btn" class="nav-link dropdown-toggle" href="" role="button" data-bs-toggle="dropdown" aria-expanded="false">Profile</a>
 				<ul class="dropdown-menu dropdown-menu-end">
-					<li><a class="dropdown-item" href="/profile" data-link><i class="fa-regular fa-user fa-lg me-2"></i><span id="settings-text">Settings</span></a></li>
-					<li><a class="dropdown-item" href="/friends" data-link><i class="fa-regular fa-face-laugh-wink fa-lg me-2"></i><span id="friends-text">Friends</span></a></li>
-					<li><a class="dropdown-item" href="/match-history" data-link><i class="fa-regular fa-chart-bar fa-lg me-2"></i><span id="match-history-text">Match history</span></a></li>
-					<li><a id="logout-btn" class="dropdown-item" href="" data-link><i class="fa-solid fa-arrow-right-from-bracket fa-lg me-2"></i><span id="logout-text">Log out</span></a></li>
+					<li><a class="dropdown-item" href="/profile" data-link><i class="fa-solid fa-gear fa-lg me-2"></i><span id="settings-text">Settings</span></a></li>
+					<li><a class="dropdown-item" href="/friends" data-link><i class="fa-solid fa-user-group fa-lg me-2"></i><span id="friends-text">Friends</span></a></li>
+					<li><a class="dropdown-item" href="/match-history" data-link><i class="fa-solid fa-chart-simple fa-lg me-2"></i><span id="match-history-text">Match history</span></a></li>
+					<li><a id="logout-btn" class="dropdown-item" href="" data-link><i class="fa-solid fa-right-from-bracket fa-lg me-2"></i><span id="logout-text">Log out</span></a></li>
 				</ul>
 			</li>
 			`;
@@ -77,6 +82,7 @@ class NavBar extends HTMLElement {
 		setColorModeIcon();
 	}
 	connectedCallback() {
+
 		generateLangs()
 		const	burgerButton = document.querySelector('.topnav__burger');
 		const	topnavMenu = document.querySelector('.topnav__menu');
