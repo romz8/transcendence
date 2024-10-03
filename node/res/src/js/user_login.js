@@ -218,6 +218,12 @@ export async function is_authenticated(access)
         console.log(data);
         if (data['error'])
             return(false);
+		if (!socket){
+			conectWB(access);
+		}
+		else if(socket.readyState !== 1 && socket.readyState !== 0){
+			conectWB(access);
+		}
         return(true);
     })
     .catch(error => {
