@@ -88,7 +88,7 @@ class ProFile extends HTMLElement {
 			dataUpdate.append('alias', inputAlias.value);
 			dataUpdate.append('imagefile', inputProfilePic.files[0]);
 			try {
-				const response = await fetch('http://localhost:8080/update_info_user/', {
+				const response = await fetch('https://localhost:3001/login/update_info_user/', {
 					method: 'POST',
 					headers: {'Authorization': 'Bearer ' + getCookie('token')},
 					body: dataUpdate,
@@ -115,7 +115,7 @@ class ProFile extends HTMLElement {
 	const infoLogin = {
 		alias: document.getElementById('alias').value
 	};
-	fetch('http://localhost:8080/update_info_user/', {
+	fetch('https://localhost:3001/login/update_info_user/', {
 		method: 'POST',
 		headers: {
 			'Authorization': 'Bearer ' + getCookie('token'),

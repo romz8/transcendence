@@ -11,7 +11,7 @@ export async function setWebsocket(id) {
     
     const token = getCookie('token');
     const host = window.location.hostname;
-    let url = `ws://${host}:8000/ws/pingpong/`+ id + "/";
+    let url = `wss://${host}:3001/tourapi/ws/pingpong/`+ id + "/";
     //let url = 'ws://10.11.5.6:8000/ws/pingpong/'+ id + "/"; 
     url += "?token=" + token;
     console.log("url is : ", url);

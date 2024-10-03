@@ -34,7 +34,7 @@ class MatchHistory extends HTMLElement {
 		`;
 	}
 	connectedCallback() {
-		fetch('http://localhost:8000/game/allmatch/', {
+		fetch('https://localhost:3001/tourapi/game/allmatch/', {
 			method: 'GET',
 			headers: {
 				'Authorization': 'Bearer ' + getCookie('token'),

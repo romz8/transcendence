@@ -46,7 +46,7 @@ def infoUser(request):
         'campus': user.campus,
         'name': user.first_name,
         'lastname': user.last_name,
-        'img': "http://localhost:8080" + user.img.url,
+        'img': "https://localhost:3001" + user.img.url,
     }
     return JsonResponse(user_json)
 

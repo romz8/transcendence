@@ -29,7 +29,7 @@ def get_friend_details(user, pend):
                 'alias': friend.alias,
                 'first_name': friend.first_name,
                 'last_name': friend.last_name,
-                'img': "http://localhost:8080" + friend.img.url,
+                'img': "https://localhost:3001/login" + friend.img.url,
                 'mine': mine,
                 'online': UserStatus.objects.get(users=friend).is_online
             })

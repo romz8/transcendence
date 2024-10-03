@@ -7,7 +7,7 @@ window.onload = fetchUIDENV;
 ///////////////////////////////////////////// UTILS /////////////////////////////////////////////
 
 async function fetchUIDENV() {
-	fetch('http://localhost:8080/uidenv/', {
+	fetch('https://localhost:3001/login/uidenv/', {
 		method: 'GET',
 	})
 		.then(response => {
@@ -69,7 +69,7 @@ export var socket = null;
 
 export function conectWB(access_token)
 {
-    socket = new WebSocket(`ws://localhost:8080/ws/user_status/?token=${access_token}`);
+    socket = new WebSocket(`wss://localhost:3001/login/ws/user_status/?token=${access_token}`);
     socket.onopen = function(event) {
         console.log("Conexión WebSocket establecida.");
     };
@@ -103,7 +103,7 @@ export function disconnectWB() {
 export async function callApi42(){
 	const params = new URLSearchParams ({
 		'client_id': uid,
-		'redirect_uri': 'http://localhost:3000/',
+		'redirect_uri': 'https://localhost:3001/',
 		'scope': 'public',
 		'state': '1234566i754twrqwdfghgfddtrwsewrt',
 		'response_type': 'code'
@@ -116,7 +116,7 @@ export async function callApi42(){
 async function getNewAccessToken(infoLogin)
 {
 	try {
-		const response = await fetch('http://localhost:8080/refreshToken/', {
+		const response = await fetch('https://localhost:3001/login/refreshToken/', {
 			method: 'POST',
 			headers: {
 				'Accept': 'application/json',
@@ -165,7 +165,7 @@ function callBackAccess() {
     let vars = getPathVars();
     if (!vars["code"] || !vars["state"])
         return ;
-    fetch('http://localhost:8080/loginIntra/', {
+    fetch('https://localhost:3001/login/loginIntra/', {
         method: 'POST',
         headers: {
             'Accept': 'application/json',
@@ -203,7 +203,7 @@ export async function is_authenticated(access)
 	if (!access) {
 		return Promise.resolve(false);
 	}
-	return fetch('http://localhost:8080/verify_token/', {
+	return fetch('https://localhost:3001/login/verify_token/', {
 		method: 'GET',
 		headers: {
 			'Authorization': 'Bearer ' + access,
