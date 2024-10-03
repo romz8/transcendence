@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Pong HotShot LlC Games{% endblock %}</title>
+</head>
+<body>
+    <header>
+        {% include "./partials/nav.html" %}
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <footer>
+        {% include "./partials/footer.html" %}
+    </footer>
+</body>
+</html>
+

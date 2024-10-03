@@ -11,21 +11,78 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - app-network
-  django:
-    container_name: django
-    build: ./django
-    image: django
+      - pongnet
+  login:
+    container_name: login
+    build: ./login
+    image: login
     volumes:
-      - django_data:/home/apriego-/django/
+      - login_data:/home/apriego-/login/
     env_file:
       - .env
     ports:
       - "8080:8080"
     networks:
-      - app-network
+      - pongnet
     depends_on:
       - postgres
+  tournament:
+    container_name: tournament
+    build: ./tournament
+    command: python manage.py runserver 0.0.0.0:8000 #is this necessaryy ?
+    volumes:
+      - ./tournament/pong_back:/app
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    networks:
+      - pongnet
+    depends_on:
+      - login
+    restart: 'always'
+  redis:
+    image: redis:7.4
+    container_name: redis
+    ports:
+      - "6380:6379" #binding redis container 6379 to 6380 for machine as 42 uses this ports already
+    networks:
+      - pongnet
+    restart: 'always'
+    command: >
+      sh -c "rm -f /data/dump.rdb && redis-server --save '' --appendonly no"
+    #command: ["redis-server", "--save", "", "--appendonly", "no"]
+
+  celery_worker:
+    build: ./tournament
+    container_name: celery_worker
+    command: celery -A pong_project worker -l info
+    env_file:
+      - .env
+    volumes:
+      - ./tournament/pong_back:/app
+    networks:
+      - pongnet
+    depends_on:
+      - tournament
+      - redis
+    restart: 'always'
+
+  celery_beat:
+    build: ./tournament
+    container_name: celery_beat
+    command: celery -A pong_project beat -l info
+    env_file:
+      - .env
+    volumes:
+      - ./tournament/pong_back:/app
+    networks:
+      - pongnet
+    depends_on:
+      - tournament
+      - redis
+    restart: 'always'
+
   postgres:
     build: ./postgreSQL
     container_name: postgres
@@ -37,7 +94,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - app-network
+      - pongnet
 volumes:
   node_data:
     driver: local
@@ -45,10 +102,10 @@ volumes:
       device: "./node/res/node_modules"
       o: bind
       type: none
-  django_data:
+  login_data:
     driver: local
     driver_opts:
-      device: "./django/res"
+      device: "./login/res"
       o: bind
       type: none
   postgres_data:
@@ -59,6 +116,6 @@ volumes:
       type: none
 
 networks:
-  app-network:
-      name: app-network
+  pongnet:
+      name: pongnet
       driver: bridge

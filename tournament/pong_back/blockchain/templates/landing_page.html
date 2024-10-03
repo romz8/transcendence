@@ -1,0 +1,56 @@
+<!-- templates/landing_page.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Submission</title>
+</head>
+<body>
+    <h1>Submit Tournament Result</h1>
+
+    <!-- Display success or error messages -->
+    {% if success %}
+        <p style="color:green;">{{ success }}</p>
+    {% elif error %}
+        <p style="color:red;">{{ error }}</p>
+    {% endif %}
+
+    <!-- Tournament form -->
+    <form method="POST">
+        {% csrf_token %}
+        <label for="winner">Winner:</label><br>
+        <input type="text" id="winner" name="winner" required><br><br>
+
+        <label for="runner_up">Runner-Up:</label><br>
+        <input type="text" id="runner_up" name="runner_up" required><br><br>
+
+        <label for="final_score">Final Score:</label><br>
+        <input type="text" id="final_score" name="final_score" required><br><br>
+
+        <label for="participant_count">Participant Count:</label><br>
+        <input type="number" id="participant_count" name="participant_count" required><br><br>
+
+        <button type="submit">Submit Result</button>
+    </form>
+
+    <!-- Check Results Button -->
+    <form action="" method="GET">
+        <input type="hidden" name="check_results" value="true">
+        <button type="submit">Check Results</button>
+    </form>
+
+    <!-- Display Tournament Results -->
+    {% if results %}
+        <h3>Results:</h3>
+        <ul>
+            {% for result in results %}
+                <li>Winner: {{ result.winner }}, Runner-Up: {{ result.runner_up }}, Final Score: {{ result.final_score }}, Participants: {{ result.participant_count }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No tournament results found yet.</p>
+    {% endif %}
+
+</body>
+</html>

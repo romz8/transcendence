@@ -1,0 +1,97 @@
+[{
+    "type": "function",
+    "name": "get",
+    "inputs": [],
+    "outputs": [
+        {
+            "name": "",
+            "type": "tuple[]",
+            "internalType": "struct TournamentContract.TournamentResult[]",
+            "components": [
+                {
+                    "name": "winner",
+                    "type": "string",
+                    "internalType": "string"
+                },
+                {
+                    "name": "runnerUp",
+                    "type": "string",
+                    "internalType": "string"
+                },
+                {
+                    "name": "finalScore",
+                    "type": "string",
+                    "internalType": "string"
+                },
+                {
+                    "name": "participantCount",
+                    "type": "uint256",
+                    "internalType": "uint256"
+                }
+            ]
+        }
+    ],
+    "stateMutability": "view"
+},
+{
+    "type": "function",
+    "name": "results",
+    "inputs": [
+        {
+            "name": "",
+            "type": "uint256",
+            "internalType": "uint256"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "winner",
+            "type": "string",
+            "internalType": "string"
+        },
+        {
+            "name": "runnerUp",
+            "type": "string",
+            "internalType": "string"
+        },
+        {
+            "name": "finalScore",
+            "type": "string",
+            "internalType": "string"
+        },
+        {
+            "name": "participantCount",
+            "type": "uint256",
+            "internalType": "uint256"
+        }
+    ],
+    "stateMutability": "view"
+},
+{
+    "type": "function",
+    "name": "set",
+    "inputs": [
+        {
+            "name": "_winner",
+            "type": "string",
+            "internalType": "string"
+        },
+        {
+            "name": "_runnerUp",
+            "type": "string",
+            "internalType": "string"
+        },
+        {
+            "name": "_finalScore",
+            "type": "string",
+            "internalType": "string"
+        },
+        {
+            "name": "_participantCount",
+            "type": "uint256",
+            "internalType": "uint256"
+        }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+}]
