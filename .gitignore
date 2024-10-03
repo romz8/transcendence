@@ -2,4 +2,7 @@
 .DS_Store
 __pycache__
 node_modules
-migrations/*
+migrations
+celery-beat-schedule
+celery-worker-state
+img_profile
