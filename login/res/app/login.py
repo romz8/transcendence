@@ -95,8 +95,12 @@ def insertLogin(tokken):
                 if value["status"] == 'error':
                     return AnonymousUser()
                 if value["status"] == 'error intra':
+                    userStatus = UserStatus.objects.create(users=user, is_online=False)
+                    userStatus.save()
                     return user
                 user.save()
+                userStatus = UserStatus.objects.create(users=user, is_online=False)
+                userStatus.save()
                 return user
             return Users.objects.get(intra_id=body.get('id'))
         else:
@@ -140,7 +144,7 @@ def loginIntra(request):
         return JsonResponse(formatResponse)
     except Exception as e:
         logger.info(str(e))
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=400)
 
 @api_view(['POST'])
 def refreshToken(request):

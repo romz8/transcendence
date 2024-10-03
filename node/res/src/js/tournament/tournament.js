@@ -1,7 +1,6 @@
 import { getTournament, getAuth, getPlayerListTournament, getMatchesListTournament, getPlayerTournnamentActive, putMatchTest} from "../api.js";
 import {router} from "../routes.js"
 
-let id = -1;
 let maxPlayers = null; // Maximum number of players (can be 4 or 8 based on the game rules)
 let registered = null; // Number of currently registered
 let state = null;
@@ -14,8 +13,49 @@ class Tournament extends HTMLElement {
     }
     
     async connectedCallback() {
+        const id = this.getAttribute('data-id');
+        if (!id) {
+            console.error("Tournament ID not set");
+            return;
+        }
         this.innerHTML = /* html */`
         <style>
+        .round {
+            margin: 20px;
+        }
+
+        .matches-container {
+            display: flex;
+            justify-content: space-around; /* Espacio uniforme entre los partidos */
+        }
+
+        .match {
+            background-color: #212529; /* Fondo oscuro para los partidos */
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px;
+            text-align: center;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+            flex: 1; /* Asegura que todos los partidos se distribuyan uniformemente */
+        }
+
+        .match-details {
+            color: white; /* Color del texto */
+        }
+
+        .player {
+            font-weight: bold; /* Hacer el texto más prominente */
+        }
+
+        .vs {
+            font-size: 1.5em; /* Hacer el texto 'VS' más grande */
+            margin: 10px 0;
+        }
+
+        .score,
+        .status {
+            margin-top: 10px; /* Espacio superior para los detalles */
+        }
         div {
             color: var(--bs-cs-secondary);
         }
@@ -39,9 +79,12 @@ class Tournament extends HTMLElement {
         }
         </style>
         <nav-bar data-authorized></nav-bar>
+        <div id="status-banner" class="mt-4"></div>
         <div id="main-container"></div>
         `;
-        this.container = document.getElementById('main-container')
+        this.container = this.querySelector('#main-container');
+        //console.log(window.location.pathname)
+        //console.log(`/tournament/${id}`)
         while (window.location.pathname == `/tournament/${id}`) {
             await renderLoop(id, this.container); // Fetch and render updates
             await delay(1000); // Wait for 1 seconds
@@ -52,8 +95,13 @@ class Tournament extends HTMLElement {
 customElements.define('tourna-ment', Tournament);
 
 export default function tournament (room) {
-    id = room.id
-    return (`<tourna-ment></tourna-ment>`);
+    if (room == undefined)
+    {
+        history.pushState(null,"","/");
+        router();
+        return;
+    }
+    return (`<tourna-ment data-id="${room.id}"></tourna-ment>`);
 }
 
 // Function to delay execution
@@ -66,7 +114,7 @@ async function renderLoop(id, container) {
     
     // Check if state has changed
     const auth = await getAuth();
-    // console.log("Auth is", auth);
+    // //console.log("Auth is", auth);
     const username = auth.username;
     if (resp.state !== state) {
         state = resp.state;
@@ -85,7 +133,7 @@ async function renderLoop(id, container) {
             updateProgressBar();
         }
         else if(resp.state === "ongoing")
-            await updateRenderActive(id);
+            await renderActiveTournament(id, username, container);
     }
 }
 
@@ -119,9 +167,9 @@ async function renderWaiting(id, username, container) {
 async function fetchPlayers(id) {
     try {
         const players = await getPlayerListTournament(id);
-        // console.log(players)
+        // //console.log(players)
         if (!players) {
-            console.log("empty tournament player list");
+            //console.log("empty tournament player list");
             return;
         }
         updatePlayerList(players);
@@ -154,94 +202,163 @@ function updateProgressBar() {
 }
 
 async function renderActiveTournament(id, username, container) {
-    console.log("Tournament is starting");
     const match = await getMatchesListTournament(id);
-    
+    if (!match || match.length === 0) {
+        console.error("No matches found");
+        return;
+    }
+
+    // Limpiar el contenedor
     container.innerHTML = "";
+
+    // Crear la estructura base
     container.innerHTML = /* html */`
-    <div id="status-banner" class="mt-4"></div>
     <div class="container mt-5">
-        <h1 class="text-center">Playing Tournament ID : ${id}</h1>
-        <h2 class="text-center">You are : ${username}</h1>
+        <h1 class="text-center">Playing Tournament ID: ${id}</h1>
+        <h2 class="text-center">You are: ${username}</h2>
     </div>
     `;
 
-    //sort rounds by order and match inside
+    // Agrupar partidos por ronda
     const rounds = roundDispatch(match);
-    //create rounds div
-    // Create a container for rounds
+
+    // Crear contenedor de rondas
     const roundsContainer = document.createElement('div');
-    roundsContainer.className =  'tournament-bracket-container d-flex justify-content-center';
+    roundsContainer.className = 'tournament-bracket-container d-flex justify-content-center';
     container.appendChild(roundsContainer);
-    
-    // creates match divs inside
-    rounds.forEach((matches, roundIndex) =>{
-        const roundDiv = document.createElement('div');
-        roundDiv.className = 'round';
-        roundDiv.innerHTML = `<h3>Round ${roundIndex + 1}</h3>`;
+
+    // Crear divs para cada ronda
+    rounds.forEach((matches, roundIndex) => {
+        const roundDiv = createRoundDiv(roundIndex, matches);
         roundsContainer.appendChild(roundDiv);
-
-        //once in the round, dispatch the match and its info
-        matches.forEach((match, matchIndex) =>{
-            const matchDiv = document.createElement('div');
-            matchDiv.className = 'match';
-            matchDiv.setAttribute("id",`round-${roundIndex + 1}-match-${matchIndex}`);
-            matchDiv.innerHTML = /* html */`
-                <div class="match-details">
-                    <div class="player">${match.player1 ? match.player1.alias : 'TBD'}</div>
-                    <div class="vs">VS</div>
-                    <div class="player">${match.player2 ? match.player2.alias : 'TBD'}</div>
-                    <div class="score"> Score : ${match.score_p1} - ${match.score_p2} </div>
-                    <div class="status"> Status : ${match.state}</div>
-                </div>
-            `;
-            roundDiv.appendChild(matchDiv);
-
-        });
     });
+
     await bannerLogic(id);
 }
 
+// Función para crear el div de una ronda
+function createRoundDiv(roundIndex, matches) {
+    const roundDiv = document.createElement('div');
+    roundDiv.className = 'round';
+    roundDiv.innerHTML = `<h3 class="text-center">Round ${roundIndex + 1}</h3>`;
 
-async function updateRenderActive(id){
-    const match = await getMatchesListTournament(id);
-    let round = 1;
-    let matchIndex = 0;
-    match.forEach((match)=>{
-        if (match.round !== round){
-            round = match.round;
-            matchIndex = 0;
-        }
-        console.log(`*** SEARCHING FOR : round-${match.round}-match-${matchIndex}`);
-        let matchDiv = document.getElementById(`round-${match.round}-match-${matchIndex}`);
-        console.log("*** matchDiv found is ", matchDiv);
-        matchDiv.innerHTML= /* html */`
+    // Crear contenedor de partidos
+    const matchContainer = document.createElement('div');
+    matchContainer.className = 'matches-container';
+
+    matches.forEach((match, matchIndex) => {
+        const matchDiv = createMatchDiv(match, roundIndex, matchIndex);
+        matchContainer.appendChild(matchDiv);
+    });
+
+    roundDiv.appendChild(matchContainer);
+    return roundDiv;
+}
+
+// Función para crear el div de un partido
+function createMatchDiv(match, roundIndex, matchIndex) {
+    const matchDiv = document.createElement('div');
+    matchDiv.className = 'match';
+    matchDiv.setAttribute("id", `round-${roundIndex + 1}-match-${matchIndex}`);
+    matchDiv.innerHTML = /* html */`
         <div class="match-details">
             <div class="player">${match.player1 ? match.player1.alias : 'TBD'}</div>
             <div class="vs">VS</div>
             <div class="player">${match.player2 ? match.player2.alias : 'TBD'}</div>
-            <div class="score"> Score : ${match.score_p1} - ${match.score_p2} </div>
-            <div class="status"> Status : ${match.state}</div>
-        </div>`;
-        matchIndex++;
-    });
-    await bannerLogic(id);
+            <div class="score">Score: ${match.score_p1} - ${match.score_p2}</div>
+            <div class="status">Status: ${match.state}</div>
+        </div>
+    `;
+    return matchDiv;
+}
 
+
+
+async function updateRenderActive(id) {
+    const matches = await getMatchesListTournament(id);
+    
+    // Limpiar el contenedor antes de volver a renderizar
+    const roundsContainer = document.querySelector('.tournament-bracket-container');
+    roundsContainer.innerHTML = ''; // Limpiar el contenedor antes de volver a renderizar
+
+    // Agrupar partidos por rondas
+    const rounds = roundDispatch(matches); // Suponiendo que `roundDispatch` ya está definido
+    let matchIndex = 0;
+    rounds.forEach((matches, roundIndex) => {
+        const roundDiv = document.createElement('div');
+        roundDiv.className = 'round';
+        roundDiv.innerHTML = `<h3 class="text-center">Round ${roundIndex + 1}</h3>`;
+        roundsContainer.appendChild(roundDiv);
+
+        const matchContainer = document.createElement('div');
+        matchContainer.className = 'matches-container d-flex justify-content-center'; // Usar flex para alinear los partidos
+        roundDiv.appendChild(matchContainer);
+
+        matches.forEach((match) => {
+            const matchDiv = document.createElement('div');
+            matchDiv.className = 'match';
+            matchDiv.setAttribute("id", `round-${roundIndex + 1}-match-${matchIndex}`);
+
+            matchDiv.innerHTML = /* html */ `
+                <div class="match-details">
+                    <div class="player">${match.player1 ? match.player1.alias : 'TBD'}</div>
+                    <div class="vs">VS</div>
+                    <div class="player">${match.player2 ? match.player2.alias : 'TBD'}</div>
+                    <div class="score">Score: ${match.score_p1} - ${match.score_p2}</div>
+                    <div class="status">Status: ${match.state}</div>
+                </div>
+            `;
+            matchContainer.appendChild(matchDiv);
+            matchIndex++;
+        });
+    });
+
+    await bannerLogic(id);
 }
 
 async function renderTournamentOver(id, username, container) {
-    console.log("tournament is over");
-    renderActiveTournament(id, username, container);
-    updateRenderActive(id);
+    // Limpiar el contenedor
+    container.innerHTML = ''; // Limpiar el contenido anterior
+
+    // Obtener la información del torneo
     const data = await getTournament(id);
-    console.log("end of toournament data are", data);
-    displayBanner(data, id, container);
+
+    // Renderizar el resultado del torneo
+    await renderTournamentFinished(data, container);
 }
+
+async function renderTournamentFinished(data, container) {
+    const { winner, final_score, datetourn, runner_up } = data;
+
+    // Crear un contenedor para el resultado del torneo
+    const resultContainer = document.createElement('div');
+    resultContainer.className = 'tournament-finished container d-flex flex-column align-items-center justify-content-center text-center';
+
+    resultContainer.innerHTML = /* html */`
+        <h1>Torneo Finalizado</h1>
+        <div class="winner my-4">¡Felicidades a <span class="text-success">${winner.alias}</span>!</div>
+        <div class="score display-5 my-3">Resultado Final: <strong>${final_score}</strong></div>
+        <div class="runner-up my-3">Subcampeón: <span class="text-warning">${runner_up}</span></div>
+        <div class="date my-3">Fecha del Torneo: ${new Date(datetourn).toLocaleString()}</div>
+        <button class="btn btn-outline-secondary mt-4" id="backToHomeButton">Regresar a Inicio</button>
+    `;
+
+
+    container.appendChild(resultContainer);
+
+    // Agregar evento para el botón
+    const backToHomeButton = document.getElementById('backToHomeButton');
+    backToHomeButton.addEventListener('click', () => {
+        history.pushState(null, "", "/"); // Redirigir a la página de inicio
+        router(); // Llamar a la función del enrutador
+    });
+}
+
 
 function roundDispatch(match){
     
     let round = {}; //creating a round object to store mathes by round
-    console.log("in round dispatch matches are", match);
+    //console.log("in round dispatch matches are", match);
     match.forEach(m => {
         // Initialize the round key as an array if it doesn't exist
         if (!round[m.round])
@@ -300,7 +417,7 @@ function displayBanner(data, id, container) {
         let gameButton = document.getElementById("startGameButton");
         gameButton.addEventListener("click",async ()=>{
             //const resp = await putMatchTest(data.match_id); //*********************** FOR TEST ONLy ********/
-            //console.log("result is : ", resp); //to test only
+            ////console.log("result is : ", resp); //to test only
             let ruta = null;
             if (data.is_ai == true)
                 ruta = 'gamebot'

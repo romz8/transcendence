@@ -1,6 +1,8 @@
 import {ws, setWebsocket} from "../game/gameWs.js";
 import {displayCountdown, updateScores} from "../game/gameDisplay.js";
 import {keyState, constants} from "../game/gameDeclarations.js";
+import { displayError } from "./renderLobby.js";
+import { router } from "../routes.js";
 
 const TARGET_FPS = 60; // Target frame rate
 const FRAME_DURATION = 1000 / TARGET_FPS;
@@ -182,6 +184,12 @@ class GameRem extends HTMLElement {
 customElements.define('pong-rem', GameRem);
 
 export default function renderGame (gameid) {
+    if (gameid == undefined)
+    {
+        history.pushState(null,"","/");
+        router();
+        return;
+    }
     id = gameid.id;
     return (`<pong-rem></pong-rem>`);
 }

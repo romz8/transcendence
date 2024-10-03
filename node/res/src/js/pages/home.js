@@ -2,6 +2,9 @@ import Lottie from 'lottie-web';
 import { callApi42, is_authenticated, getCookie, expiresDate, conectWB } from '../user_login';
 import i18next from 'i18next';
 import { router } from '../routes';
+import { createToast } from '../components/toast';
+import { updateUserInfo } from '../main';
+import { generateLangs } from '../languages';
 
 class HomeOut extends HTMLElement {
 	constructor() {
@@ -32,6 +35,7 @@ class HomeOut extends HTMLElement {
 		`;
 	}
 	connectedCallback() {
+		generateLangs('home-out');
 		Lottie.loadAnimation({
 			container: document.getElementById('paddle-animation'),
 			renderer: 'svg',
@@ -51,21 +55,21 @@ class HomeOut extends HTMLElement {
 			e.preventDefault();
 			const formData = new FormData(formLogin);
 			try {
-				const response = await fetch("http://localhost:8080/loginWeb/", {
-					method: "POST",
+				const response = await fetch('http://localhost:8080/loginWeb/', {
+					method: 'POST',
 					body: formData,
 				});
-				if (response.ok) {
-					const tokens = await response.json();
-					conectWB(tokens['access']);
-					document.cookie = `token=${tokens["access"]}; expires=${expiresDate(tokens["token_exp"]).toUTCString()}; Secure; SameSite=Strict`;
-					document.cookie = `refresh=${tokens["refresh"]}; expires=${expiresDate(tokens["refresh_exp"]).toUTCString()}; Secure; SameSite=Strict`;
-					router();
+				const tokens = await response.json();
+				conectWB(tokens['access']);
+				if (!response.ok) {
+					throw (`${tokens.error}`);
 				}
-				else
-					alert(`Unexpected error`);
+				document.cookie = `token=${tokens['access']}; expires=${expiresDate(tokens['token_exp']).toUTCString()}; Secure; SameSite=Strict`;
+				document.cookie = `refresh=${tokens['refresh']}; expires=${expiresDate(tokens['refresh_exp']).toUTCString()}; Secure; SameSite=Strict`;
+				createToast('successful','Logged in successfully');
+				router();
 			  } catch (e) {
-				alert(`Unexpected error:${e}`);
+				createToast('warning', `Error: ${e}`);
 			  }
 		});
 
@@ -78,30 +82,10 @@ class HomeOut extends HTMLElement {
 class HomeAuthorized extends HTMLElement {
 	constructor() {
 		super();
-		
 	}
-	// <h1>Hello, ${userName} </h1>
-	connectedCallback() {
-		fetch('http://localhost:8080/info_user/', {
-			method: 'GET',
-			headers: {
-				'Authorization': 'Bearer ' + getCookie('token'),
-				'Content-Type': 'application/json'
-			},
-		})
-			.then(response => {
-				if (!response.ok)
-					throw new Error('Network response was not ok ' + response.statusText);
-				return response.json();
-			})
-			.then(data => {
-				localStorage.setItem('username', data.username);
-				localStorage.setItem('name', data.name);
-				localStorage.setItem('lastname', data.lastname);
-				localStorage.setItem('alias', data.alias);
-				localStorage.setItem('campus', data.campus);
-				localStorage.setItem('img', data.img);
-				this.innerHTML = /* html */`
+	async connectedCallback() {
+		await updateUserInfo();
+		this.innerHTML = /* html */`
 				<style>
 					.div-test {
 						height: 100vh;
@@ -115,7 +99,7 @@ class HomeAuthorized extends HTMLElement {
 						height: 200px;
 						border: 1px solid var(--bs-cs-secondary);
 						border-radius: 250px;
-						background-image: url('${data.img}');
+						background-image: url(${localStorage.getItem('img')});
 						background-position: center; 
 						background-repeat: no-repeat; 
 						background-size: cover; 
@@ -123,17 +107,10 @@ class HomeAuthorized extends HTMLElement {
 				</style>
 				<nav-bar data-authorized></nav-bar>
 				<div class="div-test d-flex align-items-center justify-content-center">
-					<h1>Hi, ${data.alias}</h1>
-					<h2>Hi, ${data.username}</h2>
+					<h1>Hi, ${localStorage.getItem('alias')};</h1>
+					<h2>Hi, ${localStorage.getItem('username')}</h2>
 					<div class="profile-link"></div>
-				</div>
-
 			`;
-			})
-			.catch(error => {
-				console.error('There has been a problem with your fetch operation:', error);
-				return false;
-			});
 	}
 }
 

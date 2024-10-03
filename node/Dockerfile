@@ -5,8 +5,7 @@ WORKDIR /home/apriego-/node
 
 COPY res/package*.json ./
 
-# Instala las dependencias de la aplicación
-# RUN npm install
+RUN npm ci
 
 COPY . .
 

@@ -3,7 +3,7 @@ import { router } from "../routes";
 import { getCookie } from "../user_login";
 
 let gameid = -1;
-
+const WIN = 1;
 class PongAI extends HTMLElement {
     constructor() {
         super();
@@ -271,20 +271,20 @@ class PongAI extends HTMLElement {
     checkWinner(){
         this.palyer1score.textContent = `Score: ${this.leftScore}`
         this.palyer2score.textContent = `Score: ${this.rightScore}`
-        if (this.leftScore == 1 )
+        if (this.leftScore == WIN )
         {
             if (gameid != -1)
                 this.fetchResult();
             alert("AI WON GIT GUD")
-            this.stopGame()
+            // this.stopGame()
             return true;
         }
-        else if (this.rightScore == 1 )
+        else if (this.rightScore == WIN )
         {
             if (gameid != -1)
                 this.fetchResult();
             alert ("LUCKY GUY YOU WON")
-            this.stopGame()
+            // this.stopGame()
             return true;
         }
         return false;
@@ -355,7 +355,7 @@ class PongAI extends HTMLElement {
         this.ballDirectionY = Math.floor(Math.random() * 2) == 0? -1: 1;
         this.ballSpeedX = 5;
         this.ballSpeedY = 5;
-        if (this.leftScore != 5 && this.rightScore != 5)
+        if (this.leftScore != WIN && this.rightScore != WIN)
             await this.doCountdown();
     }
 }

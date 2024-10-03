@@ -1,4 +1,4 @@
-import { router } from "../routes";
+import { createToast } from '../components/toast';
 
 class Signup extends HTMLElement {
 	constructor() {
@@ -6,7 +6,7 @@ class Signup extends HTMLElement {
 		this.innerHTML = /* html */`
 			<nav-bar></nav-bar>
 			<main class="container">
-				<form id="signup-form" class="col-sm-12 col-md-8 col-lg-6 mt-5 login-form">
+				<form id="signup-form" class="col-sm-12 col-md-8 col-lg-6 mt-5 login-form" autocapitalize="on">
 					<div class="mb-5">
 						<h1 class="text-center">Sign up</h1>
 						<p class="text-center">Please enter your details to register.</p>
@@ -23,7 +23,12 @@ class Signup extends HTMLElement {
 					</div>
 					<div class="mb-3">
 						<label for="input-username" class="form-label">Username</label>
-						<input type="text" class="form-control" id="input-username" name="username" aria-describedby="usernameHelp" placeholder="Enter your username" minlength="3" maxlength="16" required>
+						<div class="position-relative">
+							<input type="text" class="form-control" id="input-username" name="username" aria-describedby="usernameHelp" placeholder="Enter your username" minlength="3" maxlength="16" required>
+							<div id="username-spinner" class="spinner-border d-none position-absolute" role="status">
+  								<span class="visually-hidden">Loading...</span>
+							</div>
+						</div>
 					</div>
 					<div class="mb-3 position-relative">
 						<label for="input-pass" class="form-label">Password</label>
@@ -54,44 +59,56 @@ class Signup extends HTMLElement {
 		/*
 			Changes disabled state of submit button depending on form validity
 		*/
+		const inputUsername = document.getElementById('input-username');
 		signupForm.addEventListener('input', () => {
     		document.getElementById('signup-submit-btn').disabled = !signupForm.checkValidity();
 		});
 		
 		/*
 			Check uniqueness of username and sets error message,
-			makes a requests to the DB
+			makes a requests to the DB.
+
+			Debounce to check uniqueness of name in database.
 		*/
-		const	inputUsername = document.getElementById('input-username');
+		const usernameSpinner = document.getElementById('username-spinner');
+
+		let debounceTimeout;
+
 		inputUsername.addEventListener('input', async () => {
-			try {
-				let	userInfo = { username: `${inputUsername.value}` };
+			if (usernameSpinner && inputUsername.value) {
+				usernameSpinner.classList.remove('d-none');
+			}
+			inputUsername.setCustomValidity('temporarily invalid');
+			clearTimeout(debounceTimeout);
+			debounceTimeout = setTimeout(async () => {
+				try {
+					usernameSpinner.classList.add('d-none');
+					let userInfo = { username: `${inputUsername.value}` };
 
-				const response = await fetch("http://localhost:8080/usernameCheck/", {
-					method: "POST",
-					body: JSON.stringify(userInfo),
-				});
-				if (response.ok) {
-					const	responseJson = await response.json();
-					if (responseJson.exist == 'True') {
-						inputUsername.setCustomValidity('invalid');
-						const alertMssg = document.createElement('p');
-						alertMssg.textContent = 'Username already in use';
-						alertMssg.classList.add('alert-message', 'alert-username');
-						inputUsername.insertAdjacentElement('afterend', alertMssg);
+					const response = await fetch('http://localhost:8080/usernameCheck/', {
+						method: 'POST',
+						body: JSON.stringify(userInfo),
+					});
+					const responseJson = await response.json();
+					if (response.ok) {
+						if (responseJson.exist === 'True') {
+							inputUsername.setCustomValidity('invalid');
+							const alertMssg = document.createElement('p');
+							alertMssg.textContent = 'Username already in use';
+							alertMssg.classList.add('alert-message', 'alert-username');
+							inputUsername.insertAdjacentElement('afterend', alertMssg);
+						} else {
+							document.querySelector('.alert-message.alert-username')?.remove();
+							inputUsername.setCustomValidity('');
+						}
+						document.getElementById('signup-submit-btn').disabled = !signupForm.checkValidity();
+					} else {
+						throw new Error(`${responseJson.error}`);
 					}
-					else {
-						document.querySelector('.alert-message.alert-username')?.remove();
-						inputUsername.setCustomValidity('');
-					}
-
+				} catch (e) {
+					createToast('warning', `Error: ${e}`);
 				}
-				else
-					alert(`Unexpected error`);
-			  } catch (e) {
-				alert(`Unexpected error:${e}`);
-			  }
-		
+			}, 1000);
 		});
 
 
@@ -159,18 +176,21 @@ class Signup extends HTMLElement {
 			e.preventDefault();
 			const formData = new FormData(signupForm);
 			try {
-				const response = await fetch("http://localhost:8080/signUp/", {
-					method: "POST",
+				const response = await fetch('http://localhost:8080/signUp/', {
+					method: 'POST',
 					body: formData,
 				});
 				if (response.ok) {
+					createToast('successful', 'Account created successfully');
 					const	homeIcon = document.getElementById('home-icon');
 					homeIcon.click();
 				}
-				else
-					alert(`Unexpected error`);
+				else {
+					const	responseJson = await response.json();
+					throw new Error(`${responseJson.error}`);
+				}
 			  } catch (e) {
-				alert(`Unexpected error:${e}`);
+				createToast('warning', `Error: ${e}`);
 			  }
 		});
 	};

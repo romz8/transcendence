@@ -5,6 +5,7 @@ import tournamentRoom from './tournament/tournamentRoom.js';
 import tournament from './tournament/tournament.js';
 import home from './pages/home.js';
 import profile from './pages/profile.js';
+import friends from './pages/friends.js';
 import loading from './pages/loading.js';
 import signup from './pages/signup.js';
 import matchHistory from './pages/match_history.js';
@@ -18,6 +19,7 @@ import renderLobby from './pages/renderLobby.js';
 const routes = {
 	'/': { title: 'Home', render: home, auth: true},
 	'/profile': { title: 'Profile', render: profile, auth: true},
+	'/friends': { title: 'Friends', render: friends, auth: true},
 	'/signup': { title: 'Signup', render: signup, auth: false},
 	'/gamebot': { title: 'You will lose', render: gameai, auth: true},
 	'/gamebot/:id': { title: 'You will lose', render: gameai, auth: true},
@@ -46,10 +48,9 @@ window.addEventListener('DOMContentLoaded', () => {
 /* Handle navigation */
 window.addEventListener('click', e => {
 	if (e.target.matches('[data-link]')) {
-		const	oldCssRoute = routes[window.location.pathname].css;
 		e.preventDefault();
 		history.pushState('', '', e.target.href);
-		router(oldCssRoute);
+		router();
 	}
 });
 
@@ -83,7 +84,7 @@ function routeSearch(path){
             const staticpart = key.split(":id")[0];
             if (path.startsWith(staticpart)){
                 const id = path.slice(staticpart.length);
-                if (id){
+                if (id) {
                     param = { id };
                 }
                 route = routes[key];
@@ -100,19 +101,25 @@ function routeSearch(path){
 export async function	router() {
 	app.innerHTML = loading();
 	setTimeout(async () => {
-		const isAuth =  await is_authenticated(getCookie("token"));
+		const isAuth =  await is_authenticated(getCookie('token'));
 		const windowPathname = window.location.pathname;
 		const {route, param} = routeSearch(windowPathname);
 		//updateActiveElementNavbar();
 		if (route) {
 			if (isAuth === route.auth) {
 				document.title = route.title;
+				console.log(param);
 				if (param)
 					app.innerHTML = route.render(param);
 				else
 					app.innerHTML = route.render();
 			}
+			else if (isAuth  && !view.auth) {
+				history.pushState('', '', '/');
+				app.innerHTML = '<home-authorized></home-authorized>';
+			}
 			else {
+				history.pushState('', '', '/');
 				app.innerHTML = '<home-out></home-out>';
 			}
 			

@@ -1,3 +1,4 @@
+import { t } from "i18next";
 import { getWaitRoom, leaveWaitRoom } from "../api.js";
 import { router } from "../routes.js";
 
@@ -8,14 +9,15 @@ class RenderLobby extends HTMLElement{
         super();
     }
     async connectedCallback(){
-        const waitRoom = await getWaitRoom(lobbyId);
+      this.innerHTML='<nav-bar data-authorized></nav-bar>' 
+        let waitRoom = await getWaitRoom(lobbyId);
         if (waitRoom.error) {
-            displayError(waitRoom.error);
+            displayError(waitRoom.error, this);
             return;
         }
-        this.innerHTML = /*html*/`
-            <div id="mainContainer">
-                <div id="status-banner" class="mt-4"></div>
+        this.innerHTML += /*html*/`
+            <div id="status-banner" class="mt-4"></div>
+            <div id="mainContainer" class="container d-flex flex-column align-items-center justify-content-center text-center">
                 <h1>Waiting Room</h1>
                 <div class="lobby-container">
                     <div class="owner-column">
@@ -27,7 +29,8 @@ class RenderLobby extends HTMLElement{
                         <p></p>
                     </div>
                 </div>
-                <button id="leave-btn" class="btn btn-danger">Leave Room</button>
+                <button id="search-btn" class="btn btn-outline-cream btn-general d-flex align-items-center justify-content-center gap-3 mb-3">Search Opponent</button>
+                <button id="leave-btn" class="btn btn-danger btn-general d-flex align-items-center justify-content-center gap-3 mb-3">Leave Room</button>
                 <div id="timer"></div>
             </div>
         `
@@ -46,13 +49,21 @@ class RenderLobby extends HTMLElement{
             noAttendeesMsg.innerText = "No attendees yet.";
             attendeeColumn.appendChild(noAttendeesMsg);
         }
+        const searchOponent = document.getElementById("search-btn");
+        searchOponent.addEventListener("click", async function () {
+          waitRoom = await getWaitRoom(lobbyId);
+          if (waitRoom.error) {
+              displayError(waitRoom.error, this);
+              return;
+          }
+          displayBanner(waitRoom, lobbyId);
+        });
         const leaveBtn = document.getElementById("leave-btn");
         leaveBtn.addEventListener("click", async function () {
             const resp = await leaveWaitRoom(lobbyId);
             if (resp.error) {
                displayError(resp.error);
             } else {
-                // Navigate to the appropriate route
                 history.pushState(null, "", "/");
                 router();
             }
@@ -66,7 +77,12 @@ class RenderLobby extends HTMLElement{
 customElements.define('render-lobby', RenderLobby);
 
 export default function renderLobby(id) {
-    console.log(id)
+    if (id == undefined)
+    {
+        history.pushState(null,"","/");
+        router();
+        return;
+    }
     lobbyId = id.id
     return('<render-lobby></render-lobby>')
 }
@@ -138,27 +154,22 @@ function startCountdown(expireAt) {
     const timerInterval = setInterval(updateTimer, 1000);
 }
 
-// Function to display an error message in a stylish card
-function displayError(message) {
-  const errorContainer = document.getElementById("mainContainer");
-  // Clear any previous error messages
-  errorContainer.innerHTML = "";
+export function displayError(message, self) {
+  self.innerHTML += /*html*/`
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+      <div class="error-card card text-center p-4 shadow" style="max-width: 400px; border-radius: 10px;">
+        <div class="card-body">
+          <div class="error-icon mb-4" style="font-size: 4rem; color: var(--bs-danger);">⚠️</div>
+          <h4 class="card-title text-danger">Error</h4>
+          <p class="card-text mb-4">${message}</p>
+          <button id="backToHome" class="btn btn-outline-secondary mt-3">Volver a Inicio</button>
+        </div>
+      </div>
+    </div>
+  `;
 
-  // Create the error card element
-  const errorCard = document.createElement("div");
-  errorCard.className = "error-card";
-
-  // Add the error icon (you can replace this with an actual icon if desired)
-  const errorIcon = document.createElement("span");
-  errorIcon.className = "error-icon";
-  errorIcon.innerHTML = "⚠️"; // Unicode warning sign
-  errorCard.appendChild(errorIcon);
-
-  // Add the error message text
-  const errorMessage = document.createElement("span");
-  errorMessage.textContent = message;
-  errorCard.appendChild(errorMessage);
-
-  // Append the error card to the error container
-  errorContainer.appendChild(errorCard);
+  document.getElementById('backToHome').addEventListener('click', () => {
+    history.pushState(null, "", "/");
+    router();
+  });
 }

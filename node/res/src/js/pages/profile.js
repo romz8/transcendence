@@ -1,5 +1,9 @@
 import { callApi42, is_authenticated, getCookie } from '../user_login';
 import { router } from '/src/js/routes.js';
+import { createToast } from '../components/toast';
+import { updateUserInfo } from '../main';
+
+const	TWO_MEGABYTES = 2*1024*1024;
 
 class ProFile extends HTMLElement {
 	constructor() {
@@ -61,12 +65,18 @@ class ProFile extends HTMLElement {
 		inputProfilePic.addEventListener('change', function(event) {
 			const file = event.target.files[0];
 			if (file) {
-				const reader = new FileReader();
-				reader.onload = (e) => {
-					// Set the new image source to the profile picture
-					profilePic.style.backgroundImage = `url('${e.target.result}'`;
-				};
-				reader.readAsDataURL(file); // Convert the file to a data URL
+				if (file.size <= TWO_MEGABYTES) {
+					const reader = new FileReader();
+					reader.onload = (e) => {
+						// Set the new image source to the profile picture
+						profilePic.style.backgroundImage = `url('${e.target.result}'`;
+					};
+					reader.readAsDataURL(file); // Convert the file to a data URL
+				}
+				else {
+					inputProfilePic.value = '';
+					createToast('warning', 'File size too big');
+				}
 			}
 		});
 
@@ -77,27 +87,21 @@ class ProFile extends HTMLElement {
 			const	dataUpdate = new FormData();
 			dataUpdate.append('alias', inputAlias.value);
 			dataUpdate.append('imagefile', inputProfilePic.files[0]);
-			console.log("hola:" + dataUpdate.get('imagefile'));
 			try {
-				const response = await fetch("http://localhost:8080/update_info_user/", {
-					method: "POST",
+				const response = await fetch('http://localhost:8080/update_info_user/', {
+					method: 'POST',
 					headers: {'Authorization': 'Bearer ' + getCookie('token')},
 					body: dataUpdate,
 				});
 				if (!response.ok) {
 					const responseJson = await response.json();
-					throw new Error(`${responseJson.error}`);
+					throw (`${responseJson.error}`);
 				}
+				createToast('successful','Profile updated successfully');
+				updateUserInfo();
 				router();
 			} catch (e) {
-				const	currentAlert = document.querySelector('.alert-profile-update');
-				if (currentAlert) {
-					currentAlert.remove();
-				}
-				const alertMssg = document.createElement('p');
-				alertMssg.textContent = e.message;
-				alertMssg.classList.add('alert-message', 'alert-profile-update');
-				updateSubmitBtn.insertAdjacentElement('beforebegin', alertMssg);
+				createToast('warning',`Error: ${e.message}`);
 			}
 		});
 

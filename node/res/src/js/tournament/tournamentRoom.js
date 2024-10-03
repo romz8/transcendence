@@ -21,25 +21,29 @@ class TournamentRoom extends HTMLElement {
       }
       </style>
       <nav-bar data-authorized></nav-bar>
-      <h1>Tournament</h1>
-      `;
+      <div class="d-flex flex-column justify-content-center align-items-center">
+        <h1>Tournament</h1>
+        <div id="main-container" class="d-flex justify-content-center gap-3 mt-3">
 
+        </div>
+      </div>
+        `;
+    const mainContainer = document.getElementById("main-container")
     if (this.hasTournament){
-        let getTournament = await getTournament();
+        let tourn = await getTournament();
         if (this.hasTournament){
-          this.innerHTML += /* html */`<h2>${getTournament.genId}</h2>`
+          
+          this.innerHTML += /* html */`<h2>${tourn.genId}</h2>`
             this.hasTournament = true;
         }
     }
 
-    let createTournamentButton = addGameButton('create-tour', "Create Tournament", "/tournament/create", this);
-    let joinTournamentButton = addGameButton('join-tour', "Join Tournament", "/tournament/join", this);
+    let createTournamentButton = addGameButton('create-tour', "Create Tournament", "/tournament/create", mainContainer);
+    let joinTournamentButton = addGameButton('join-tour', "Join Tournament", "/tournament/join", mainContainer);
     console.log(createTournamentButton)
     console.log(joinTournamentButton)
     if (this.hasTournament){
-        // createGameButton.className += " disabled"; ?????????????
-        // joinGameButton.className += " disabled"; ?????????
-        var deleteButton = addGameButton('delete-tour', "Delete Waiting Room", "/waitroom/delete", this);
+        var deleteButton = addGameButton('delete-tour', "Delete Waiting Room", "/waitroom/delete", mainContainer);
         deleteButton.addEventListener('click', waitRoomView);
     }
 
@@ -48,7 +52,7 @@ class TournamentRoom extends HTMLElement {
     let resp = null;
     switch(path){
         case "/tournament/create":
-            await createModale(); //- TO IMPLEMENT : size and N humans
+            await createModale();
             break;
         case "/tournament/join":
             await joinModale();
@@ -80,24 +84,29 @@ async function joinModale(){
     const modalContainer = document.createElement('div');
     modalContainer.innerHTML = /* html */`
     <div class="modal fade" id="TournModal" tabindex="-1" aria-labelledby="TournModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="TournModalLabel">Select a Tournament</h5>
-      </div>
-      <div class="modal-body">
-      <ul class="list-group" id="roomList">
-      ${allTour.map(room => `<li class="list-group-item room-item" data-room-id="${room.id}">ROOM : ${room.id} - with ${room.n_registered}/${room.size} registered</li>`).join('')}
-      </ul>
-    </div>
-    <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" id="modalSubmitButton">Submit</button>
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="TournModalLabel">Seleccionar Torneo</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <ul class="list-group" id="roomList">
+              ${allTour.map(room => /* html */`
+                <li class="list-group-item d-flex justify-content-between align-items-center room-item" data-room-id="${room.id}">
+                  <span class="">ROOM: ${room.id}</span>
+                  <span class="badge bg-secondary">${room.n_registered}/${room.size} registrados</span>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+          <div class="modal-footer d-flex justify-content-between">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-primary" id="modalSubmitButton">Enviar</button>
           </div>
         </div>
       </div>
-    </div>
-
+    </div>  
     `;
     // Remove any existing modal container to avoid duplicates
     const existingModal = document.getElementById('TournModal');
@@ -153,40 +162,39 @@ async function createModale(){
     modalContainer.innerHTML= /* html */`
     <!-- Tournament Settings Modal -->
     <div class="modal fade" id="tournamentModal" tabindex="-1" aria-labelledby="tournamentModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="tournamentModalLabel">Tournament Settings</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <!-- Tournament Size Selection -->
-            <div class="form-group">
-              <label for="tournamentSize">Tournament Size</label>
-              <select class="form-control" id="tournamentSize">
-                <option value="4">4 Players</option>
-                <option value="8">8 Players</option>
-              </select>
-            </div>
-            <!-- Number of Human Players Slider -->
-            <div class="form-group">
-              <label for="numHumans">Number of Humans: <span id="numHumansLabel">2</span></label>
-              <input type="range" class="form-control-range" id="numHumans" min="1" max="4" value="2">
-            </div>
-            <!-- Number of AI Players Display -->
-            <div class="form-group">
-              <label for="numAI">Number of AIs: <span id="numAI">2</span></label>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" id="modalCreateButton">Create</button>
-          </div>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="tournamentModalLabel">Configuración del Torneo</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Selección del tamaño del torneo -->
+        <div class="mb-3">
+          <label for="tournamentSize" class="form-label">Tamaño del Torneo</label>
+          <select class="form-select" id="tournamentSize">
+            <option value="4">4 Jugadores</option>
+            <option value="8">8 Jugadores</option>
+          </select>
+        </div>
+        <!-- Slider para número de jugadores humanos -->
+        <div class="mb-3">
+          <label for="numHumans" class="form-label">Número de Humanos: <span id="numHumansLabel">2</span></label>
+          <input type="range" class="form-range" id="numHumans" min="1" max="4" value="2" oninput="document.getElementById('numHumansLabel').textContent = this.value;">
+        </div>
+        <!-- Número de jugadores de IA -->
+        <div class="mb-3">
+          <label class="form-label">Número de AIs: <span id="numAI">2</span></label>
         </div>
       </div>
-    </div>`;
+      <div class="modal-footer d-flex justify-content-between">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-primary" id="modalCreateButton">Crear</button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
 
     document.body.appendChild(modalContainer);
     
@@ -219,7 +227,7 @@ async function createModale(){
             console.log('Tournament created successfully:', resp);
         }
         catch(error){
-            console.log(resp);
+            console.log(error);
         }
     })
 

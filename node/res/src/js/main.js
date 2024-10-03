@@ -6,9 +6,15 @@ import '/src/js/routes.js';
 import '/src/js/user_login.js';
 import '/src/js/languages';
 
+import { createToast } from './components/toast';
+import { getCookie } from './user_login';
+
 'use strict';
 
 const	app = document.getElementById('app');
+export const	toastNotifications = document.getElementById('toast-notifications');
+export const	navigationCs = document.getElementById('navigation-cs');
+
 
 window.addEventListener('DOMContentLoaded', () => {
 	checkPreferedColoScheme();
@@ -85,4 +91,34 @@ export function	updateLightMode(colorScheme) {
 		document.documentElement.setAttribute('data-bs-theme', 'light');
 
 	window.localStorage.setItem('color-scheme', colorScheme);
+}
+
+/*
+	Updates user info on local storage with database info. User data displayed in
+	the website uses data stored on local storage.
+*/
+export async function	updateUserInfo() {
+	try {
+		const	response = await fetch('http://localhost:8080/info_user/', {
+			method: 'GET',
+			headers: {
+				'Authorization': 'Bearer ' + getCookie('token'),
+				'Content-Type': 'application/json'
+			},
+		});
+		const	userInfo = await response.json();
+		if (!response.ok) {
+			throw (`${userInfo.error}`);
+		}
+		localStorage.setItem('username', userInfo.username);
+		localStorage.setItem('name', userInfo.name);
+		localStorage.setItem('lastname', userInfo.lastname);
+		localStorage.setItem('alias', userInfo.alias);
+		localStorage.setItem('campus', userInfo.campus);
+		localStorage.setItem('img', userInfo.img);
+		
+	}
+	catch (e) {
+		createToast('warning', `Error: ${e}`);
+	}
 }

@@ -4,8 +4,8 @@ services:
     build: ./node
     image: node
     volumes:
-      - ./node/res:/home/apriego-/node
-      - node_data:/home/apriego-/node/res/node_modules
+      - node_data:/home/apriego-/node
+      - /home/apriego-/node/node_modules
     env_file:
       - .env
     ports:
@@ -99,7 +99,7 @@ volumes:
   node_data:
     driver: local
     driver_opts:
-      device: "./node/res/node_modules"
+      device: "./node/res"
       o: bind
       type: none
   login_data:
