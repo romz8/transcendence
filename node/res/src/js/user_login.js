@@ -1,24 +1,21 @@
+import { createToast } from './components/toast';
 import { router } from './routes';
-
-let uid;
-
-window.onload = fetchUIDENV;
 
 ///////////////////////////////////////////// UTILS /////////////////////////////////////////////
 
 async function fetchUIDENV() {
-	fetch('http://localhost:8080/uidenv/', {
+	return fetch('http://localhost:8080/uidenv/', {
 		method: 'GET',
 	})
-		.then(response => {
-			if (!response.ok)
-				throw new Error('Network response was not ok ' + response.statusText);
-			return response.json();
-		})
-		.then(data => {
-			uid = data['UID'];
-		})
-		.catch(error => console.error('There has been a problem with your fetch operation:', error));
+	.then(response => {
+		if (!response.ok)
+			throw new Error('Network response was not ok ' + response.statusText);
+		return response.json();
+	})
+	.then(data => {
+		return data['UID'];
+	})
+	.catch(error => console.error('There has been a problem with your fetch operation:', error));
 }
 
 export function expiresDate(seconds)
@@ -101,14 +98,23 @@ export function disconnectWB() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export async function callApi42(){
-	const params = new URLSearchParams ({
-		'client_id': uid,
-		'redirect_uri': 'http://localhost:3000/',
-		'scope': 'public',
-		'state': '1234566i754twrqwdfghgfddtrwsewrt',
-		'response_type': 'code'
-	});
-	window.location.href = `https://api.intra.42.fr/oauth/authorize/?${params.toString()}`;
+
+	const uid = await fetchUIDENV()
+	if (uid)
+	{
+		const params = new URLSearchParams ({
+			'client_id': uid,
+			'redirect_uri': 'http://localhost:3000/',
+			'scope': 'public',
+			'state': '1234566i754twrqwdfghgfddtrwsewrt',
+			'response_type': 'code'
+		});
+		window.location.href = `https://api.intra.42.fr/oauth/authorize/?${params.toString()}`;	
+	}
+	else
+	{
+		createToast('warning', 'Error: server not provided UID pleas wait')
+	}
 }
 
 ///////////////////////////////////// REFRESH TOKEN /////////////////////////////////////
