@@ -32,7 +32,7 @@ class JwtAuthMiddleware:
 
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get("https://login:8080/verify_token/", headers=headers) as resp:
+                async with session.get("http://login:8080/login/verify_token/", headers=headers) as resp:
                     if resp.status == 200:
                         json_resp = await resp.json()
                         username = json_resp.get('user')
@@ -68,7 +68,7 @@ class Intra42Authentication(BaseAuthentication):
         if not auth_header:
             return None
         headers = {"Authorization": auth_header}
-        req = requests.get("https://login:8080/verify_token/", headers=headers)
+        req = requests.get("http://login:8080/login/verify_token/", headers=headers)
         if req.status_code == 200:
             username = req.json()['user']
             if username:
