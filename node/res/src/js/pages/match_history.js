@@ -33,11 +33,11 @@ class MatchHistory extends HTMLElement {
 			</main>
 		`;
 	}
-	connectedCallback() {
+	async connectedCallback() {
 		fetch('http://localhost:8000/game/allmatch/', {
 			method: 'GET',
 			headers: {
-				'Authorization': 'Bearer ' + getCookie('token'),
+				'Authorization': 'Bearer ' + await getCookie('token'),
 				'Content-Type': 'application/json'
 			},
 		})

@@ -427,8 +427,6 @@ function displayBanner(data, id, container) {
             console.error(data)
             let gameButton = document.getElementById("startGameButton");
             gameButton.addEventListener("click",async ()=>{
-                //const resp = await putMatchTest(data.match_id); //*********************** FOR TEST ONLy ********/
-                ////console.log("result is : ", resp); //to test only
                 let ruta = null;
                 if (data.is_ai == true)
                     ruta = 'gamebot'

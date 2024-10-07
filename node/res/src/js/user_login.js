@@ -25,7 +25,7 @@ export function expiresDate(seconds)
 	return currentDate;
 }
 
-export function getCookie(cname) {
+function getTokens(cname){
 	let name = cname + '=';
 	let ca = document.cookie.split(';');
 	for(let i = 0; i < ca.length; i++)
@@ -37,6 +37,26 @@ export function getCookie(cname) {
 			return c.substring(name.length, c.length);
 	}
 	return '';
+}
+
+export async function getCookie(cname) {
+	if (cname === "token")
+	{
+		let retValue = getTokens(cname);
+		if (retValue == '')
+		{
+			retValue = getTokens("refresh");
+			if (!retValue)
+				return '';
+			await refresh_token(retValue);
+			return (getTokens(cname));
+		}
+		return retValue;
+	}
+	else
+	{
+		return getTokens(cname);
+	}
 }
 
 function getPathVars() {
@@ -144,8 +164,8 @@ async function getNewAccessToken(infoLogin)
 		}
 		console.log('Response OK');
 	} catch (error) {
-		console.error('There has been a problem with your fetch operation:', error);
-		return null;
+		history.pushState('', '', '/');
+		router();
 	}
 }
 
@@ -155,19 +175,13 @@ async function refresh_token(refresh)
 		refresh_token: refresh
 	};
 	await getNewAccessToken(infoLogin);
-	router();
 }
 
 ///////////////////////////////////////// LOGIN INTRA ////////////////////////////////////////////////
 
-function callBackAccess() {
-    if (!getCookie("token"))
-    {
-        // console.log(getCookie('refresh'))
-        const refresh = getCookie("refresh");
-        if (refresh)
-            refresh_token(refresh);
-    }
+async function callBackAccess() {
+    if (await getCookie("token"))
+		return;
     let vars = getPathVars();
     if (!vars["code"] || !vars["state"])
         return ;
