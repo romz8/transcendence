@@ -333,12 +333,12 @@ async function renderTournamentFinished(data, container) {
     // Crear un contenedor para el resultado del torneo
     const resultContainer = document.createElement('div');
     resultContainer.className = 'tournament-finished container d-flex flex-column align-items-center justify-content-center text-center';
-
+    console.log(runner_up)
     resultContainer.innerHTML = /* html */`
         <h1>Torneo Finalizado</h1>
         <div class="winner my-4">¡Felicidades a <span class="text-success">${winner.alias}</span>!</div>
         <div class="score display-5 my-3">Resultado Final: <strong>${final_score}</strong></div>
-        <div class="runner-up my-3">Subcampeón: <span class="text-warning">${runner_up}</span></div>
+        <div class="runner-up my-3">Subcampeón: <span class="text-warning">${runner_up.alias}</span></div>
         <div class="date my-3">Fecha del Torneo: ${new Date(datetourn).toLocaleString()}</div>
         <button class="btn btn-outline-secondary mt-4" id="backToHomeButton">Regresar a Inicio</button>
     `;

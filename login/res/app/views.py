@@ -35,10 +35,9 @@ def protected_view(request):
 
 @api_view(['GET'])
 def infoUser(request):
-    if request.user == AnonymousUser():
+    if request.user == AnonymousUser() or not request.user:
         return JsonResponse({'error': 'missing token'}, status=498)
     user = request.user
-
     user_json = {
         'id': user.id,
         'username': user.username,
