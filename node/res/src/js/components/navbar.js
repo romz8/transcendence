@@ -15,7 +15,7 @@ class NavBar extends HTMLElement {
 			<li><a href="/waitroom" class="nav-link" data-link>Play Remote</a></li>
 			<li><a href="/gamebot" id="play-btn" class="nav-link" data-link>Play Local</a></li>
 			<li class="nav-item dropdown">
-				<a id="profile-btn" class="nav-link dropdown-toggle" href="" role="button" data-bs-toggle="dropdown" aria-expanded="false">Profile</a>
+				<a id="profile-btn" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">Profile</a>
 				<ul class="dropdown-menu dropdown-menu-end">
 					<li><a class="dropdown-item" href="/profile" data-link><i class="fa-regular fa-user fa-lg me-2"></i><span id="settings-text">Settings</span></a></li>
 					<li><a class="dropdown-item" href="/friends" data-link><i class="fa-regular fa-face-laugh-wink fa-lg me-2"></i><span id="friends-text">Friends</span></a></li>

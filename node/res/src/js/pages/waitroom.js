@@ -1,6 +1,7 @@
 import {createWaitRoom, getWaitRoom, getListWaitRoom, deleteWaitRoom, joinWaitRoom} from "../api.js"
 // import {createTournament, getTournament, deleteTournament, joinTournament} from "../api.js"
 import {router} from "../routes.js"
+import { Modal } from 'bootstrap'; // Importar los módulos JS específicos que necesites
 
 async function renderLobby(){
     console.log('Rendering lobby');
