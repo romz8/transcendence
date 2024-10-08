@@ -1,7 +1,7 @@
 import {createWaitRoom, getWaitRoom, getListWaitRoom, deleteWaitRoom, joinWaitRoom} from "../api.js"
 // import {createTournament, getTournament, deleteTournament, joinTournament} from "../api.js"
 import {router} from "../routes.js"
-
+import { Modal } from "bootstrap"
 
 function test(e)
 {
@@ -80,7 +80,7 @@ async function renderLobby(){
     document.body.appendChild(modalContainer);
 
     // Initialize and show the modal using Bootstrap's JavaScript API
-    const exampleModal = new bootstrap.Modal(document.getElementById('exampleModal'));
+    const exampleModal = new Modal(document.getElementById('exampleModal'));
     exampleModal.show();
 
     let selectedRoomId = null; // Variable to store the selected room ID
