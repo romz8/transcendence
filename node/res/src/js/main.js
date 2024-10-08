@@ -1,5 +1,5 @@
 
-import '/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js';
+import 'bootstrap';
 
 import '/src/js/components/navbar.js';
 import '/src/js/routes.js';
@@ -99,7 +99,7 @@ export function	updateLightMode(colorScheme) {
 */
 export async function	updateUserInfo() {
 	try {
-		const	response = await fetch('http://localhost:8080/info_user/', {
+		const	response = await fetch('https://localhost:3001/login/info_user/', {
 			method: 'GET',
 			headers: {
 				'Authorization': 'Bearer ' + await getCookie('token'),

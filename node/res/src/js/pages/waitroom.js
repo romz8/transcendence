@@ -1,41 +1,7 @@
 import {createWaitRoom, getWaitRoom, getListWaitRoom, deleteWaitRoom, joinWaitRoom} from "../api.js"
 // import {createTournament, getTournament, deleteTournament, joinTournament} from "../api.js"
 import {router} from "../routes.js"
-
-
-function test(e)
-{
-    e.preventDefault();
-    console.log("AAAAAAAAA")
-}
-
-async function waitRoomView(e){
-    
-    e.preventDefault();
-    const url = new URL(e.target.href);
-    const path = url.pathname;
-    console.log("inside the waitRoomView, the path is ", path);
-    let resp = null;
-    switch(path){
-        case "/waitroom/create":
-            resp = await createWaitRoom();
-            let gameId = resp.genId;
-            console.log("gameId is : ", gameId);
-            history.pushState(null,"","/game/" + gameId);
-            router();
-        break;
-        case "/waitroom/join":
-            console.log("we are joingin");
-            await renderLobby();
-            break;
-        case "/waitroom/delete":
-            resp = await deleteWaitRoom();
-            renderWaitRoom();
-            break;
-        default: 
-            break;
-    };
-}
+import { Modal } from 'bootstrap'; // Importar los módulos JS específicos que necesites
 
 async function renderLobby(){
     console.log('Rendering lobby');
@@ -78,7 +44,7 @@ async function renderLobby(){
     document.body.appendChild(modalContainer);
 
     // Initialize and show the modal using Bootstrap's JavaScript API
-    const exampleModal = new bootstrap.Modal(document.getElementById('exampleModal'));
+    const exampleModal = new Modal(document.getElementById('exampleModal'));
     exampleModal.show();
 
     let selectedRoomId = null; // Variable to store the selected room ID
