@@ -1,5 +1,6 @@
 import {createTournament, getTournament, deleteTournament, joinTournament, getListTournament} from "../api.js"
 import {router} from "../routes.js"
+import { Modal } from 'bootstrap'; // Importar los módulos JS específicos que necesites
 
 class TournamentRoom extends HTMLElement {
   constructor() {
@@ -135,7 +136,7 @@ async function joinModale(){
     document.body.appendChild(modalContainer);
     
     // Initialize and show the modal using Bootstrap's JavaScript API
-    const TournModal = new bootstrap.Modal(document.getElementById('TournModal'));
+    const TournModal = new Modal(document.getElementById('TournModal'));
     TournModal.show();
     let selectedRoomId = null; // Variable to store the selected room ID
     // Add event listeners to each room item
@@ -218,7 +219,7 @@ async function createModale(){
     document.body.appendChild(modalContainer);
     
     // Initialize and show the modal using Bootstrap's JavaScript API
-    const TournModal = new bootstrap.Modal(document.getElementById('tournamentModal'));
+    const TournModal = new Modal(document.getElementById('tournamentModal'));
     TournModal.show();
 
     // Dynamically attach the event handlers

@@ -1,6 +1,6 @@
 FROM python:3.12.4
 
-WORKDIR /home/apriego-/login
+WORKDIR /home/dtome-pe/login
 
 COPY res/requirements.txt ./
 

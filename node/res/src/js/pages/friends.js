@@ -39,7 +39,7 @@ class Friends extends HTMLElement {
 			e.preventDefault();
 			const formData = new FormData(addUserForm);
 			try {
-				const response = await fetch('http://localhost:8080/add_friend/', {
+				const response = await fetch('https://localhost:3001/login/add_friend/', {
 					method: 'POST',
 					headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 					body: formData,
@@ -67,7 +67,7 @@ class Friends extends HTMLElement {
 async function	loadRequests() {
 	const	requestList = document.querySelector('.request-list');
 	try {
-		const response = await fetch('http://localhost:8080/list_pending/', {
+		const response = await fetch('https://localhost:3001/login/list_pending/', {
 			method: 'POST',
 			headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 		});
@@ -109,7 +109,7 @@ async function	loadRequests() {
 async function	loadFriendList() {
 	const	friendList = document.querySelector('.friend-list');
 	try {
-		const response = await fetch('http://localhost:8080/list_friends/', {
+		const response = await fetch('https://localhost:3001/login/list_friends/', {
 			method: 'POST',
 			headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 		});
@@ -162,7 +162,7 @@ function	setListenerFriends() {
 			deleteBtn.addEventListener('click', async () => {
 				try {
 					const	bodyInfo = { username: friendItem.getAttribute('data-friend-username') };
-					const	response = await fetch('http://localhost:8080/delete_friend/', {
+					const	response = await fetch('https://localhost:3001/login/delete_friend/', {
 						method: 'POST',
 						headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 						body: JSON.stringify(bodyInfo),
@@ -191,7 +191,7 @@ function	setListenerFriends() {
 			acceptBtn.addEventListener('click', async () => {
 				try {
 					const	bodyInfo = { username };
-					const	response = await fetch('http://localhost:8080/confirm_friends/', {
+					const	response = await fetch('https://localhost:3001/login/confirm_friends/', {
 						method: 'POST',
 						headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 						body: JSON.stringify(bodyInfo),
@@ -214,7 +214,7 @@ function	setListenerFriends() {
 			rejectBtn.addEventListener('click', async () => {
 				try {
 					const	bodyInfo = { username };
-					const	response = await fetch('http://localhost:8080/delete_pending/', {
+					const	response = await fetch('https://localhost:3001/login/delete_pending/', {
 						method: 'POST',
 						headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 						body: JSON.stringify(bodyInfo),

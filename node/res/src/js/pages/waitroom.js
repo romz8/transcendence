@@ -43,7 +43,7 @@ async function renderLobby(){
     document.body.appendChild(modalContainer);
 
     // Initialize and show the modal using Bootstrap's JavaScript API
-    const exampleModal = new bootstrap.Modal(document.getElementById('exampleModal'));
+    const exampleModal = new Modal(document.getElementById('exampleModal'));
     exampleModal.show();
 
     let selectedRoomId = null; // Variable to store the selected room ID

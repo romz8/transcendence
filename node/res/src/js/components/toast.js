@@ -1,4 +1,5 @@
 import { toastNotifications } from '../main';
+import { Toast } from "bootstrap"
 
 export function	createToast(type = 'successful', message = 'undefined') {
 	if (toastNotifications) {
@@ -18,6 +19,6 @@ export function	createToast(type = 'successful', message = 'undefined') {
 			</div>
 		</div>
 	`;
-	const toast = new bootstrap.Toast(document.getElementById('liveToast'));
+	const toast = new Toast(document.getElementById('liveToast'));
 	toast.show();
 }

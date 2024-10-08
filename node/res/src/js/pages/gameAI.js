@@ -244,7 +244,7 @@ class PongAI extends HTMLElement {
     async fetchResult(){
         const access = await getCookie('token');
         const infoBody = JSON.stringify({"score_ai": this.leftScore,"score_user": this.rightScore})
-        fetch(`http://localhost:8000/game/tournament/${gameid[0]}/match_ai/`, {
+        fetch(`https://localhost:3001/tourapi/game/tournament/${gameid[0]}/match_ai/`, {
             method: 'POST',
             headers: {
                 'Authorization': 'Bearer ' + access,
