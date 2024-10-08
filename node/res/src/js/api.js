@@ -159,11 +159,11 @@ export async function deleteWaitRoom(){
     try{
         let payload = {'method':'DELETE', headers: {'Content-Type':'application/json'}};
         const roomId = localStorage.getItem('waitroomId');
-        console.log("roomId is : ", roomId);
         if (!roomId){
             return null;
         }
         let endpoint = `http://${DN}:8000/game/waitingroom/${roomId}/`;
+        console.log("roomId is : ", roomId);
         console.log("delete path is ", endpoint);
         let resp = await fetchWithAuth(endpoint, payload);
         if (resp.ok){
@@ -471,13 +471,12 @@ export async function leaveWaitRoom(){
         if (!roomId){
             return null;
         }
-        let endpoint = `http://${DN}:8000/game/waitingroom/delete/${roomId}/`;
+        let endpoint = `http://${DN}:8000/game/waitingroom/${roomId}/`;
         console.log("delete path is ", endpoint);
         let resp = await fetchWithAuth(endpoint, payload);
         if (resp.ok){
-            let json = await resp.json();
             localStorage.removeItem("waitroomId");
-            return json;
+            return resp;
         }
         else{
             let error_txt = await resp.text();

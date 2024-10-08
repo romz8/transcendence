@@ -268,6 +268,30 @@ class PongAI extends HTMLElement {
         });
     }
 
+    genFinishModal(text){
+        this.innerHTML += /* html */`
+        <div class="modal fade modal-sm" id="TournModal" tabindex="-1" aria-labelledby="TournModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="TournModalLabel">GAME OVER</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body d-flex flex-column justify-content-center align-items-center">
+                <h6>${text}</h6>
+              </div>
+              <div class="modal-footer">
+                <button id="home-btn" type="button" class="btn btn-primary">Go Home</button>
+                <button id="again-btn" type="button" class="btn btn-primary">Try Again</button>
+              </div>
+            </div>
+          </div>
+        </div>  
+        `
+        const TournModal = new bootstrap.Modal(document.getElementById('TournModal'));
+        TournModal.show();
+    }
+
     checkWinner(){
         this.palyer1score.textContent = `Score: ${this.leftScore}`
         this.palyer2score.textContent = `Score: ${this.rightScore}`
@@ -275,16 +299,14 @@ class PongAI extends HTMLElement {
         {
             if (gameid != -1)
                 this.fetchResult();
-            alert("AI WON GIT GUD")
-            // this.stopGame()
+            this.genFinishModal("AI WON");
             return true;
         }
         else if (this.rightScore == WIN )
         {
             if (gameid != -1)
                 this.fetchResult();
-            alert ("LUCKY GUY YOU WON")
-            // this.stopGame()
+            this.genFinishModal("YOU WON");
             return true;
         }
         return false;

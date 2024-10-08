@@ -2,41 +2,6 @@ import {createWaitRoom, getWaitRoom, getListWaitRoom, deleteWaitRoom, joinWaitRo
 // import {createTournament, getTournament, deleteTournament, joinTournament} from "../api.js"
 import {router} from "../routes.js"
 
-
-function test(e)
-{
-    e.preventDefault();
-    console.log("AAAAAAAAA")
-}
-
-async function waitRoomView(e){
-    
-    e.preventDefault();
-    const url = new URL(e.target.href);
-    const path = url.pathname;
-    console.log("inside the waitRoomView, the path is ", path);
-    let resp = null;
-    switch(path){
-        case "/waitroom/create":
-            resp = await createWaitRoom();
-            let gameId = resp.genId;
-            console.log("gameId is : ", gameId);
-            history.pushState(null,"","/game/" + gameId);
-            router();
-        break;
-        case "/waitroom/join":
-            console.log("we are joingin");
-            await renderLobby();
-            break;
-        case "/waitroom/delete":
-            resp = await deleteWaitRoom();
-            renderWaitRoom();
-            break;
-        default: 
-            break;
-    };
-}
-
 async function renderLobby(){
     console.log('Rendering lobby');
     const modalContainer = document.createElement('div');

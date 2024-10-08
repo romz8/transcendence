@@ -130,7 +130,7 @@ class NavBar extends HTMLElement {
 					createToast('successful','Hope to see you back soon!');
 					document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; Secure; SameSite=Strict";
 					document.cookie = "refresh=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; Secure; SameSite=Strict";
-				disconnectWB()
+					disconnectWB()
 					localStorage.removeItem('username');
 					localStorage.removeItem('alias');
 					localStorage.removeItem('name');

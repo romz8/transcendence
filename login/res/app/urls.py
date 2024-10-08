@@ -30,6 +30,7 @@ urlpatterns = [
     path("list_pending/", friends.list_pending, name="list_pending"),
     path("list_friends/", friends.list_friends, name="list_friends"),
     path("delete_friend/", friends.delete_friend, name="delete_friend"),
+    path("delete_pending/", friends.delete_pending, name="delete_pending"),
     path("usernameCheck/", login.username_check, name="username_check"),
     path('verify_token/', views.verify_token, name="verify_token"),
     path("info_user/", views.infoUser, name="info_user"),
