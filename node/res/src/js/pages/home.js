@@ -41,7 +41,7 @@ class HomeOut extends HTMLElement {
 			renderer: 'svg',
 			loop: true,
 			autoplay: true,
-			path: '/src/assets/paddle_lottie.json'
+			path: '/assets/paddle_lottie.json'
 		});
 
 		const	login42Btn = document.getElementById('login-42-btn');
@@ -60,10 +60,10 @@ class HomeOut extends HTMLElement {
 					body: formData,
 				});
 				const tokens = await response.json();
-				conectWB(tokens['access']);
 				if (!response.ok) {
 					throw (`${tokens.error}`);
 				}
+				conectWB(tokens['access']);
 				document.cookie = `token=${tokens['access']}; expires=${expiresDate(tokens['token_exp']).toUTCString()}; Secure; SameSite=Strict`;
 				document.cookie = `refresh=${tokens['refresh']}; expires=${expiresDate(tokens['refresh_exp']).toUTCString()}; Secure; SameSite=Strict`;
 				createToast('successful','Logged in successfully');

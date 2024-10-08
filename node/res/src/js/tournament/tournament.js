@@ -390,8 +390,6 @@ window.addEventListener("popstate",() => {
 async function bannerLogic(id, container)
 {
     const data = await getPlayerTournnamentActive(id);
-    console.info(`AAAAAAAAAA ${data.status} aaaaaaaaaaaaaa`);
-    console.info(`AAAAAAAAAA ${bannerState} BBBBBBBBBBBBBB`);
 
     if (data.status !== bannerState)
     {
@@ -404,7 +402,6 @@ function displayBanner(data, id, container) {
 
     const bannerDiv = document.getElementById('status-banner');
     
-    console.info(`AAAAAAAAAA ${data.status} CCCCCCCCCCCCCC`);
     if (data.state && data.state === "finished"){
         const bannerEnd = document.createElement("div");
         bannerEnd.className = 'alert alert-secondary text-center';
