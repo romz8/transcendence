@@ -38,6 +38,7 @@ class TournamentDetailSerializer(serializers.ModelSerializer):
     Used for detailed view in the getTournament for winnerid
     '''
     winner = CustomUserSerializer(read_only=True)
+    runner_up = CustomUserSerializer(read_only=True)
     
     class Meta:
         model = Tournament
@@ -71,3 +72,26 @@ class MatchDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Match
         fields = "__all__"
+
+class MatchDetailWinner(MatchDetailSerializer):
+    '''
+    extending the nested MatchDetail with a field (winner) at runtime serializing overwritting
+    return the serialzed json
+    '''
+
+    class Meta(MatchDetailSerializer.Meta):
+        fields = "__all__"
+    
+    def to_representation(self, instance):
+        user = self.context['request'].user
+
+        obj = super().to_representation(instance)
+        if instance.state == "finished":
+            if instance.score_p1 > instance.score_p2:
+                obj['winner'] = (user == instance.player1)
+            if instance.score_p2 > instance.score_p1:
+                obj['winner'] = (user == instance.player2)
+        else:
+            obj['winner'] = False
+        return obj
+

@@ -41,7 +41,7 @@ class Friends extends HTMLElement {
 			try {
 				const response = await fetch('https://localhost:3001/login/add_friend/', {
 					method: 'POST',
-					headers: {'Authorization': 'Bearer ' + getCookie('token')},
+					headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 					body: formData,
 				});
 				if (response.ok) {
@@ -69,7 +69,7 @@ async function	loadRequests() {
 	try {
 		const response = await fetch('https://localhost:3001/login/list_pending/', {
 			method: 'POST',
-			headers: {'Authorization': 'Bearer ' + getCookie('token')},
+			headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 		});
 		const responseJson = await response.json();
 		console.log(responseJson);
@@ -111,7 +111,7 @@ async function	loadFriendList() {
 	try {
 		const response = await fetch('https://localhost:3001/login/list_friends/', {
 			method: 'POST',
-			headers: {'Authorization': 'Bearer ' + getCookie('token')},
+			headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 		});
 		const responseJson = await response.json();
 		console.log(responseJson);
@@ -164,7 +164,7 @@ function	setListenerFriends() {
 					const	bodyInfo = { username: friendItem.getAttribute('data-friend-username') };
 					const	response = await fetch('https://localhost:3001/login/delete_friend/', {
 						method: 'POST',
-						headers: {'Authorization': 'Bearer ' + getCookie('token')},
+						headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 						body: JSON.stringify(bodyInfo),
 					});
 					const responseJson = await response.json();
@@ -193,7 +193,7 @@ function	setListenerFriends() {
 					const	bodyInfo = { username };
 					const	response = await fetch('https://localhost:3001/login/confirm_friends/', {
 						method: 'POST',
-						headers: {'Authorization': 'Bearer ' + getCookie('token')},
+						headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 						body: JSON.stringify(bodyInfo),
 					});
 					const responseJson = await response.json();
@@ -216,7 +216,7 @@ function	setListenerFriends() {
 					const	bodyInfo = { username };
 					const	response = await fetch('https://localhost:3001/login/delete_pending/', {
 						method: 'POST',
-						headers: {'Authorization': 'Bearer ' + getCookie('token')},
+						headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 						body: JSON.stringify(bodyInfo),
 					});
 					const responseJson = await response.json();

@@ -1,3 +1,4 @@
+
 """
 URL configuration for app project.
 
@@ -29,6 +30,7 @@ urlpatterns = [
     path("login/list_pending/", friends.list_pending, name="list_pending"),
     path("login/list_friends/", friends.list_friends, name="list_friends"),
     path("login/delete_friend/", friends.delete_friend, name="delete_friend"),
+    path("login/delete_pending/", friends.delete_pending, name="delete_pending"),
     path("login/usernameCheck/", login.username_check, name="username_check"),
     path('login/verify_token/', views.verify_token, name="verify_token"),
     path("login/info_user/", views.infoUser, name="info_user"),

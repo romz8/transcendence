@@ -1,43 +1,6 @@
 import {createWaitRoom, getWaitRoom, getListWaitRoom, deleteWaitRoom, joinWaitRoom} from "../api.js"
 // import {createTournament, getTournament, deleteTournament, joinTournament} from "../api.js"
 import {router} from "../routes.js"
-import { Modal } from "bootstrap"
-
-function test(e)
-{
-    e.preventDefault();
-    console.log("AAAAAAAAA")
-}
-
-async function waitRoomView(e){
-    
-    e.preventDefault();
-    console.log("AAAAAAAAA")
-    const url = new URL(e.target.href);
-    const path = url.pathname;
-    console.log("inside the waitRoomView, the path is ", path);
-    let resp = null;
-    switch(path){
-        case "/waitroom/create":
-            console.log("HIHIH")
-            resp = await createWaitRoom();
-            let gameId = resp.genId;
-            console.log("gameId is : ", gameId);
-            history.pushState(null,"","/game/" + gameId);
-            router();
-        break;
-        case "/waitroom/join":
-            console.log("we are joingin");
-            await renderLobby();
-            break;
-        case "/waitroom/delete":
-            resp = await deleteWaitRoom();
-            renderWaitRoom();
-            break;
-        default: 
-            break;
-    };
-}
 
 async function renderLobby(){
     console.log('Rendering lobby');
@@ -117,11 +80,9 @@ async function renderLobby(){
 }
 
 function addGameButton(id, name, path, self){
-    self.innerHTML += /* html */`
-    <a id="${id}" class="btn btn-primary" href=${path} type="button" data-link>${name}</a>
-    `;
-    let GameButton = document.getElementById(id);
-    return GameButton;
+  self.innerHTML += /* html */`<a id="${id}" class="btn btn-primary" href=${path} type="button" data-link>${name}</a>`;
+  let GameButton = document.getElementById(id);
+  return GameButton;
 }
             
 class Waitroom extends HTMLElement {
@@ -134,17 +95,23 @@ class Waitroom extends HTMLElement {
     async connectedCallback() {
         this.innerHTML = /* html */`
         <style>
+            div {
+                color: var(--bs-cs-secondary);
+            }
             h1 {
                 color: var(--bs-cs-secondary);
-                font-size: 100px;
             }
             h2 {
                 color: var(--bs-cs-secondary);
-                font-size: 100px;
             }
         </style>
         <nav-bar data-authorized></nav-bar>
-        <h1>Wait Room</h1>`
+        <div class="d-flex flex-column justify-content-center align-items-center">
+            <h1>Wait Room</h1>
+            <div id="main-container" class="d-flex justify-content-center gap-3 mt-3">
+
+           </div>
+        </div>`
         if (this.hasRoom){
             let getRoom = await getWaitRoom();
             if (getRoom){
@@ -152,8 +119,9 @@ class Waitroom extends HTMLElement {
                 this.hasRoom = true;
             }
         }
-        let createGameButton = addGameButton("crt-game" ,"Create Game", "/waitroom/create", this);
-        let joinGameButton = addGameButton("jn-game" ,"Join Game", "/waitroom/join", this);
+        const mainContainer = document.getElementById("main-container")
+        let createGameButton = addGameButton("crt-game" ,"Create Game", "/waitroom/create", mainContainer);
+        let joinGameButton = addGameButton("jn-game" ,"Join Game", "/waitroom/join", mainContainer);
 
         const path = window.location.pathname;
         console.log("inside the waitRoomView, the path is ", path);

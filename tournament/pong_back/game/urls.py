@@ -3,13 +3,12 @@ from . import views
 
 urlpatterns = [
     path("tournament/<int:pk>/match_ai/", views.modify_match_ai, name="matchAi"),
-    path("players/", views.player_list, name='player_list'),
+    #path("players/", views.player_list, name='player_list'),
     path("allmatch/", views.MatchList.as_view(), name='match_list'),
     path("waitingroom/info/<str:genId>/", views.getWaitRoom.as_view(), name='getWaitroom'),
     path("waitingroom/listopen/", views.ListWaitRoom.as_view(), name='getWaitroom'),
     path("waitingroom/create/", views.createWaitroom.as_view(), name='createWaitroom'),
-    path("waitingroom/join/<str:pk>/", views.join_waitroom, name='joinWaitroom'),
-    path("waitingroom/delete/<str:pk>/", views.delete_waitroom, name='deleteWaitroom'),
+    path("waitingroom/<str:pk>/", views.ManageWaitroom.as_view(), name='ManageWaitroom'),
     path("tournament/create/", views.create_tournament, name='createTournament'),
     path("tournament/join/<str:pk>/", views.join_tournament, name='joinTournament'),
     path("tournament/openlist/", views.TournamentsOpen.as_view(), name='ListTournamentOpen'),

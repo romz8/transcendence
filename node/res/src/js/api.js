@@ -136,7 +136,7 @@ export async function createWaitRoom(){
 export async function joinWaitRoom(roomId){
     try{
         let payload = {"method":"PUT", headers:{"Content-Type":"application/json"}};
-        let endpoint = `https://${DN}:3001/tourapi/game/waitingroom/join/${roomId}/`;
+        let endpoint = `https://${DN}:3001/tourapi/game/waitingroom/${roomId}/`;
         let resp = await fetchWithAuth(endpoint, payload);
         console.log("resp is : ", resp);
         if (resp.ok){
@@ -159,11 +159,10 @@ export async function deleteWaitRoom(){
     try{
         let payload = {'method':'DELETE', headers: {'Content-Type':'application/json'}};
         const roomId = localStorage.getItem('waitroomId');
-        console.log("roomId is : ", roomId);
         if (!roomId){
             return null;
         }
-        let endpoint = `https://${DN}:3001/tourapi/game/waitingroom/delete/${roomId}/`;
+        let endpoint = `https://${DN}:3001/tourapi/game/waitingroom/${roomId}/`;
         console.log("delete path is ", endpoint);
         let resp = await fetchWithAuth(endpoint, payload);
         if (resp.ok){
@@ -418,7 +417,7 @@ async function refreshToken(){
 
 //Wrapper of fetch API calls to Fetch endpoint with Token Auth
 async function fetchWithAuth(url, options = {}){
-    let token = getCookie("token");
+    let token = await getCookie("token");
     if (!token){
         token = await refreshToken();
     }
@@ -471,17 +470,17 @@ export async function leaveWaitRoom(){
         if (!roomId){
             return null;
         }
-        let endpoint = `https://${DN}:3001/tourapi/game/waitingroom/delete/${roomId}/`;
+        let endpoint = `https://${DN}:3001/tourapi/game/waitingroom/${roomId}/`;
         console.log("delete path is ", endpoint);
         let resp = await fetchWithAuth(endpoint, payload);
-        if (resp.ok)
+        if (resp.ok){
             localStorage.removeItem("waitroomId");
+            return resp;
+        }
         else{
             let error_txt = await resp.text();
             console.log("issue on deleting the ressrouce", error_txt);
         }
-        return resp;
-
     }
     catch(error)
     {

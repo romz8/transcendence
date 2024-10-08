@@ -35,10 +35,15 @@ def protected_view(request):
 
 @api_view(['GET'])
 def infoUser(request):
-    if request.user == AnonymousUser():
+    if request.user == AnonymousUser() or not request.user:
         return JsonResponse({'error': 'missing token'}, status=498)
     user = request.user
+    url = user.img
 
+    if not url:
+        url = "/media/def/default.jpg"
+    else:
+        url = url.url
     user_json = {
         'id': user.id,
         'username': user.username,
@@ -46,7 +51,7 @@ def infoUser(request):
         'campus': user.campus,
         'name': user.first_name,
         'lastname': user.last_name,
-        'img': "https://localhost:3001" + user.img.url,
+        'img': "https://localhost:3001" + url,
     }
     return JsonResponse(user_json)
 

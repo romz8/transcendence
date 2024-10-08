@@ -24,7 +24,7 @@ def create_Userss_and_profiles(profiles):
         alias = profile_data['alias']
         
         # Create the Users if it does not exist
-        user, created = Users.objects.get_or_create(username=username, alias=alias, intra=True, campus="CAMPUS OF LIFE", is_ai=True, img="/def/ai_img.jpeg")
+        user, created = Users.objects.get_or_create(username=username, alias=alias, intra=True, campus="CAMPUS OF LIFE", is_ai=True, img="def/ai_img.jpeg")
         if created:
             user.save()
 

@@ -179,12 +179,23 @@ class GameRem extends HTMLElement {
         await gameLoop();
         
     }
+    disconnectedCallback()
+    {
+        start = false;
+        init = false;
+        goal = false;
+        input = false;
+        gameEnded = false;
+        endscore = undefined;
+        ws.close();
+        ws = null;
+    }
 }
 
 customElements.define('pong-rem', GameRem);
 
 export default function renderGame (gameid) {
-    if (gameid == undefined)
+    if (gameid == undefined || !validateId(gameid.id))
     {
         history.pushState(null,"","/");
         router();
@@ -192,6 +203,22 @@ export default function renderGame (gameid) {
     }
     id = gameid.id;
     return (`<pong-rem></pong-rem>`);
+}
+
+function validateId(id) {
+
+    const regexG = /^g\/.+$/;
+    const regexT = /^t\/\d+-\d+$/;
+
+    console.log(id);
+
+    if (regexG.test(id) || regexT.test(id)) {
+        console.log("TESTING")
+        return true;
+    } else {
+        console.log("TESTING LIMITS")
+        return false;
+    }
 }
 
 async function gameLoop() {
@@ -319,7 +346,7 @@ export async function initializeElements(data) {
         player = 'player2';
         playerName = document.getElementById('player2-name').textContent
     }
-        
+         
     window.addEventListener('keydown', (event) => {
         if (input == true && keyState[event.key] == false) {
             keyState[event.key] = true;

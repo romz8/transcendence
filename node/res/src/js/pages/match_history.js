@@ -33,11 +33,12 @@ class MatchHistory extends HTMLElement {
 			</main>
 		`;
 	}
-	connectedCallback() {
+
+	async connectedCallback() {
 		fetch('https://localhost:3001/tourapi/game/allmatch/', {
 			method: 'GET',
 			headers: {
-				'Authorization': 'Bearer ' + getCookie('token'),
+				'Authorization': 'Bearer ' + await getCookie('token'),
 				'Content-Type': 'application/json'
 			},
 		})
