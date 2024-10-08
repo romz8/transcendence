@@ -41,7 +41,7 @@ def infoUser(request):
     url = user.img
 
     if not url:
-        url = "/media/def/default.jpg"
+        url = "/login/media/def/default.jpg"
     else:
         url = url.url
     user_json = {

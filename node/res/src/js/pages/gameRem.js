@@ -188,7 +188,6 @@ class GameRem extends HTMLElement {
         gameEnded = false;
         endscore = undefined;
         ws.close();
-        ws = null;
     }
 }
 

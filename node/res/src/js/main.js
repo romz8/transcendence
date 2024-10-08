@@ -1,5 +1,5 @@
 
-import '/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js';
+import 'bootstrap';
 
 import '/src/js/components/navbar.js';
 import '/src/js/routes.js';
