@@ -1,3 +1,4 @@
+
 """
 URL configuration for app project.
 
@@ -25,7 +26,6 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
     path("confirm_friends/", friends.confirm_friends, name="confirm_friends"),
-    path("delete_pending/", friends.delete_pending, name="delete_pending"),
     path("add_friend/", friends.add_friend, name="add_friend"),
     path("list_pending/", friends.list_pending, name="list_pending"),
     path("list_friends/", friends.list_friends, name="list_friends"),

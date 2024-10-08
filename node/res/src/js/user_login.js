@@ -20,9 +20,9 @@ async function fetchUIDENV() {
 
 export function expiresDate(seconds)
 {
-	const currentDate = new Date();
-	currentDate.setSeconds(currentDate.getSeconds() + Number(seconds));
-	return currentDate;
+    const currentDate = new Date();
+    currentDate.setSeconds(currentDate.getSeconds() + Number(seconds));
+    return currentDate;
 }
 
 function getTokens(cname){
@@ -60,22 +60,22 @@ export async function getCookie(cname) {
 }
 
 function getPathVars() {
-	const querySearch = window.location.search;
-	const URLParams = new URLSearchParams(querySearch);
+    const querySearch = window.location.search;
+    const URLParams = new URLSearchParams(querySearch);
     
-	if (URLParams)
-	{
-		let vars = {};
-		vars['code'] = URLParams.get('code');
-		vars['state'] = URLParams.get('state');
-		return vars;
-	}
+    if (URLParams)
+    {
+        let vars = {};
+        vars["code"] = URLParams.get('code');
+        vars["state"] = URLParams.get('state');
+        return vars
+    }
 }
 
 function clearURL() {
-	const url = new URL(window.location.href);
-	url.search = '';
-	window.history.replaceState({}, document.title, url.toString());
+    const url = new URL(window.location.href);
+    url.search = '';
+    window.history.replaceState({}, document.title, url.toString());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -118,7 +118,6 @@ export function disconnectWB() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export async function callApi42(){
-
 	const uid = await fetchUIDENV()
 	if (uid)
 	{
@@ -213,44 +212,43 @@ async function callBackAccess() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-	callBackAccess();
+    callBackAccess();
 });
 
 //////////////////////////////////////////////////////////
 
 export async function is_authenticated(access)
 {
-	if (!access) {
-		return Promise.resolve(false);
-	}
-	return fetch('http://localhost:8080/verify_token/', {
-		method: 'GET',
-		headers: {
-			'Authorization': 'Bearer ' + access,
-			'Content-Type': 'application/json'
-		},
-	})
-		.then(response => {
-			if (!response.ok)
-				throw new Error('Network response was not ok ' + response.statusText);
-			return response.json();
-		})
-		.then(data => {
-			console.log(data);
-			if (data['error'])
-				return(false);
-			if (!socket){
-				conectWB(access);
-			}
-			else if(socket.readyState !== 1 && socket.readyState !== 0){
-				conectWB(access);
-			}
-			return(true);
-		})
-		.catch(error => {
-			console.error('There has been a problem with your fetch operation:', error);
-			return false;
-		});
+    if (!access)
+        return Promise.resolve(false);
+    return fetch('http://localhost:8080/verify_token/', {
+        method: 'GET',
+        headers: {
+            'Authorization': 'Bearer ' + access,
+            'Content-Type': 'application/json'
+        },
+    })
+    .then(response => {
+        if (!response.ok)
+            throw new Error('Network response was not ok ' + response.statusText);
+        return response.json();
+    })
+    .then(data => {
+        console.log(data);
+        if (data['error'])
+            return(false);
+		if (!socket){
+			conectWB(access);
+		}
+		else if(socket.readyState !== 1 && socket.readyState !== 0){
+			conectWB(access);
+		}
+        return(true);
+    })
+    .catch(error => {
+        console.error('There has been a problem with your fetch operation:', error)
+        return false;
+    });
 }
 
 //////////////////////////////////////////////////////////////
