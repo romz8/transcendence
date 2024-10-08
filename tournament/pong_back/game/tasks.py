@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.db import transaction
 from .models import WaitRoom, Match, Tournament, Tourparticipation
 from .consumers.pong_consumer import PongConsumer
+from .consumers.game_management import ENDSCORE
 import logging, random
 
 logger = logging.getLogger(__name__)
@@ -37,8 +38,8 @@ def manage_full_ai_match(self):
                 try:
                     if m.player1 and m.player2 and m.player1.is_ai and m.player2.is_ai:
                         with transaction.atomic():
-                            m.score_p1 = 3 if random.random() < 0.5 else 0
-                            m.score_p2 = 0 if m.score_p1 == 3 else 3
+                            m.score_p1 = ENDSCORE if random.random() < 0.5 else 0
+                            m.score_p2 = 0 if m.score_p1 ==  ENDSCORE else  ENDSCORE
                             m.state = "finished"
                             m.save()
                             loser = m.player1 if m.score_p1 == 0 else m.player2

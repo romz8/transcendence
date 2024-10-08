@@ -35,6 +35,7 @@ def update_match_tournament(sender, instance, **kwargs):
             tourn.final_score = str(instance.score_p1) + "-" + str(instance.score_p2)
             tourn.state = "finished"
             tourn.save()
+            logger.info(f"Tournament is saved and state is {tourn.state}")
 
     except Match.DoesNotExist:
         logger.info(f"Next match not found in tournament instance for tag {instance.next_match}")
@@ -77,14 +78,10 @@ def build_bracket_tournament(sender, instance, created,**kwargs):
 
 @receiver(post_save, sender=Tournament)
 def save_tournament_blockchain(sender, instance, created, **kwargs):
-    logger.info(f"==========================================================")
-    logger.info(f"==========================================================")
-    logger.info(f"=======================STATE is{instance.state} ==========")
+    logger.info(f"================= BLOCKCHAIN SIGNAL ========================")
     logger.info(f"ENTERING BLOCKCHAIN SAVE TOURNAMENT with block url {Block_url}")
-    logger.info(f"==========================================================")
-    logger.info(f"==========================================================")
-    logger.info(f"==========================================================")
-    
+    logger.info(f"tournament is {instance.id} and stae {instance.state}")
+    logger.info(f"================= BLOCKCHAIN SIGNAL ========================")
     if created:
         return
     if instance.state != "finished":
@@ -94,13 +91,7 @@ def save_tournament_blockchain(sender, instance, created, **kwargs):
         "final_score" : instance.final_score,
         "participant_count" : instance.n_humans } 
     try:
-        logger.info(f"**********************************************************")
-        logger.info(f"**********************************************************")
-        logger.info(f"**********************************************************")
         logger.info(f"IT SHOULD SAVE TO BCKCHAIN WITH {payload} BUT WE ARE SAVING GAS")
-        logger.info(f"**********************************************************")
-        logger.info(f"**********************************************************")
-        logger.info(f"**********************************************************")
         # response = requests.post(Block_url, payload)
         # if response.status == 200 or response.status == 201:
         #     logger.info("Tournament result successfully posted to blockchain.")
