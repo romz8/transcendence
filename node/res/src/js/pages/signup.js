@@ -8,47 +8,47 @@ class Signup extends HTMLElement {
 			<main class="container">
 				<form id="signup-form" class="col-sm-12 col-md-8 col-lg-6 mt-5 login-form" autocapitalize="on">
 					<div class="mb-5">
-						<h1 class="text-center">Sign up</h1>
-						<p class="text-center">Please enter your details to register.</p>
+						<h1 id="signup" class="text-center">Sign up</h1>
+						<p id="details-register" class="text-center">Please enter your details to register.</p>
 					</div>
 					<div class="mb-3 d-flex justify-content-between gap-3">
 						<div class="flex-grow-1">
-							<label for="input-name" class="form-label">Name</label>
-							<input type="text" class="form-control" id="input-name" name="name" aria-describedby="nameHelp" placeholder="Enter your name" minlength="2" maxlength="16" required>
+							<label id="name-label" for="input-name" class="form-label">Name</label>
+							<input id="input-name" type="text" class="form-control" name="name" aria-describedby="nameHelp" placeholder="Enter your name" minlength="2" maxlength="16" required>
 						</div>
 						<div class="flex-grow-1">
-							<label for="input-last-name" class="form-label">Last name</label>
-							<input type="text" class="form-control" id="input-last-name" name="lastname" aria-describedby="nameHelp" placeholder="Enter your last name" minlength="2" maxlength="16" required>
+							<label id="last-name-label" for="input-last-name" class="form-label">Last name</label>
+							<input id="input-last-name" type="text" class="form-control" name="lastname" aria-describedby="nameHelp" placeholder="Enter your last name" minlength="2" maxlength="16" required>
 						</div>
 					</div>
 					<div class="mb-3">
-						<label for="input-username" class="form-label">Username</label>
+						<label id="username-label" for="input-username" class="form-label">Username</label>
 						<div class="position-relative">
-							<input type="text" class="form-control" id="input-username" name="username" aria-describedby="usernameHelp" placeholder="Enter your username" minlength="3" maxlength="16" required>
+							<input id="input-username" type="text" class="form-control" name="username" aria-describedby="usernameHelp" placeholder="Enter your username" minlength="3" maxlength="16" required>
 							<div id="username-spinner" class="spinner-border d-none position-absolute" role="status">
-  								<span class="visually-hidden">Loading...</span>
+  								<span id="loading" class="visually-hidden">Loading...</span>
 							</div>
 						</div>
 					</div>
 					<div class="mb-3 position-relative">
-						<label for="input-pass" class="form-label">Password</label>
-						<input type="password" class="form-control" id="input-pass" name="password" placeholder="Password" required>
+						<label id="" for="input-pass" class="form-label">Password</label>
+						<input id="" type="password" class="form-control" id="input-pass" name="password" placeholder="Password" required>
 						<div class="password-checklist">
-							<p class="checklist-title">Password should be</h3>
+							<p id="password-should" class="checklist-title">Password should be</h3>
 							<ul class="checklist">
-								<li class="list-item">  Between 8 and 16 character long</li>
-								<li class="list-item">  At least 1 number</li>
-								<li class="list-item">  At least 1 lowercase letter</li>
-								<li class="list-item">  At least 1 uppercase letter</li>
-								<li class="list-item">  At least 1 special character (!,@,#,$,%,^,&,_,=,+,-)</li>
+								<li id="check-between" class="list-item">  Between 8 and 16 character long</li>
+								<li id="check-number" class="list-item">  At least 1 number</li>
+								<li id="check-lower" class="list-item">  At least 1 lowercase letter</li>
+								<li id="check-upper" class="list-item">  At least 1 uppercase letter</li>
+								<li id="check-special" class="list-item">  At least 1 special character (!,@,#,$,%,^,&,_,=,+,-)</li>
 							</ul>
 						</div>
 					</div>
 					<div class="mb-3">
-						<label for="input-pass-rep" class="form-label">Confirm password</label>
-						<input type="password" class="form-control" id="input-pass-rep" name="passwordrep" placeholder="Password" required>
+						<label id="label-pass-rep" for="input-pass-rep" class="form-label">Confirm password</label>
+						<input id="input-pass-rep" type="password" class="form-control" name="passwordrep" placeholder="Password" required>
 					</div>
-					<button disabled type="submit" id="signup-submit-btn" class="btn btn-outline-cream-fill btn-general w-100 mb-3">Sign up</button>
+					<button id="signup-submit-btn" disabled type="submit" class="btn btn-outline-cream-fill btn-general w-100 mb-3">Sign up</button>
 				</form>
    			 </main>
 		`;

@@ -45,6 +45,14 @@ class ProFile extends HTMLElement {
 						<label for="input-campus" class="form-label">Campus</label>
 						<input type="text" class="form-control" id="input-campus" aria-describedby="campusHelp" value="${localStorage.getItem('campus')}" disabled>
                     </div>
+					<div class="mb-3">
+						<select class="form-select" aria-label="Default select example">
+							<option selected>Default language</option>
+							<option value="1">One</option>
+							<option value="2">Two</option>
+							<option value="3">Three</option>
+						</select>
+                    </div>
                     <button type="submit" id="update-submit-btn" class="btn btn-outline-cream-fill btn-general w-100 mb-3">Update</button>
                 </form>
             </main>
@@ -84,6 +92,11 @@ class ProFile extends HTMLElement {
 		const	updateForm = document.getElementById('update-form');
 		updateForm.addEventListener('submit', async (e) => {
 			e.preventDefault();
+			console.log(`${inputAlias.value} === ${localStorage.getItem('alias')} and ${inputProfilePic.files[0]} === ${localStorage.getItem('img')}`);
+			if (inputAlias.value === localStorage.getItem('alias') && !inputProfilePic.files[0]) {
+				createToast('warning','There is no information to update');
+				return ;
+			}
 			const	dataUpdate = new FormData();
 			dataUpdate.append('alias', inputAlias.value);
 			dataUpdate.append('imagefile', inputProfilePic.files[0]);
