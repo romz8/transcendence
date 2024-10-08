@@ -179,6 +179,15 @@ class GameRem extends HTMLElement {
         await gameLoop();
         
     }
+    disconnectedCallback()
+    {
+        start = false;
+        init = false;
+        goal = false;
+        input = false;
+        gameEnded = false;
+        endscore = undefined;
+    }
 }
 
 customElements.define('pong-rem', GameRem);
