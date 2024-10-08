@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.views.generic import ListView
 from .models import Users, Match, WaitRoom, Tournament, Tourparticipation
-from .serializer import CustomUserSerializer, MatchSerializer, MatchDetailSerializer, RoomSerializer, RoomDetailSerializer, TournamentSerializer, TournamentDetailSerializer, ParticipSerializer, ParticipDetailSerializer
+from .serializer import CustomUserSerializer, MatchSerializer, MatchDetailSerializer, MatchDetailWinner, RoomSerializer, RoomDetailSerializer, TournamentSerializer, TournamentDetailSerializer, ParticipSerializer, ParticipDetailSerializer
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -64,7 +64,7 @@ def modify_match_ai(request, pk):
 
 
 class MatchList(ListAPIView):
-    serializer_class = MatchDetailSerializer
+    serializer_class = MatchDetailWinner
 
     def get_queryset(self):
         player = self.request.user
