@@ -102,7 +102,7 @@ export async function	updateUserInfo() {
 		const	response = await fetch('http://localhost:8080/info_user/', {
 			method: 'GET',
 			headers: {
-				'Authorization': 'Bearer ' + getCookie('token'),
+				'Authorization': 'Bearer ' + await getCookie('token'),
 				'Content-Type': 'application/json'
 			},
 		});

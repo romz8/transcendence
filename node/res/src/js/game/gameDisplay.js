@@ -1,4 +1,5 @@
 import {player, playerName, gameEnded} from '../pages/gameRem.js'
+import { router } from '../routes.js';
 
 export function displayCountdown(number) {
     if (!gameEnded) {
@@ -54,26 +55,64 @@ export function displayLeave(message) {
     `;
 }
 
+function parseUrl(url) {
+    const urlObj = new URL(url);
+
+    const path = urlObj.pathname;
+    
+    if (path.startsWith('/game/t')) {
+        const numSegment = path.split('/').pop();
+        const [firstNum, secondNum] = numSegment.split('-');
+        return secondNum;
+    }
+    return null;
+}
+
 export function displayOverMessage(data) {
-
-    let card_title, c_style;
-
+    
+    console.log(data);
+    let messageStyle, homeButton = '', tournamentButton = '';
+    const idTour = parseUrl(window.location.href)
+    if (idTour){
+        tournamentButton =/*html*/ `<button id="tournament-btn" class="btn btn-primary mt-3">Ir al Torneo</button>`
+    }
+    else{
+        homeButton = /*html*/`<button id="home-btn" class="btn btn-warning mt-3">Go Home</button>`;
+    }
     if (player == data.winner) {
-        card_title = 'You won!';
-        c_style = "bg-success";
+        messageStyle = "text-success";
+    } else {
+        messageStyle = "text-danger";
+        homeButton = /*html*/`<button id="home-btn" class="btn btn-warning mt-3">Go Home</button>`;
     }
-    else {
-        card_title = 'You lost!'
-        c_style = "bg-danger";
-    }
+
     const mainContainer = document.getElementById('mainContainer');
+
     mainContainer.innerHTML = /* html */`
-        <div class="card text-whitemb-3 ${c_style}" style="max-width: 18rem;">
-            <div class="card-header">Game Over </div>
-            <div class="card-body">
-                <h5 class="card-title">${card_title}</h5>
-                <p class="card-text">${document.getElementById('player1-name').textContent} ${data.score.player1} - ${document.getElementById('player2-name').textContent} ${data.score.player2}</p>
-            </div>
+        <div class="text-center mt-5">
+            <h2 class="${messageStyle}">${player == data.winner ? 'You won!' : 'You lost!'}</h2>
+            <p>
+                ${document.getElementById('player1-name').textContent} ${data.score.player1} - 
+                ${document.getElementById('player2-name').textContent} ${data.score.player2}
+            </p>
+            ${tournamentButton}
+            ${homeButton}
         </div>
     `;
+
+    // Añadir eventos a los botones
+    console.log(window.location.href);
+    console.log(parseUrl(window.location.href));
+    if (idTour){
+
+        document.getElementById('tournament-btn').addEventListener('click', () => {
+            window.location.href = `/tournament/${idTour}`;
+        });
+    }
+    if (document.getElementById('home-btn')) {
+        document.getElementById('home-btn').addEventListener('click', () => {
+            history.pushState('', '', '/');
+            router();
+        });
+    }
 }

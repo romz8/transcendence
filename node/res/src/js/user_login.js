@@ -1,24 +1,21 @@
-import { router } from "./routes";
-
-let uid;
-
-window.onload = fetchUIDENV;
+import { createToast } from './components/toast';
+import { router } from './routes';
 
 ///////////////////////////////////////////// UTILS /////////////////////////////////////////////
 
 async function fetchUIDENV() {
-    fetch('http://localhost:8080/uidenv/', {
-        method: 'GET',
-    })
-    .then(response => {
-        if (!response.ok)
-            throw new Error('Network response was not ok ' + response.statusText);
-        return response.json();
-    })
-    .then(data => {
-        uid = data['UID'];
-    })
-    .catch(error => console.error('There has been a problem with your fetch operation:', error));
+	return fetch('http://localhost:8080/uidenv/', {
+		method: 'GET',
+	})
+	.then(response => {
+		if (!response.ok)
+			throw new Error('Network response was not ok ' + response.statusText);
+		return response.json();
+	})
+	.then(data => {
+		return data['UID'];
+	})
+	.catch(error => console.error('There has been a problem with your fetch operation:', error));
 }
 
 export function expiresDate(seconds)
@@ -28,18 +25,38 @@ export function expiresDate(seconds)
     return currentDate;
 }
 
-export function getCookie(cname) {
-    let name = cname + "=";
-    let ca = document.cookie.split(';');
-    for(let i = 0; i < ca.length; i++)
-    {
-        let c = ca[i];
-        while (c.charAt(0) == ' ')
-            c = c.substring(1);
-        if (c.indexOf(name) == 0)
-            return c.substring(name.length, c.length);
-    }
-    return "";
+function getTokens(cname){
+	let name = cname + '=';
+	let ca = document.cookie.split(';');
+	for(let i = 0; i < ca.length; i++)
+	{
+		let c = ca[i];
+		while (c.charAt(0) == ' ')
+			c = c.substring(1);
+		if (c.indexOf(name) == 0)
+			return c.substring(name.length, c.length);
+	}
+	return '';
+}
+
+export async function getCookie(cname) {
+	if (cname === "token")
+	{
+		let retValue = getTokens(cname);
+		if (retValue == '')
+		{
+			retValue = getTokens("refresh");
+			if (!retValue)
+				return '';
+			await refresh_token(retValue);
+			return (getTokens(cname));
+		}
+		return retValue;
+	}
+	else
+	{
+		return getTokens(cname);
+	}
 }
 
 function getPathVars() {
@@ -101,67 +118,69 @@ export function disconnectWB() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export async function callApi42(){
-    const params = new URLSearchParams ({
-        "client_id": uid,
-        "redirect_uri": "http://localhost:3000/",
-        "scope": "public",
-        "state": "1234566i754twrqwdfghgfddtrwsewrt",
-        "response_type": "code"
-    });
-    window.location.href = `https://api.intra.42.fr/oauth/authorize/?${params.toString()}`;
+	const uid = await fetchUIDENV()
+	if (uid)
+	{
+		const params = new URLSearchParams ({
+			'client_id': uid,
+			'redirect_uri': 'http://localhost:3000/',
+			'scope': 'public',
+			'state': '1234566i754twrqwdfghgfddtrwsewrt',
+			'response_type': 'code'
+		});
+		window.location.href = `https://api.intra.42.fr/oauth/authorize/?${params.toString()}`;	
+	}
+	else
+	{
+		createToast('warning', 'Error: server not provided UID pleas wait')
+	}
 }
 
 ///////////////////////////////////// REFRESH TOKEN /////////////////////////////////////
 
 async function getNewAccessToken(infoLogin)
 {
-    try {
-        const response = await fetch('http://localhost:8080/refreshToken/', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(infoLogin)
-        });
+	try {
+		const response = await fetch('http://localhost:8080/refreshToken/', {
+			method: 'POST',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(infoLogin)
+		});
 
-        if (!response.ok) {
-            throw new Error('Network response was not ok ' + response.statusText);
-        }
-        const data = await response.json();
-        console.log(data);
-        if (data['access'])
-        {
-            console.log(data['access_token']);
-            document.cookie = `token=${data["access"]}; expires=${expiresDate(data["token_exp"]).toUTCString()}; Secure; SameSite=Strict`;
-            document.cookie = `refresh=${data["refresh"]}; expires=${expiresDate(data["refresh_exp"]).toUTCString()}; Secure; SameSite=Strict`;
-        }
-        console.log("Response OK");
-    } catch (error) {
-        console.error('There has been a problem with your fetch operation:', error);
-        return null;
-    }
+		if (!response.ok) {
+			throw new Error('Network response was not ok ' + response.statusText);
+		}
+		const data = await response.json();
+		console.log(data);
+		if (data['access'])
+		{
+			console.log(data['access_token']);
+			document.cookie = `token=${data['access']}; expires=${expiresDate(data['token_exp']).toUTCString()}; Secure; SameSite=Strict`;
+			document.cookie = `refresh=${data['refresh']}; expires=${expiresDate(data['refresh_exp']).toUTCString()}; Secure; SameSite=Strict`;
+		}
+		console.log('Response OK');
+	} catch (error) {
+		history.pushState('', '', '/');
+		router();
+	}
 }
 
 async function refresh_token(refresh)
 {
-    const infoLogin = {
-        refresh_token: refresh
-    }
-    await getNewAccessToken(infoLogin);
-    router();
+	const infoLogin = {
+		refresh_token: refresh
+	};
+	await getNewAccessToken(infoLogin);
 }
 
 ///////////////////////////////////////// LOGIN INTRA ////////////////////////////////////////////////
 
-function callBackAccess() {
-    if (!getCookie("token"))
-    {
-        // console.log(getCookie('refresh'))
-        const refresh = getCookie("refresh");
-        if (refresh)
-            refresh_token(refresh);
-    }
+async function callBackAccess() {
+    if (await getCookie("token"))
+		return;
     let vars = getPathVars();
     if (!vars["code"] || !vars["state"])
         return ;

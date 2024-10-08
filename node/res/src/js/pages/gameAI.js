@@ -13,8 +13,8 @@ class PongAI extends HTMLElement {
         this.paddleWidth = 10;
         this.ballSize = 10;
         this.paddleSpeed = 5;
-        this.ballSpeedX = 5;
-        this.ballSpeedY = 5;
+        this.ballSpeedX = 3;
+        this.ballSpeedY = 2;
         this.aiSpeed = 5;
 
         this.leftPaddleY = this.gameHeight / 2 - this.paddleHeight / 2;
@@ -241,8 +241,8 @@ class PongAI extends HTMLElement {
         await gameLoop();
     }
 
-    fetchResult(){
-        const access = getCookie('token');
+    async fetchResult(){
+        const access = await getCookie('token');
         const infoBody = JSON.stringify({"score_ai": this.leftScore,"score_user": this.rightScore})
         fetch(`http://localhost:8000/game/tournament/${gameid[0]}/match_ai/`, {
             method: 'POST',
@@ -299,16 +299,12 @@ class PongAI extends HTMLElement {
                 this.leftPaddleY += this.aiSpeed;
             }
         }
-        if (this.keys['w'] && this.rightPaddleY > 0)
+        
+        if ((this.keys['w'] || this.keys['arrowup']) && this.rightPaddleY > 0)
             this.rightPaddleY -= this.paddleSpeed;
 
-        if (this.keys['s'] && this.rightPaddleY < this.gameHeight - this.paddleHeight)
+        if ((this.keys['s'] || this.keys['arrowdown']) && this.rightPaddleY < this.gameHeight - this.paddleHeight)
             this.rightPaddleY += this.paddleSpeed;
-
-        // if (this.ballDirectionX > 0 && this.ballY < this.rightPaddleY + this.paddleHeight / 2 && this.rightPaddleY > 0)
-        //     this.rightPaddleY -= this.aiSpeed;
-        // else if (this.ballDirectionX > 0 && this.ballY > this.rightPaddleY + this.paddleHeight / 2 && this.rightPaddleY < this.gameHeight - this.paddleHeight)
-        //     this.rightPaddleY += this.aiSpeed;
     }
 
     changeDir(dirx)
@@ -317,8 +313,8 @@ class PongAI extends HTMLElement {
             this.ballDirectionX *= -1;
         else
             this.ballDirectionY *= -1;
-        this.ballSpeedX += 0.4;
-        this.ballSpeedY += 0.4;
+        this.ballSpeedX += 0.2;
+        this.ballSpeedY += 0.2;
     }
 
     async moveBall() {
@@ -353,8 +349,8 @@ class PongAI extends HTMLElement {
         this.ballY = this.gameHeight / 2;
         this.ballDirectionX *= -1;
         this.ballDirectionY = Math.floor(Math.random() * 2) == 0? -1: 1;
-        this.ballSpeedX = 5;
-        this.ballSpeedY = 5;
+        this.ballSpeedX = 3;
+        this.ballSpeedY = 2;
         if (this.leftScore != WIN && this.rightScore != WIN)
             await this.doCountdown();
     }

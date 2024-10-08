@@ -101,7 +101,7 @@ function routeSearch(path){
 export async function	router() {
 	app.innerHTML = loading();
 	setTimeout(async () => {
-		const isAuth =  await is_authenticated(getCookie('token'));
+		const isAuth =  await is_authenticated(await getCookie('token'));
 		const windowPathname = window.location.pathname;
 		const {route, param} = routeSearch(windowPathname);
 		//updateActiveElementNavbar();

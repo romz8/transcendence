@@ -319,7 +319,7 @@ export async function initializeElements(data) {
         player = 'player2';
         playerName = document.getElementById('player2-name').textContent
     }
-        
+         
     window.addEventListener('keydown', (event) => {
         if (input == true && keyState[event.key] == false) {
             keyState[event.key] = true;

@@ -418,7 +418,7 @@ async function refreshToken(){
 
 //Wrapper of fetch API calls to Fetch endpoint with Token Auth
 async function fetchWithAuth(url, options = {}){
-    let token = getCookie("token");
+    let token = await getCookie("token");
     if (!token){
         token = await refreshToken();
     }

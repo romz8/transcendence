@@ -77,42 +77,61 @@ function addGameButton(id, name, path, self){
 
 async function joinModale(){
     let allTour = await getListTournament();
-    if (!Array.isArray(allTour) || allTour.length === 0){
-        alert('No Tournaments are Open to register');
-    }
-
     const modalContainer = document.createElement('div');
-    modalContainer.innerHTML = /* html */`
-    <div class="modal fade" id="TournModal" tabindex="-1" aria-labelledby="TournModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title" id="TournModalLabel">Seleccionar Torneo</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <ul class="list-group" id="roomList">
-              ${allTour.map(room => /* html */`
-                <li class="list-group-item d-flex justify-content-between align-items-center room-item" data-room-id="${room.id}">
-                  <span class="">ROOM: ${room.id}</span>
-                  <span class="badge bg-secondary">${room.n_registered}/${room.size} registrados</span>
-                </li>
-              `).join('')}
-            </ul>
-          </div>
-          <div class="modal-footer d-flex justify-content-between">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-            <button type="button" class="btn btn-primary" id="modalSubmitButton">Enviar</button>
+    if (!Array.isArray(allTour) || allTour.length === 0){
+      modalContainer.innerHTML = /* html */`
+      <div class="modal fade" id="TournModal" tabindex="-1" aria-labelledby="TournModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title" id="TournModalLabel">Seleccionar Torneo</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <h6>No Tournaments are Open to register</h6>
+            </div>
+            <div class="modal-footer d-flex justify-content-left">
+              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>  
-    `;
+      </div>  
+      `
+    }
+    else
+    {
+      modalContainer.innerHTML = /* html */`
+      <div class="modal fade" id="TournModal" tabindex="-1" aria-labelledby="TournModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title" id="TournModalLabel">Seleccionar Torneo</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <ul class="list-group" id="roomList">
+                ${allTour.map(room => /* html */`
+                  <li class="list-group-item d-flex justify-content-between align-items-center room-item" data-room-id="${room.id}">
+                    <span class="">ROOM: ${room.id}</span>
+                    <span class="badge bg-secondary">${room.n_registered}/${room.size} registrados</span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+              <button type="button" class="btn btn-primary" id="modalSubmitButton">Enviar</button>
+            </div>
+          </div>
+        </div>
+      </div>  
+      `;
+    }
     // Remove any existing modal container to avoid duplicates
     const existingModal = document.getElementById('TournModal');
     if (existingModal) {
         existingModal.remove();
-    }   
+    } 
     document.body.appendChild(modalContainer);
     
     // Initialize and show the modal using Bootstrap's JavaScript API
