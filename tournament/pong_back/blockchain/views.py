@@ -4,14 +4,15 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
-from .eth import rpc_url, web3, contract, account_address
+from .eth import rpc_url, web3, contract, account_address, private_key
 
 import logging
 
-@api_view(['POST'])
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
 def set_tournament(request):
     try:
-        
         winner = request.data.get('winner')
         runner_up = request.data.get('runner_up')
         final_score = request.data.get('final_score')
@@ -24,11 +25,11 @@ def set_tournament(request):
         max_priority_fee_per_gas = web3.to_wei(1, 'gwei') # Priority fee to include the transaction in the block
         max_fee_per_gas = (5 * base_fee_per_gas) + max_priority_fee_per_gas # Maximum amount you’re willing to pay
 
-        logging.info('---------------------------------------')
-        logging.info(nonce)
-        logging.info(max_fee_per_gas)
-        logging.info(max_priority_fee_per_gas)
-
+        logger.info('---------------------------------------')
+        logger.info(nonce)
+        logger.info(max_fee_per_gas)
+        logger.info(max_priority_fee_per_gas)
+        logger.info('---------------------------------------')
 
         unsent_tx = contract.functions.set(winner, runner_up, final_score, participant_count).build_transaction({
             'chainId': 11155111,
@@ -36,18 +37,15 @@ def set_tournament(request):
             'maxPriorityFeePerGas': max_priority_fee_per_gas,
             'nonce': nonce,
         })
-        logging.info(unsent_tx)
-        signed_tx = web3.eth.account.sign_transaction(unsent_tx, private_key)
-        logging.info('transaction signed')
-        logging.info('---------------------------------------')
 
+        signed_tx = web3.eth.account.sign_transaction(unsent_tx, private_key)
         tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
         tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
         
-        return JsonResponse(tx_receipt)
+        return JsonResponse({'tx': tx_receipt}, status=200)
 
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=404)
 
 @api_view(['GET'])
 def get_tournament(request):
@@ -64,6 +62,5 @@ def get_tournament(request):
             for result in results  # Iterate over the list of TournamentResult structures
         ]
         return JsonResponse({"results": response}, safe=False)  # Return the list of results
-    
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)

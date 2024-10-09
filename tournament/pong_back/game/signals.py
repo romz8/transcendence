@@ -87,8 +87,8 @@ def save_tournament_blockchain(sender, instance, created, **kwargs):
         return
     if instance.state != "finished":
         return
-    payload = { "winner" : instance.winner,
-        "runner_up" : instance.runner_up,
+    payload = { "winner" : instance.winner.username,
+        "runner_up" : instance.runner_up.username,
         "final_score" : instance.final_score,
         "participant_count" : instance.n_humans } 
     try:
