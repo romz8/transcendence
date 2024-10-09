@@ -8,8 +8,6 @@ import logging, random, requests, os
 
 logger = logging.getLogger(__name__)
 
-Block_url = os.getenv('API_URL_BLOCKCHAIN')
-
 @receiver(post_save, sender=Match)
 def update_match_tournament(sender, instance, **kwargs):
     if instance.state != "finished" or instance.tournament is None:
@@ -80,7 +78,7 @@ def save_tournament_blockchain(sender, instance, created, **kwargs):
     logger.info(f"==========================================================")
     logger.info(f"==========================================================")
     logger.info(f"=======================STATE is{instance.state} ==========")
-    logger.info(f"ENTERING BLOCKCHAIN SAVE TOURNAMENT with block url {Block_url}")
+    logger.info(f"ENTERING BLOCKCHAIN SAVE TOURNAMENT=======================")
     logger.info(f"==========================================================")
     logger.info(f"==========================================================")
     logger.info(f"==========================================================")
@@ -101,11 +99,11 @@ def save_tournament_blockchain(sender, instance, created, **kwargs):
         logger.info(f"**********************************************************")
         logger.info(f"**********************************************************")
         logger.info(f"**********************************************************")
-        # response = requests.post(Block_url, payload)
-        # if response.status == 200 or response.status == 201:
-        #     logger.info("Tournament result successfully posted to blockchain.")
-        # else:
-        #     logger.error(f"Failed to post tournament result to blockchain. Status code: {response.status_code}, Response: {response.text}")
+        response = requests.post("http://localhost:8000/tourapi/blockchain/set_tournament", payload)
+        if response.status == 200 or response.status == 201:
+            logger.info("Tournament result successfully posted to blockchain.")
+        else:
+            logger.error(f"Failed to post tournament result to blockchain. Status code: {response.status_code}, Response: {response.text}")
     except Exception as e:
         logger.error(f"Exception occurred while posting to blockchain: {str(e)}")
 

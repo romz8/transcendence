@@ -2,5 +2,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.tournament_landing_page, name='landing_page'),
+    path('set_tournament', views.set_tournament, name="set_tournament"),
+    path('get_tournament', views.get_tournament, name="get_tournament")
 ]
