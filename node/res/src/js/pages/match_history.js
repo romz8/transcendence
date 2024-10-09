@@ -62,14 +62,14 @@ class MatchHistory extends HTMLElement {
 			data.map(match => {
 				const matchCard = document.createElement('div');
 				const winner = getMatchResult(match.score_p1, match.score_p2);
-				if (winner === 'Victory')
+				if (match.winner === true)
 					matchCard.classList.add('w-100', 'match-card', 'match-card-win');
 				else
 					matchCard.classList.add('w-100', 'match-card', 'match-card-defeat');
 				matchCard.innerHTML = /* html */`
 					<div class="d-flex justify-content-between">
 					<p class="match-card-type mb-0">${getMatchType(match.tournament)}</p>
-					<p class="match-card-type mb-0">${getMatchResult(match.score_p1, match.score_p2)}</p>
+					<p class="match-card-type mb-0">${match.winner? 'Victroy':'Defeat'}</p>
 					</div>
 					<div class="d-flex justify-content-center gap-5 align-items-center">
 					<div class="d-flex align-items-center gap-3">

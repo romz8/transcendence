@@ -151,6 +151,7 @@ async function joinModale(){
     
     // Add event listener to the modal submit button
     document.getElementById('modalSubmitButton').addEventListener('click', async function () {
+        console.log('PEPEPEPEPEPEPE');
         if (selectedRoomId) {
             TournModal.hide(); // Hide the modal
             const resp = await joinTournament(selectedRoomId);

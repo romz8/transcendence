@@ -116,7 +116,11 @@ function delay(ms) {
 
 async function renderLoop(id, container) {
     const resp = await updateData(id);
-    
+    if (resp == null)
+    {
+        history.pushState('','','/')
+        router();
+    }
     // Check if state has changed
     const auth = await getAuth();
     // //console.log("Auth is", auth);
@@ -145,6 +149,8 @@ async function renderLoop(id, container) {
 
 async function updateData(id) {
     const conf = await getTournament(id); // Fetch tournament configuration
+    if (conf == null)
+        return null
     maxPlayers = conf.size; // Maximum number of players
     registered = conf.n_registered; // Number of currently registered
     return conf;       
