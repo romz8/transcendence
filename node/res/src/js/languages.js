@@ -1,8 +1,32 @@
 import i18next from 'i18next';
+import { getCookie } from './user_login.js';
+import { createToast } from './components/toast.js';
 
-export function generateLangs()
+export async function generateLangs()
 {
-	const savedLanguage = localStorage.getItem('language') || 'en';
+	/* Sets language, hierarchy is local storage > database prefered language > english default */
+	let	savedLanguage;
+	if (localStorage.getItem('language')) {
+		savedLanguage = localStorage.getItem('language');
+	}
+	else if (getCookie('token')){
+		try {
+			const response = await fetch('http://localhost:8080/getLang/', {
+				method: 'GET',
+				headers: {'Authorization': 'Bearer ' + getCookie('token')},
+			});
+			const	responseJson = await response.json();
+			if (!response.ok) {
+				throw new Error(`${responseJson.error}`);
+			}
+			savedLanguage = responseJson.language;
+		  } catch (e) {
+			createToast('warning', `Error: ${e}`);
+		  }
+	}
+	else {
+		savedLanguage = 'en';
+	}
 
 	i18next.init({
 		lng: savedLanguage,
@@ -39,12 +63,32 @@ export function generateLangs()
 					loading: 'Loading...',
 					password_should: 'Password should be',
 					check_between: 'Between 8 and 16 character long',
-					check_number: 'At least 1 number',
-					check_lower: 'At least 1 lowercase letter',
-					check_upper: 'At least 1 uppercase letter',
-					check_special: 'At least 1 special character (!,@,#,$,%,^,&,_,=,+,-)',
+					check_number: ' At least 1 number',
+					check_lower: ' At least 1 lowercase letter',
+					check_upper: ' At least 1 uppercase letter',
+					check_special: ' At least 1 special character (!,@,#,$,%,^,&,_,=,+,-)',
 					password_rep: 'Confirm password',
 					submit: 'Submit',
+					profile_info: 'Update your profile info.',
+					alias: 'Alias',
+					campus: 'Campus',
+					prefered_language: 'Preferred language',
+					update: 'Update',
+					friends: 'Friends',
+					friends_info: 'Add, remove, and see your friends status.',
+					add_friend: 'Add friend',
+					no_pending_requets: 'No pending friend requests',
+					friend_request: '{{alias}} (@{{username}}) wants to add you as a friend.',
+					accept: 'Accept',
+					reject: 'Reject',
+					no_friends: 'No friends yet',
+					match_history: 'Match history',
+					match_history_info: 'View your last games and stats.',
+					games_played: 'Games played',
+					wins: 'Wins',
+					defeats: 'Defeats',
+					waitroom: 'Waitroom',
+					waitroom_info: 'Create a new game or join an existing one.',
 				}
 			},
 			es: {
@@ -93,6 +137,41 @@ export function generateLangs()
 					login: 'Inicia sessió',
 					login_42: 'Inicia sessió amb 42',
 					no_account: 'No tens compte?',
+					signup: 'Registra\'t',
+					details_register: 'Introdueix les teves dades per registrar-te.',
+					name: 'Nom',
+					input_name: 'Introdueix el teu nom',
+					last_name: 'Cognom',
+					input_last_name: 'Introdueix el teu cognom',
+					loading: 'Carregant...',
+					password_should: 'La contrasenya ha de ser',
+					check_between: ' Entre 8 i 16 caràcters de llargada',
+					check_number: ' Almenys 1 número',
+					check_lower: ' Almenys 1 lletra minúscula',
+					check_upper: ' Almenys 1 lletra majúscula',
+					check_special: ' Almenys 1 caràcter especial (!,@,#,$,%,^,&,_,=,+,-)',
+					password_rep: 'Confirma la contrasenya',
+					submit: 'Enviar',
+					profile_info: 'Actualitza la teva informació de perfil.',
+					alias: 'Àlies',
+					campus: 'Campus',
+					prefered_language: 'Idioma preferit',
+					update: 'Actualitza',
+					friends: 'Amics',
+					friends_info: 'Afegeix, elimina i consulta l\'estat dels teus amics.',
+					add_friend: 'Afegir amic',
+					no_pending_requets: 'No hi ha peticions d\'amistat pendents',
+					friend_request: '{{alias}} (@{{username}}) vol afegir-te com a amic.',
+					accept: 'Accepta',
+					reject: 'Rebutja',
+					no_friends: 'Encara no tens amics',
+					match_history: 'Historial de partides',
+					match_history_info: 'Visualitza les teves últimes partides i estadístiques.',
+					games_played: 'Partides jugades',
+					wins: 'Victòries',
+					defeats: 'Derrotes',
+					waitroom: 'Sala d\'espera',
+					waitroom_info: 'Crea una nova partida o uneix-te a una existent.',
 				}
 			},
 			fr: {
@@ -126,87 +205,16 @@ export function generateLangs()
 	
 	function changeItemLanguage(t)
 	{
-		/* Navbar */
-		changeLanguageElementContent(document.getElementById('play-btn'), t('play'));
-		changeLanguageElementContent(document.getElementById('local-game-text'), t('local_game'));
-		changeLanguageElementContent(document.getElementById('online-game-text'), t('online_game'));
-		changeLanguageElementContent(document.getElementById('tournament-text'), t('tournament'));
-
-		changeLanguageElementContent(document.getElementById('profile-btn'), t('profile'));
-
-		changeLanguageElementContent(document.getElementById('settings-text'), t('settings'));
-		changeLanguageElementContent(document.getElementById('friends-text'), t('friends'));
-		changeLanguageElementContent(document.getElementById('match-history-text'), t('match_history'));
-		changeLanguageElementContent(document.getElementById('logout-text'), t('logout'));
-
-		changeLanguageElementContent(document.getElementById('language-btn'), t('language'));
-
-		changeLanguageElementContent(document.getElementById('ca-btn'), t('catalan'));
-		changeLanguageElementContent(document.getElementById('es-btn'), t('spanish'));
-		changeLanguageElementContent(document.getElementById('en-btn'), t('english'));
-		changeLanguageElementContent(document.getElementById('fr-btn'), t('french'));
-
-		changeLanguageElementContent(document.getElementById('language'), t('language'));
-
-		/* Home out */
-		changeLanguageElementContent(document.getElementById('label-username'), t('username'));
-		changeLanguagePlaceholder(document.getElementById('input-username'), t('input_username'));
-		changeLanguageElementContent(document.getElementById('label-pass'), t('password'));
-		changeLanguagePlaceholder(document.getElementById('input-pass'), t('password'));
-		changeLanguageElementContent(document.getElementById('login-username-btn'), t('login'));
-		changeLanguageElementContent(document.getElementById('login-42-txt'), t('login_42'));
-		changeLanguageElementContent(document.getElementById('signup-txt'), t('no_account'));
-
-
-		/* Sign up */
-		changeLanguageElementContent(document.getElementById('signup'), t('signup')); 
-		changeLanguageElementContent(document.getElementById('details-register'), t('details_register')); 
-		changeLanguageElementContent(document.getElementById('name-label'), t('name')); 
-		changeLanguagePlaceholder(document.getElementById('input-name'), t('input_name')); 
-		changeLanguageElementContent(document.getElementById('last-name-label'), t('last_name')); 
-		changeLanguagePlaceholder(document.getElementById('input-last-name'), t('input_last_name')); 
-		changeLanguageElementContent(document.getElementById('username-label'), t('username')); 
-		changeLanguagePlaceholder(document.getElementById('input-username'), t('input_username')); 
-		changeLanguageElementContent(document.getElementById('loading'), t('loading')); 
-		changeLanguageElementContent(document.getElementById('password-should'), t('password_should')); 
-		changeLanguageElementContent(document.getElementById('check-between'), t('check_between')); 
-		changeLanguageElementContent(document.getElementById('check-number'), t('check_number')); 
-		changeLanguageElementContent(document.getElementById('check-lower'), t('check_lower')); 
-		changeLanguageElementContent(document.getElementById('check-upper'), t('check_upper')); 
-		changeLanguageElementContent(document.getElementById('check-special'), t('check_special')); 
-		changeLanguagePlaceholder(document.getElementById('label-pass-rep'), t('password_rep')); 
-		changeLanguageElementContent(document.getElementById('input-pass-rep'), t('password')); 
-		changeLanguageElementContent(document.getElementById('signup-submit-btn'), t('submit')); 
-
-		/* Profile */
-
+		const elementsTransText = document.querySelectorAll('[data-translate="text"]');
+		const elementsTransPlaceholder = document.querySelectorAll('[data-translate="placeholder"]');
 		
-		/* if (file === "navbar")
-		{
-			if (atributes)
-			{
-				document.getElementById('play').innerText = t('play');
-				document.getElementById('profile').innerText = t('profile');
-				document.getElementById('inProfile').innerText = t('inProfile');
-				document.getElementById('logout-btn').innerText = t('logout');
-			}
-			document.getElementById('language').innerText = t('language');
-		}
-		if (file === "login")
-		{
-			document.getElementById('login-title').innerText = t('loginTitle')
-		} */
-	}
+		elementsTransText.forEach( (element) => {
+			element.textContent = t(element.getAttribute('data-key'));
+		});
 
-	function	changeLanguageElementContent(element, translation) {
-		if (element) {
-			element.textContent = translation;
-		}
-	}
-	function	changeLanguagePlaceholder(element, translation) {
-		if (element) {
-			element.placeholder = translation;
-		}
+		elementsTransPlaceholder.forEach( (element) => {
+			element.placeholder = t(element.getAttribute('data-key'));
+		});
 	}
 
 	const	languageSelectors = document.querySelectorAll('.language-select');
@@ -216,7 +224,7 @@ export function generateLangs()
 		item.addEventListener('click', () => {
 			const	language_i18 = item.getAttribute('value');
 			i18next.changeLanguage(language_i18, (err, t) => {
-				console.log(item.getAttribute('value'));
+				localStorage.setItem('language', language_i18);
 				changeItemLanguage(t);
 			});
 			localStorage.setItem('language', language_i18);

@@ -71,7 +71,7 @@
 	border: 1px solid var(--bs-cs-primary-subtle);
 }
 
-input {
+input, select {
 	height: 48px;
 	color: var(--bs-cs-secondary) !important;
 	transition: box-shadow 1s ease;

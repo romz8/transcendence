@@ -17,25 +17,24 @@ class HomeOut extends HTMLElement {
 						<div id="paddle-animation"></div>
 					</div>
 					<div class="mb-3">
-						<label for="input-username" class="form-label" id="label-username">Username</label>
-						<input type="text" class="form-control" id="input-username" name="username" aria-describedby="usernameHelp" placeholder="Enter your username" minlength="1" maxlength="16" required>
+						<label for="input-username" class="form-label" data-translate="text" data-key="username">Username</label>
+						<input type="text" class="form-control" id="input-username" name="username" aria-describedby="usernameHelp" placeholder="Enter your username" data-translate="placeholder" data-key="input_username" minlength="1" maxlength="16" required>
 					</div>
 					<div class="mb-3">
-						<label for="input-pass" id="label-pass" class="form-label">Password</label>
-						<input type="password" class="form-control" id="input-pass" name="password" placeholder="Password" minlength="1" maxlength="16" required>
+						<label for="input-pass" data-translate="text" data-key="password" class="form-label">Password</label>
+						<input type="password" class="form-control" id="input-pass" name="password" data-translate="placeholder" data-key="password" placeholder="Password" minlength="1" maxlength="16" required>
 					</div>
-					<button id="login-username-btn" type="submit" class="btn btn-outline-cream-fill btn-general w-100 mb-3">Log in</button>
+					<button id="login-username-btn" type="submit" class="btn btn-outline-cream-fill btn-general w-100 mb-3" data-translate="text" data-key="login">Log in</button>
 					<button id="login-42-btn" type="button" class="btn btn-outline-cream w-100 btn-general d-flex align-items-center justify-content-center gap-3 mb-3">
 						<svg class="cs-svg" height="34" viewBox="0 0 30 35" xmlns="http://www.w3.org/2000/svg"><path d="M1 22.1962H11.3156V28.0542H16.4625V17.4681H6.16563L16.4625 5.77354H11.3156L1 17.4681V22.1962Z"/><path d="M18.6843 11.6279L23.8343 5.77354H18.6843V11.6279Z"/><path d="M23.8343 11.6279L18.6843 17.4681V23.3048H23.8343V17.4681L29 11.6279V5.77354H23.8343V11.6279Z"/><path d="M29 17.4681L23.8344 23.3048H29V17.4681Z"/></svg>
-						<span id="login-42-txt">Log in with 42</span>
+						<span id="login-42-txt" data-translate="text" data-key="login_42">Log in with 42</span>
 					</button>
-					<a data-link id="signup-txt" class="d-block text-center link-cream link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover" href="/signup">Don't have an account? Sign up here</a>
+					<a data-link id="signup-txt" class="d-block text-center link-cream link-offset-2 link-underline-opacity-25 link-underline-opacity-75-hover" href="/signup" data-translate="text" data-key="no_account">Don't have an account? Sign up here</a>
 				</form>
    			 </main>
 		`;
 	}
 	connectedCallback() {
-		generateLangs('home-out');
 		Lottie.loadAnimation({
 			container: document.getElementById('paddle-animation'),
 			renderer: 'svg',
@@ -72,7 +71,7 @@ class HomeOut extends HTMLElement {
 				createToast('warning', `Error: ${e}`);
 			  }
 		});
-
+		generateLangs();
 		/* document.getElementById('login-42-txt').textContent = i18next.t('login_42_txt');
 		document.getElementById('login-email-txt').textContent = i18next.t('login_email_txt');
 		document.getElementById('signup-txt').textContent = i18next.t('signup_txt'); */
@@ -111,6 +110,8 @@ class HomeAuthorized extends HTMLElement {
 					<h2>Hi, ${localStorage.getItem('username')}</h2>
 					<div class="profile-link"></div>
 			`;
+		/* Translate language, needed in async connectedCallback() to make sure it's executed */
+		generateLangs();
 	}
 }
 
