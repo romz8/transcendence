@@ -146,6 +146,7 @@ class PongConsumer(AsyncWebsocketConsumer):
                 return
         else: 
             PongConsumer.rooms[self.game_id] = Room(self.game_id, self.channel_layer, self.tournament_mode, time.time())
+        asyncio.create_task(PongConsumer.cleanup_room(60))
         self.room = PongConsumer.rooms[self.game_id]
 
     async def disconnect(self, close_code):
@@ -300,11 +301,12 @@ class PongConsumer(AsyncWebsocketConsumer):
     '''*********************************** UTILS METHODS ********************************************'''
 
     @classmethod
-    def cleanup_room(cls):
+    async def cleanup_room(cls, delay):
         '''
         A garbage-collector-style seeking inactive rooms for more than 60sec. cls function Implemented
         via Celery task Manager 
         '''
+        await asyncio.sleep(delay)
         logger.info("*** Arriving in cleanup Room ***")
         to_delete = set()
         current_time = time.time()

@@ -254,39 +254,6 @@ class QuitTournament(DestroyAPIView):
             raise ValidationError("Cannot leave the tournament, an error occured" + str(e))
             
 
-
-class RandomMatch(APIView):
-    '''
-    for test only : randomize win or lose in a match
-    '''
-    def patch(self, request, *args, **kwargs):
-        try:
-            match_id = self.kwargs.get('id')
-            m = get_object_or_404(Match, pk = match_id)
-            r = random.random()
-            if r < 0.5:
-                m.score_p1 = 3
-                m.score_p2 = 0
-            else:
-                m.score_p1 = 0
-                m.score_p2 = 3
-            m.state = "finished"
-            m.save()
-            serialized = MatchSerializer(m)
-            user_p1 = User.objects.get(id=m.player1.id)
-            user_p2 = User.objects.get(id=m.player2.id)
-            if m.score_p1 < m.score_p2:
-                    loser = user_p1
-            else:
-                loser = user_p2
-            loser = Tourparticipation.objects.get(userid=loser, tournament=m.tournament)
-            loser.is_eliminated = True
-            loser.save()
-            return Response(serialized.data, status = status.HTTP_200_OK)
-        except Http404:
-            logger.info(f"can't find the match for id {match_id}")
-
-
 class UserMatchStatusView(APIView):
 
     def get(self, request, *args, **kwargs):
