@@ -131,9 +131,30 @@ async function joinModale(){
     // Remove any existing modal container to avoid duplicates
     const existingModal = document.getElementById('TournModal');
     if (existingModal) {
-        existingModal.remove();
+      existingModal.remove();
     } 
     document.body.appendChild(modalContainer);
+    const subBtn = document.getElementById('modalSubmitButton');
+    if(subBtn){
+      subBtn.addEventListener('click', async function () {
+          if (selectedRoomId) {
+              TournModal.hide(); // Hide the modal
+              const resp = await joinTournament(selectedRoomId);
+              if (resp) {
+                  // Handle successful join
+                  console.log('Joined room:', resp);
+                  history.pushState(null,"","/tournament/" + resp.tournament);
+                  router();
+              } else {
+                  // Handle join failure
+                  console.log('Failed to join room');
+              }
+          } else {
+              alert('Please select a room!');
+          }
+      });
+    }
+
     
     // Initialize and show the modal using Bootstrap's JavaScript API
     const TournModal = new Modal(document.getElementById('TournModal'));
@@ -150,24 +171,6 @@ async function joinModale(){
         });
     
     // Add event listener to the modal submit button
-    document.getElementById('modalSubmitButton').addEventListener('click', async function () {
-        console.log('PEPEPEPEPEPEPE');
-        if (selectedRoomId) {
-            TournModal.hide(); // Hide the modal
-            const resp = await joinTournament(selectedRoomId);
-            if (resp) {
-                // Handle successful join
-                console.log('Joined room:', resp);
-                history.pushState(null,"","/tournament/" + resp.tournament);
-                router();
-            } else {
-                // Handle join failure
-                console.log('Failed to join room');
-            }
-        } else {
-            alert('Please select a room!');
-        }
-    });
     });
 }
 

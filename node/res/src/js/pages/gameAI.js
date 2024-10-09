@@ -285,7 +285,7 @@ class PongAI extends HTMLElement {
         if (gameid){
     
             document.getElementById('tournament-btn').addEventListener('click', () => {
-                window.location.href = `/tournament/${gameid}`;
+                window.location.href = `/tournament/${gameid[1]}`;
             });
         }
         if (document.getElementById('home-btn')) {
