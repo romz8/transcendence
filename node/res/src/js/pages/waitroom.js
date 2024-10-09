@@ -15,17 +15,21 @@ async function renderLobby(){
     }
     console.log("in render the data are ")
     console.log(JSON.stringify(availableRooms));
-   
     modalContainer.innerHTML = /* html */`
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header">
+          <div class="modal-header bg-primary text-white">
             <h5 class="modal-title" id="exampleModalLabel">Join a Game: Select a Room</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <ul class="list-group" id="roomList">
-                ${availableRooms.map(room => /*html*/`<li class="list-group-item room-item" data-room-id="${room.genId}">ROOM : ${room.genId}</li>`).join('')}
+                ${availableRooms.map(room => /*html*/`
+                <li class="list-group-item d-flex justify-content-between align-items-center room-item" data-room-id="${room.genId}">
+                    <span class="">ROOM: ${room.genId}</span>
+                </li>
+                `).join('')}
             </ul>
           </div>
           <div class="modal-footer">

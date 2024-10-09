@@ -63,7 +63,7 @@ class RenderLobby extends HTMLElement{
             const resp = await leaveWaitRoom(lobbyId);
             if (resp.error) {
                displayError(resp.error);
-            } else {
+            } else{
                 history.pushState(null, "", "/");
                 router();
             }

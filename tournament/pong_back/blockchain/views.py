@@ -61,7 +61,6 @@ def get_tournament(request):
             }
             for result in results  # Iterate over the list of TournamentResult structures
         ]
-        return JsonResponse({"tournaments": response})  # Return the list of results
-    
+        return JsonResponse({"results": response}, safe=False)  # Return the list of results
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=404)
+        return JsonResponse({'error': str(e)}, status=400)

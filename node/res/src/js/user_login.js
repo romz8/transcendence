@@ -247,7 +247,9 @@ export async function is_authenticated(access)
 			return(true);
 		})
 		.catch(error => {
-			console.error('There has been a problem with your fetch operation:', error);
+			document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; Secure; SameSite=Strict";
+			document.cookie = "refresh=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; Secure; SameSite=Strict";
+			disconnectWB()
 			return false;
 		});
 }

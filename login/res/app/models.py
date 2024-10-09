@@ -10,11 +10,14 @@ logger = logging.getLogger(__name__)
 from django.contrib.auth.models import AbstractUser
 
 class Users(AbstractUser):
+    LANG_CHOICE = [('es', 'ES'),('ca', 'CA'),('fr', 'FR'),('en', 'EN')]
+
     alias = models.CharField(max_length=50, unique=True,blank=False, null=False)
     intra = models.BooleanField(blank=False, null=False)
     campus = models.CharField(max_length=100, blank=True, null=True)
     img = models.ImageField(upload_to='img_profile/', blank=True, null=True)
     intra_id = models.CharField(unique=True, null=True, max_length=50)
+    lang = models.CharField(max_length=5, default="en", choices=LANG_CHOICE)
     is_ai = models.BooleanField(default=False, null=False, blank=False)
 
     class Meta:

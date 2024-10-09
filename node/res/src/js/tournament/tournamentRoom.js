@@ -151,6 +151,7 @@ async function joinModale(){
     
     // Add event listener to the modal submit button
     document.getElementById('modalSubmitButton').addEventListener('click', async function () {
+        console.log('PEPEPEPEPEPEPE');
         if (selectedRoomId) {
             TournModal.hide(); // Hide the modal
             const resp = await joinTournament(selectedRoomId);
@@ -182,38 +183,38 @@ async function createModale(){
     modalContainer.innerHTML= /* html */`
     <!-- Tournament Settings Modal -->
     <div class="modal fade" id="tournamentModal" tabindex="-1" aria-labelledby="tournamentModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title" id="tournamentModalLabel">Configuración del Torneo</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <!-- Selección del tamaño del torneo -->
-        <div class="mb-3">
-          <label for="tournamentSize" class="form-label">Tamaño del Torneo</label>
-          <select class="form-select" id="tournamentSize">
-            <option value="4">4 Jugadores</option>
-            <option value="8">8 Jugadores</option>
-          </select>
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="tournamentModalLabel">Configuración del Torneo</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Selección del tamaño del torneo -->
+            <div class="mb-3">
+              <label for="tournamentSize" class="form-label">Tamaño del Torneo</label>
+              <select class="form-select" id="tournamentSize">
+                <option value="4">4 Jugadores</option>
+                <option value="8">8 Jugadores</option>
+              </select>
+            </div>
+            <!-- Slider para número de jugadores humanos -->
+            <div class="mb-3">
+              <label for="numHumans" class="form-label">Número de Humanos: <span id="numHumansLabel">2</span></label>
+              <input type="range" class="form-range" id="numHumans" min="1" max="4" value="2" oninput="document.getElementById('numHumansLabel').textContent = this.value;">
+            </div>
+            <!-- Número de jugadores de IA -->
+            <div class="mb-3">
+              <label class="form-label">Número de AIs: <span id="numAI">2</span></label>
+            </div>
+          </div>
+          <div class="modal-footer d-flex justify-content-between">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-primary" id="modalCreateButton">Crear</button>
+          </div>
         </div>
-        <!-- Slider para número de jugadores humanos -->
-        <div class="mb-3">
-          <label for="numHumans" class="form-label">Número de Humanos: <span id="numHumansLabel">2</span></label>
-          <input type="range" class="form-range" id="numHumans" min="1" max="4" value="2" oninput="document.getElementById('numHumansLabel').textContent = this.value;">
-        </div>
-        <!-- Número de jugadores de IA -->
-        <div class="mb-3">
-          <label class="form-label">Número de AIs: <span id="numAI">2</span></label>
-        </div>
-      </div>
-      <div class="modal-footer d-flex justify-content-between">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-        <button type="button" class="btn btn-primary" id="modalCreateButton">Crear</button>
       </div>
     </div>
-  </div>
-</div>
 `;
 
     document.body.appendChild(modalContainer);
