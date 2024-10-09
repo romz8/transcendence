@@ -10,13 +10,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-@csrf_exempt
-def set_tournament(request):
+def set_tournament(payload):
     try:
-        winner = request.data.get('winner')
-        runner_up = request.data.get('runner_up')
-        final_score = request.data.get('final_score')
-        participant_count = request.data.get('participant_count')
+        winner = payload['winner']
+        runner_up = payload['runner_up']
+        final_score = payload['final_score']
+        participant_count = payload['participant_count']
 
 
         nonce = web3.eth.get_transaction_count(account_address)
@@ -42,10 +41,10 @@ def set_tournament(request):
         tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
         tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
         
-        return JsonResponse({'tx': tx_receipt}, status=200)
+        return 200
 
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=404)
+        return 400
 
 @api_view(['GET'])
 def get_tournament(request):

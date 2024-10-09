@@ -5,6 +5,7 @@ from .models import Users, Match, Tournament, Tourparticipation
 from .tournament import TournamentSerie, MatchNode
 from django.db import transaction
 import logging, random, requests, os
+from blockchain.views import set_tournament
 
 logger = logging.getLogger(__name__)
 
@@ -75,13 +76,8 @@ def build_bracket_tournament(sender, instance, created,**kwargs):
 
 @receiver(post_save, sender=Tournament)
 def save_tournament_blockchain(sender, instance, created, **kwargs):
-    logger.info(f"==========================================================")
-    logger.info(f"==========================================================")
     logger.info(f"=======================STATE is{instance.state} ==========")
     logger.info(f"ENTERING BLOCKCHAIN SAVE TOURNAMENT=======================")
-    logger.info(f"==========================================================")
-    logger.info(f"==========================================================")
-    logger.info(f"==========================================================")
     
     if created:
         return
@@ -92,18 +88,13 @@ def save_tournament_blockchain(sender, instance, created, **kwargs):
         "final_score" : instance.final_score,
         "participant_count" : instance.n_humans } 
     try:
-        logger.info(f"**********************************************************")
-        logger.info(f"**********************************************************")
-        logger.info(f"**********************************************************")
         logger.info(f"IT SHOULD SAVE TO BCKCHAIN WITH {payload} BUT WE ARE SAVING GAS")
-        logger.info(f"**********************************************************")
-        logger.info(f"**********************************************************")
-        logger.info(f"**********************************************************")
-        response = requests.post("http://localhost:8000/tourapi/blockchain/set_tournament", payload)
-        if response.status == 200 or response.status == 201:
+        status = set_tournament(payload)
+        # response = requests.post("http://localhost:8000/tourapi/blockchain/set_tournament", payload)
+        if status == 200 or status == 201:
             logger.info("Tournament result successfully posted to blockchain.")
         else:
-            logger.error(f"Failed to post tournament result to blockchain. Status code: {response.status_code}, Response: {response.text}")
+            logger.error(f"Failed to post tournament result to blockchain. Status code: {status}")
     except Exception as e:
         logger.error(f"Exception occurred while posting to blockchain: {str(e)}")
 
