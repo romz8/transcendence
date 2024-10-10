@@ -86,14 +86,7 @@ class HomeAuthorized extends HTMLElement {
 		await updateUserInfo();
 		this.innerHTML = /* html */`
 				<style>
-					.div-test {
-						height: 100vh;
-					}
-					h1 {
-						color: var(--bs-cs-secondary);
-						font-size: 100px;
-					}
-					.profile-link {
+					.home-profile-picture {
 						width: 200px;
 						height: 200px;
 						border: 1px solid var(--bs-cs-secondary);
@@ -103,12 +96,15 @@ class HomeAuthorized extends HTMLElement {
 						background-repeat: no-repeat; 
 						background-size: cover; 
 					}
+					.div-home {
+						height: calc(100vh - 64px - 16px);
+					}
 				</style>
 				<nav-bar data-authorized></nav-bar>
-				<div class="div-test d-flex align-items-center justify-content-center">
-					<h1>Hi, ${localStorage.getItem('alias')};</h1>
-					<h2>Hi, ${localStorage.getItem('username')}</h2>
-					<div class="profile-link"></div>
+				<div class="div-home d-flex flex-column align-items-center justify-content-center gap-5 mt-0">
+					<div class="home-profile-picture"></div>
+					<h1 class="krona-font title-home text-center">${i18next.t('hey_name', {name: localStorage.getItem('name')})}</h1>
+					<h2 class="text-center">${i18next.t('welcome')}</h2>
 			`;
 		/* Translate language, needed in async connectedCallback() to make sure it's executed */
 		generateLangs();

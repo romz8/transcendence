@@ -89,6 +89,8 @@ export async function generateLangs()
 					defeats: 'Defeats',
 					waitroom: 'Waitroom',
 					waitroom_info: 'Create a new game or join an existing one.',
+					hey_name: 'Hey, {{name}}!',
+					welcome: 'Welcome to Transcendence!',
 				}
 			},
 			es: {
@@ -172,6 +174,8 @@ export async function generateLangs()
 					defeats: 'Derrotes',
 					waitroom: 'Sala d\'espera',
 					waitroom_info: 'Crea una nova partida o uneix-te a una existent.',
+					hey_name: 'Hola, {{name}}!',
+					welcome: 'Benvingut a Transcendence!',
 				}
 			},
 			fr: {

@@ -371,7 +371,7 @@ button:focus .cs-svg {
 .edit-profile-pic{
 	position: absolute;
 	top: 70%;
-	left: 80%;
+	left: 40%;
 }
 
 .edit-profile-pic span{
@@ -522,7 +522,9 @@ svg.light-mode-switch:hover {
 	}
 }
 
-
+.title-home {
+	font-size: 80px;
+}
 .krona-font {
 	font-family: 'KronaOne';
 }
