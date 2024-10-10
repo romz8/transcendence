@@ -11,7 +11,7 @@ export async function generateLangs()
 	}
 	else if (getCookie('token')){
 		try {
-			const response = await fetch('http://localhost:8080/getLang/', {
+			const response = await fetch('https://localhost:3001/login/getLang/', {
 				method: 'GET',
 				headers: {'Authorization': 'Bearer ' + getCookie('token')},
 			});
