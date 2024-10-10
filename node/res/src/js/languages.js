@@ -167,6 +167,21 @@ export async function generateLangs()
 					login: 'Iniciar sesión',
 					login_42: 'Iniciar sesión con 42',
 					no_account: '¿No tienes una cuenta?',
+					
+					//////////////////////////////////////////////////
+					match_play: 'Tienes un partido contra',
+					waitroom_tournament: "Sala de espera para el torneo ID",
+					you_are: "Eres",
+					tournament_over: "Torneo Finalizado",
+					playing_tournament: "Jugando el torneo ID",
+					congrats: "¡Felicidades a",
+					final_result: "Resultados finales",
+					runner_up: "Subcampeón",
+					tournament_date: "Fecha del torneo",
+					wait_nxt_match: "Esperando tu próximo partido...",
+					eliminated: "Has sido eliminado del torneo.",
+					RO_tournament: "No estás registrado para este torneo :)"
+
 				}
 			},
 			ca: {
@@ -252,6 +267,20 @@ export async function generateLangs()
 					login: 'Se connecter',
 					login_42: 'Se connecter avec 42',
 					no_account: 'Pas de compte?',
+
+					/////////////////////
+					match_play: 'Vous avez un match à jouer contre',
+					waitroom_tournament: "Salle d'attente pour le tournoi ID",
+					you_are: "Vous êtes",
+					playing_tournament: "Jouant le tournoi ID",
+					congrats: "Félicitations", //Félicitations à
+					tournament_over: "Tournoi Terminé",
+					final_result: "Résultats finaux",
+					runner_up: "Finaliste",
+					tournament_date: "Date du tournoi",
+					wait_nxt_match: "En attente de votre prochain match...",
+					eliminated: "Vous êtes éliminé du tournoi.",
+					RO_tournament: "Vous n'êtes pas inscrit à ce tournoi. :)"
 				}
 			}			
 		}		
