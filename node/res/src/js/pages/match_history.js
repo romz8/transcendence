@@ -1,4 +1,4 @@
-import { getCookie } from "../user_login";
+import { getCookie } from '../user_login';
 
 class MatchHistory extends HTMLElement {
 	constructor() {
@@ -8,22 +8,22 @@ class MatchHistory extends HTMLElement {
 			<main class="container">
 				<div class="col-sm-12 col-md-9 col-lg-6 mx-auto">
 					<div class="mb-5 row">
-						<h1 class="text-center">Match history</h1>
-						<p class="text-center">View your last games and stats.</p>
+						<h1 class="text-center" data-translate="text" data-key="match_history">Match history</h1>
+						<p class="text-center" data-translate="text" data-key="match_history_info">View your last games and stats.</p>
 					</div>
 					<section class="mb-5">
 						<div class="row justify-content-between">
 							<span class="col d-flex flex-column align-items-center">
 								<h2 id="game-counter" class="krona-font fs-1">24</h2>
-								<p>Games played</p>
+								<p data-translate="text" data-key="games_played">Games played</p>
 							</span>
 							<span class="col d-flex flex-column align-items-center">
 								<h2 id="wins-counter" class="krona-font fs-1">16</h2>
-								<p>Wins</p>
+								<p data-translate="text" data-key="wins">Wins</p>
 							</span>
 							<span class="col d-flex flex-column align-items-center">
 								<h2 id="losses-counter" class="krona-font fs-1">8</h2>
-								<p>Defeats</p>
+								<p data-translate="text" data-key="defeats">Defeats</p>
 							</span>
 						</div>
 					</section>
@@ -42,23 +42,22 @@ class MatchHistory extends HTMLElement {
 				'Content-Type': 'application/json'
 			},
 		})
-		.then(response => {
-			if (!response.ok)
-				throw new Error('Network response was not ok ' + response.statusText);
-			return response.json();
-		})
-		.then(data => {
-			console.log(data);
+			.then(response => {
+				if (!response.ok)
+					throw new Error('Network response was not ok ' + response.statusText);
+				return response.json();
+			})
+			.then(data => {
+				console.log(data);
 
-			const matchesContainer = document.getElementById('matches-container');
-			const totalGames = data.length;
-			const totalWins = data.filter(match => match.score_p1 > match.score_p2).length;
-			const totalLosses = totalGames - totalWins;
+				const matchesContainer = document.getElementById('matches-container');
+				const totalGames = data.length;
+				const totalWins = data.filter(match => match.score_p1 > match.score_p2).length;
+				const totalLosses = totalGames - totalWins;
 
-			document.getElementById('game-counter').innerText = totalGames;
-			document.getElementById('wins-counter').innerText = totalWins;
-			document.getElementById('losses-counter').innerText = totalLosses;
-
+				document.getElementById('game-counter').innerText = totalGames;
+				document.getElementById('wins-counter').innerText = totalWins;
+				document.getElementById('losses-counter').innerText = totalLosses;
 			data.map(match => {
 				const matchCard = document.createElement('div');
 				const winner = getMatchResult(match.score_p1, match.score_p2);
@@ -87,13 +86,13 @@ class MatchHistory extends HTMLElement {
 					</div>
 				`;
 			
-				matchesContainer.appendChild(matchCard);
+					matchesContainer.appendChild(matchCard);
+				});
+			})
+			.catch(error => {
+				console.error('There has been a problem with your fetch operation:', error);
+				return false;
 			});
-		})
-		.catch(error => {
-			console.error('There has been a problem with your fetch operation:', error);
-			return false;
-		});
 
 	};
 }
@@ -103,17 +102,17 @@ function timeAgo(date) {
 	const gameDate = new Date(date);
 	const difference = Math.floor((now - gameDate) / (1000 * 60 * 60 * 24));
 
-	if (difference === 0) return "Today";
-	else if (difference === 1) return "1 day ago";
+	if (difference === 0) return 'Today';
+	else if (difference === 1) return '1 day ago';
 	else return `${difference} days ago`;
 }
 
 function getMatchResult(scoreP1, scoreP2) {
-	return scoreP1 > scoreP2 ? "Victory" : "Defeat";
+	return scoreP1 > scoreP2 ? 'Victory' : 'Defeat';
 }
 
 function getMatchType(tournament){
-	return tournament ? "Tournament": "Regular";
+	return tournament ? 'Tournament': 'Regular';
 }
 
 customElements.define('match-history', MatchHistory);
