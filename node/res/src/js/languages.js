@@ -9,11 +9,11 @@ export async function generateLangs()
 	if (localStorage.getItem('language')) {
 		savedLanguage = localStorage.getItem('language');
 	}
-	else if (getCookie('token')){
+	else if (await getCookie('token')){
 		try {
 			const response = await fetch('https://localhost:3001/login/getLang/', {
 				method: 'GET',
-				headers: {'Authorization': 'Bearer ' + getCookie('token')},
+				headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 			});
 			const	responseJson = await response.json();
 			if (!response.ok) {

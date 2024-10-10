@@ -126,26 +126,20 @@ class Waitroom extends HTMLElement {
     
 	async connectedCallback() {
 		this.innerHTML = /* html */`
-            <nav-bar data-authorized></nav-bar>
-            <main class="container">
-                <div class="col-sm-12 col-md-9 col-lg-6 mx-auto">
-                    <div class="mb-5 row">
-                        <h1 class="text-center" data-translate="text" data-key="waitroom">Waitroom</h1>
-                        <p class="text-center" data-translate="text" data-key="waitroom_info">Create a new game or join an existing one.</p>
-                    </div>
+        <nav-bar data-authorized></nav-bar>
+        <main id="main-container" class="container">
+            <div class="col-sm-12 col-md-9 col-lg-6 mx-auto">
+                <div class="mb-5 row">
+                    <h1 class="text-center" data-translate="text" data-key="waitroom">Waitroom</h1>
+                    <p class="text-center" data-translate="text" data-key="waitroom_info">Create a new game or join an existing one.</p>
                 </div>
-            </main>
-        `;
-		if (this.hasRoom){
-			let getRoom = await getWaitRoom();
-			if (getRoom){
-				this.innerHTML += /* html */`<h2>${getRoom.genId}</h2>`;
-				this.hasRoom = true;
-			}
-		}
-        const mainContainer = document.getElementById("main-container")
-        let createGameButton = addGameButton("crt-game" ,"Create Game", "/waitroom/create", mainContainer);
-        let joinGameButton = addGameButton("jn-game" ,"Join Game", "/waitroom/join", mainContainer);
+            </div>
+        </main>
+    `;
+    let mainContainer = document.getElementById("main-container")
+    console.error(mainContainer);
+    let createGameButton = addGameButton("crt-game" ,"Create Game", "/waitroom/create", mainContainer);
+    let joinGameButton = addGameButton("jn-game" ,"Join Game", "/waitroom/join", mainContainer);
 
 		const path = window.location.pathname;
 		console.log('inside the waitRoomView, the path is ', path);

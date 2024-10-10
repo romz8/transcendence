@@ -23,13 +23,17 @@ def get_friend_details(user, pend):
             friend = friendship.usersid1
             mine = True
         if pend == False or (pend == True and mine == True) :
+            if not friend.img:
+                url = "/login/media/def/default.jpeg"
+            else:
+                url = friend.img.url
             friends.append({
                 'id': friend.id,
                 'username': friend.username,
                 'alias': friend.alias,
                 'first_name': friend.first_name,
                 'last_name': friend.last_name,
-                'img': "https://localhost:3001/login" + friend.img.url,
+                'img': "https://localhost:3001" + url,
                 'mine': mine,
                 'online': UserStatus.objects.get(users=friend).is_online
             })
