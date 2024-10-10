@@ -8,7 +8,7 @@ class BlockChain extends HTMLElement {
 			<main class="container">
 				<div class="col-sm-12 col-md-9 col-lg-6 mx-auto">
 					<div class="mb-5 row">
-						<h1 class="text-center">Blockchain history</h1>
+						<h1 class="text-center krona-font">Blockchain history</h1>
 						<p class="text-center">View all history registered in the blockchain.</p>
 					</div>
 					<section id='matches-container' class="d-flex flex-column gap-3">

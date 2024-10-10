@@ -14,7 +14,7 @@ class ProFile extends HTMLElement {
 		<main class="container">
 			<form id="update-form" class="col-sm-12 col-md-8 col-lg-6 login-form">
 				<div class="mb-5">
-					<h1 class="text-center" data-translate="text" data-key="profile">Profile</h1>
+					<h1 class="text-center krona-font" data-translate="text" data-key="profile">Profile</h1>
 					<p class="text-center" data-translate="text" data-key="profile_info">Update your profile info.</p>
 				</div>
 				<div class="mb-3 d-flex flex-column align-items-center">
@@ -117,9 +117,9 @@ class ProFile extends HTMLElement {
 			dataUpdate.append('imagefile', inputProfilePic.files[0]);
 			dataUpdate.append('language', languageSelect.value);
 			try {
-				const response = await fetch('http://localhost:8080/update_info_user/', {
+				const response = await fetch('https://localhost:3001/login/update_info_user/', {
 					method: 'POST',
-					headers: {'Authorization': 'Bearer ' + getCookie('token')},
+					headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 					body: dataUpdate,
 				});
 				if (!response.ok) {

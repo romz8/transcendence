@@ -14,7 +14,7 @@ class Friends extends HTMLElement {
             <main class="container">
 				<div class="col-sm-12 col-md-9 col-lg-6 mx-auto">
 					<div class="mb-5 row">
-						<h1 class="text-center" data-translate="text" data-key="friends">Friends</h1>
+						<h1 class="text-center krona-font" data-translate="text" data-key="friends">Friends</h1>
 						<p class="text-center" data-translate="text" data-key="friends_info">Add, remove, and see your friends status.</p>
 					</div>
 					<form id="add-user-form">
@@ -134,7 +134,6 @@ async function	loadFriendList() {
 			else {
 				friendListHtml = responseJson.friends.map((friend) => {
 					const statusColor = friend.online ? 'bg-success' : 'bg-danger';
-					console.error(friend.img)
 					return( /* html */`
 						<li class="friend-item pe-none px-4 rounded cs-border d-flex justify-content-between align-items-center mb-2" data-friend-username="${friend.username}">
 							<div class="d-flex align-items-center gap-3">
