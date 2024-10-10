@@ -2,6 +2,7 @@ import {player, playerName, gameEnded} from '../pages/gameRem.js'
 import { router } from '../routes.js';
 import i18next from 'i18next';
 
+
 export function displayCountdown(number) {
     if (!gameEnded) {
         const countdownElement = document.getElementById('countdown');
@@ -29,14 +30,12 @@ export function displayForfeitMessage(data) {
             <div class="card-header">${i18next.t('game_over')}</div>
             <div class="card-body">
                 <h5 class="card-title">${i18next.t('player_forfeit')}</h5>
-                <!--<p class="card-text">${data.message}</p>-->
                 <p class="card-text">${text}</p>
             </div>
         </div>
     `;
 }
 
-  // Function to display the leaving message
 export function displayLeave(message) {
 
     const mainContainer = document.getElementById('mainContainer');
@@ -65,8 +64,7 @@ function parseUrl(url) {
 }
 
 export function displayOverMessage(data) {
-    
-    console.log(data);
+
     let messageStyle, homeButton = '', tournamentButton = '';
     const idTour = parseUrl(window.location.href)
     if (idTour){
@@ -96,9 +94,6 @@ export function displayOverMessage(data) {
         </div>
     `;
 
-    // Añadir eventos a los botones
-    console.log(window.location.href);
-    console.log(parseUrl(window.location.href));
     if (idTour){
 
         document.getElementById('tournament-btn').addEventListener('click', () => {

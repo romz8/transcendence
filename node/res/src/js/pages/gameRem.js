@@ -218,13 +218,9 @@ function validateId(id) {
     const regexG = /^g\/.+$/;
     const regexT = /^t\/\d+-\d+$/;
 
-    console.log(id);
-
     if (regexG.test(id) || regexT.test(id)) {
-        console.log("TESTING")
         return true;
     } else {
-        console.log("TESTING LIMITS")
         return false;
     }
 }
@@ -232,7 +228,6 @@ function validateId(id) {
 async function gameLoop() {
     while (!gameEnded) {
         goal = false;
-        //drawPitch(ctx);
         await waitForStart();
         input = true;
         while (!goal) {
@@ -244,7 +239,7 @@ async function gameLoop() {
   }
 
 export async function setState(data) {
-    // Push the new state and timestamp into the buffer
+
     stateBuffer.push({
         leftPad: data.leftPad,
         rightPad: data.rightPad,
@@ -253,7 +248,7 @@ export async function setState(data) {
         timestamp: data.timestamp 
     });
     if (stateBuffer.length > maxBufferSize) {
-        stateBuffer.shift(); // Remove the oldest state
+        stateBuffer.shift();
     }
 }
 
@@ -329,7 +324,6 @@ export async function startCountdown() {
   
     let countdown = 3;
     while (countdown > 0) {
-        console.log('countdown')
         displayCountdown(countdown);
         countdown--;
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second
@@ -358,14 +352,12 @@ export async function initializeElements(data) {
     window.addEventListener('keydown', (event) => {
         if (input == true && keyState[event.key] == false) {
             keyState[event.key] = true;
-            console.log('keydown');
             sendInputs(event.key);
         }
     });
     window.addEventListener('keyup', (event) => {
         if (input == true && keyState[event.key] == true) {
             keyState[event.key] = false;
-            console.log('keyup');
             sendInputs(event.key);
         }
     });
@@ -394,7 +386,7 @@ async function waitForStart() {
         event: 'ready',
     }));
     while (!start) {
-        await new Promise(resolve => setTimeout(resolve, 10)); // Wait 100ms before checking again
+        await new Promise(resolve => setTimeout(resolve, 10));
     }
 }
   
