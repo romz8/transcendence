@@ -68,7 +68,6 @@ class MatchHistory extends HTMLElement {
             const matchesContainer = document.getElementById('matches-container');
             const matches = data["matches"];
             totalGames = matches.length;
-            console.log(matches);
             totalWins = matches.filter(match => match.winner).length;
             totalLosses = totalGames - totalWins;
 
