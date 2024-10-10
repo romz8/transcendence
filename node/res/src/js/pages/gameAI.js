@@ -133,7 +133,7 @@ class PongAI extends HTMLElement {
             <div id="players-container">
                 <div id="player1-container" class="player-container">
                     <h2 id="player1-name">AI</h2>
-                    <h3 id="player1-score">Score: 0</h3>
+                    <h3 id="player1-score" >Score: 0</h3>
                 </div>
                 <div id="player2-container" class="player-container">
                     <h2 id="player2-name">${localStorage.getItem('alias')}</h2>

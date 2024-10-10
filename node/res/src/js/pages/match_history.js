@@ -1,4 +1,6 @@
 import { getCookie } from '../user_login';
+import i18next from 'i18next';
+import Chart from 'chart.js/auto';
 
 class MatchHistory extends HTMLElement {
 	constructor() {
@@ -8,7 +10,7 @@ class MatchHistory extends HTMLElement {
 			<main class="container">
 				<div class="col-sm-12 col-md-9 col-lg-6 mx-auto">
 					<div class="mb-5 row">
-						<h1 class="text-center" data-translate="text" data-key="match_history">Match history</h1>
+						<h1 class="text-center krona-font" data-translate="text" data-key="match_history">Match history</h1>
 						<p class="text-center" data-translate="text" data-key="match_history_info">View your last games and stats.</p>
 					</div>
 					<section class="mb-5">
@@ -25,6 +27,7 @@ class MatchHistory extends HTMLElement {
 								<h2 id="losses-counter" class="krona-font fs-1">8</h2>
 								<p data-translate="text" data-key="defeats">Defeats</p>
 							</span>
+							<canvas id="games-chart" width="400" height="400"></canvas>
 						</div>
 					</section>
 					<section id='matches-container' class="d-flex flex-column gap-3">
@@ -35,6 +38,9 @@ class MatchHistory extends HTMLElement {
 	}
 
 	async connectedCallback() {
+		let totalGames;
+		let totalWins;
+		let totalLosses;
 		fetch('https://localhost:3001/tourapi/game/allmatch/', {
 			method: 'GET',
 			headers: {
@@ -51,13 +57,14 @@ class MatchHistory extends HTMLElement {
 				console.log(data);
 
 				const matchesContainer = document.getElementById('matches-container');
-				const totalGames = data.length;
-				const totalWins = data.filter(match => match.score_p1 > match.score_p2).length;
-				const totalLosses = totalGames - totalWins;
+				totalGames = data.length;
+				totalWins = data.filter(match => match.score_p1 > match.score_p2).length;
+				totalLosses = totalGames - totalWins;
 
 				document.getElementById('game-counter').innerText = totalGames;
 				document.getElementById('wins-counter').innerText = totalWins;
 				document.getElementById('losses-counter').innerText = totalLosses;
+				
 			data.map(match => {
 				const matchCard = document.createElement('div');
 				const winner = getMatchResult(match.score_p1, match.score_p2);
@@ -92,6 +99,36 @@ class MatchHistory extends HTMLElement {
 			.catch(error => {
 				console.error('There has been a problem with your fetch operation:', error);
 				return false;
+			});
+
+			/* Draw charts */
+			const xValues = [i18next.t('wins'), i18next.t('defeats')];
+			const yValues = [totalWins, totalLosses];
+			const barColors = [
+				"#00aba9",
+				"#b91d47",
+			];
+
+			new Chart("games-chart", {
+			type: "pie",
+			data: {
+					labels: xValues,
+					datasets: [{
+					backgroundColor: barColors,
+					data: yValues,
+					yAlign: 'bottom',
+				}]
+			},
+			options: {
+				plugins: {
+					legend: {
+						display: false,
+					},
+					tooltip: {
+						enabled: true
+					}
+				}
+			}
 			});
 
 	};

@@ -125,6 +125,7 @@ class NavBar extends HTMLElement {
 					localStorage.removeItem('lastname');
 					localStorage.removeItem('campus');
 					localStorage.removeItem('img');
+					localStorage.removeItem('language');
 					router();
 				});
 			}

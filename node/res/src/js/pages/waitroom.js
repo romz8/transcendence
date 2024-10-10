@@ -16,14 +16,14 @@ async function renderLobby(){
           <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
               <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="exampleModalLabel">Join a Game: Select a Room</h5>
+                <h5 class="modal-title" id="exampleModalLabel">${i18next.t("selector_game")}</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
-                <p>No rooms are available to join.</p>
+                <p>${i18next.t("no_rooms")}</p>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${i18next.t("close")}</button>
               </div>
             </div>
           </div>
@@ -48,7 +48,7 @@ async function renderLobby(){
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title" id="exampleModalLabel">Join a Game: Select a Room</h5>
+            <h5 class="modal-title" id="exampleModalLabel">${i18next.t("selector_game")}</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -61,8 +61,8 @@ async function renderLobby(){
             </ul>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" id="modalSubmitButton">Submit</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${i18next.t("close")}</button>
+            <button type="button" class="btn btn-primary" id="modalSubmitButton">${i18next.t("submit")}</button>
           </div>
         </div>
       </div>
@@ -102,11 +102,11 @@ async function renderLobby(){
 				history.pushState(null, '', '/lobby/' + selectedRoomId);
 				router();
 			} else {
-				// Handle join failure
-				console.log('Failed to join room');
+				createToast("warning", i18next('fail_join'))
+
 			}
 		} else {
-			alert('Please select a room!');
+      createToast("warning", i18next('error_select_room'))
 		}
 	});
 }
@@ -137,18 +137,15 @@ class Waitroom extends HTMLElement {
         </main>
     `;
     let mainContainer = document.getElementById("main-container")
-    console.error(mainContainer);
-    let createGameButton = addGameButton("crt-game" ,"Create Game", "/waitroom/create", mainContainer);
-    let joinGameButton = addGameButton("jn-game" ,"Join Game", "/waitroom/join", mainContainer);
+    let createGameButton = addGameButton("crt-game" ,i18next.t('create_game'), "/waitroom/create", mainContainer);
+    let joinGameButton = addGameButton("jn-game" ,i18next.t('join_game'), "/waitroom/join", mainContainer);
 
 		const path = window.location.pathname;
-		console.log('inside the waitRoomView, the path is ', path);
 		let resp = null;
 		switch(path){
 			case '/waitroom/create':
 				resp = await createWaitRoom();
 				let gameId = resp.genId;
-				console.log('gameId is : ', gameId);
 				history.pushState(null,'','/lobby/' + gameId);
 				router();
 				break;
@@ -164,7 +161,6 @@ class Waitroom extends HTMLElement {
 				break;
 		};
 	}
-   
 }
 
 customElements.define('wait-room', Waitroom);

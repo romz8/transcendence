@@ -1,6 +1,8 @@
 import {createTournament, getTournament, deleteTournament, joinTournament, getListTournament} from "../api.js"
+import { generateLangs } from "../languages.js";
 import {router} from "../routes.js"
 import { Modal } from 'bootstrap'; // Importar los módulos JS específicos que necesites
+import i18next from 'i18next';
 
 class TournamentRoom extends HTMLElement {
   constructor() {
@@ -23,12 +25,13 @@ class TournamentRoom extends HTMLElement {
       </style>
       <nav-bar data-authorized></nav-bar>
       <div class="d-flex flex-column justify-content-center align-items-center">
-        <h1>Tournament</h1>
+        <h1  data-translate="text" data-key="tournament">Tournament</h1>
         <div id="main-container" class="d-flex justify-content-center gap-3 mt-3">
 
         </div>
       </div>
         `;
+    generateLangs();
     const mainContainer = document.getElementById("main-container")
     if (this.hasTournament){
         let tourn = await getTournament();
@@ -39,17 +42,15 @@ class TournamentRoom extends HTMLElement {
         }
     }
 
-    let createTournamentButton = addGameButton('create-tour', "Create Tournament", "/tournament/create", mainContainer);
-    let joinTournamentButton = addGameButton('join-tour', "Join Tournament", "/tournament/join", mainContainer);
+    let createTournamentButton = addGameButton('create-tour', i18next.t('create_tour'), "/tournament/create", mainContainer);
+    let joinTournamentButton = addGameButton('join-tour', i18next.t('join_tour'), "/tournament/join", mainContainer);
     console.log(createTournamentButton)
     console.log(joinTournamentButton)
     if (this.hasTournament){
-        var deleteButton = addGameButton('delete-tour', "Delete Waiting Room", "/waitroom/delete", mainContainer);
+        var deleteButton = addGameButton('delete-tour',  i18next.t('delete_wait_room'), "/waitroom/delete", mainContainer);
         deleteButton.addEventListener('click', waitRoomView);
     }
-
     const path = window.location.pathname;
-    console.log("inside the waitRoomView, the path is ", path);
     let resp = null;
     switch(path){
         case "/tournament/create":
@@ -85,14 +86,14 @@ async function joinModale(){
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-              <h5 class="modal-title" id="TournModalLabel">Seleccionar Torneo</h5>
+              <h5 class="modal-title" id="TournModalLabel">${i18next.t('select_tour')}</h5>
               <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-              <h6>No Tournaments are Open to register</h6>
+              <h6>${i18next.t('no_tour')}</h6>
             </div>
             <div class="modal-footer d-flex justify-content-left">
-              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">${i18next.t('close')}</button>
             </div>
           </div>
         </div>
@@ -106,7 +107,7 @@ async function joinModale(){
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-              <h5 class="modal-title" id="TournModalLabel">Seleccionar Torneo</h5>
+              <h5 class="modal-title" id="TournModalLabel">${i18next.t('select_tour')}</h5>
               <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -114,7 +115,7 @@ async function joinModale(){
                 ${allTour.map(room => /* html */`
                   <li class="list-group-item d-flex justify-content-between align-items-center room-item" data-room-id="${room.id}">
                     <span class="">ROOM: ${room.id}</span>
-                    <span class="badge bg-secondary">${room.n_registered}/${room.size} registrados</span>
+                    <span class="badge bg-secondary">${room.n_registered}/${room.size} ${i18next.t("registred")}</span>
                   </li>
                 `).join('')}
               </ul>
@@ -189,31 +190,31 @@ async function createModale(){
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title" id="tournamentModalLabel">Configuración del Torneo</h5>
+            <h5 class="modal-title" id="tournamentModalLabel">${i18next.t('conf_tourn')}</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <!-- Selección del tamaño del torneo -->
             <div class="mb-3">
-              <label for="tournamentSize" class="form-label">Tamaño del Torneo</label>
+              <label for="tournamentSize" class="form-label">${i18next.t('size_tourn')}</label>
               <select class="form-select" id="tournamentSize">
-                <option value="4">4 Jugadores</option>
-                <option value="8">8 Jugadores</option>
+                <option value="4">4 ${i18next.t('players')}</option>
+                <option value="8">8 ${i18next.t('players')}</option>
               </select>
             </div>
             <!-- Slider para número de jugadores humanos -->
             <div class="mb-3">
-              <label for="numHumans" class="form-label">Número de Humanos: <span id="numHumansLabel">2</span></label>
+              <label for="numHumans" class="form-label">${i18next.t('n_humans')}<span id="numHumansLabel">2</span></label>
               <input type="range" class="form-range" id="numHumans" min="1" max="4" value="2" oninput="document.getElementById('numHumansLabel').textContent = this.value;">
             </div>
             <!-- Número de jugadores de IA -->
             <div class="mb-3">
-              <label class="form-label">Número de AIs: <span id="numAI">2</span></label>
+              <label class="form-label">${i18next.t('n_ias')}<span id="numAI">2</span></label>
             </div>
           </div>
           <div class="modal-footer d-flex justify-content-between">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-            <button type="button" class="btn btn-primary" id="modalCreateButton">Crear</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${i18next.t('close')}</button>
+            <button type="button" class="btn btn-primary" id="modalCreateButton">${i18next.t('create')}</button>
           </div>
         </div>
       </div>
@@ -238,17 +239,14 @@ async function createModale(){
         TournModal.hide();    
         try{
             const resp = await createTournament(size, n_humans);
-            console.log("tournamentId creation resp is: ", resp);
             if (resp.error)
             {
                 displayError(resp.error);
                 return;
             }
             let tournamentId = resp.id;
-            console.log("tournamentId is : ", tournamentId);
             history.pushState(null,"","/tournament/" + tournamentId);
             router();
-            console.log('Tournament created successfully:', resp);
         }
         catch(error){
             console.log(error);

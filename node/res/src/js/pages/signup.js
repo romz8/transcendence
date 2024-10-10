@@ -8,7 +8,7 @@ class Signup extends HTMLElement {
 			<main class="container">
 				<form id="signup-form" class="col-sm-12 col-md-8 col-lg-6 mt-5 login-form" autocapitalize="on">
 					<div class="mb-5">
-						<h1 class="text-center" data-translate="text" data-key="signup">Sign up</h1>
+						<h1 class="text-center krona-font" data-translate="text" data-key="signup">Sign up</h1>
 						<p class="text-center" data-translate="text" data-key="details_register">Please enter your details to register.</p>
 					</div>
 					<div class="mb-3 d-flex justify-content-between gap-3">

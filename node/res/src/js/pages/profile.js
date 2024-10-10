@@ -14,7 +14,7 @@ class ProFile extends HTMLElement {
 		<main class="container">
 			<form id="update-form" class="col-sm-12 col-md-8 col-lg-6 login-form">
 				<div class="mb-5">
-					<h1 class="text-center" data-translate="text" data-key="profile">Profile</h1>
+					<h1 class="text-center krona-font" data-translate="text" data-key="profile">Profile</h1>
 					<p class="text-center" data-translate="text" data-key="profile_info">Update your profile info.</p>
 				</div>
 				<div class="mb-3 d-flex flex-column align-items-center">
@@ -137,8 +137,10 @@ class ProFile extends HTMLElement {
 		/* Translate language, needed in async connectedCallback() to make sure it's executed */
 		generateLangs();
 	};
-
+        
+	
 }
+
 
 customElements.define('pro-file', ProFile);
 
