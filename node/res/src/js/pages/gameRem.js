@@ -1,8 +1,9 @@
 import {ws, setWebsocket} from "../game/gameWs.js";
-import {displayCountdown, updateScores} from "../game/gameDisplay.js";
+import {displayCountdown} from "../game/gameDisplay.js";
 import {keyState, constants} from "../game/gameDeclarations.js";
 import { displayError } from "./renderLobby.js";
 import { router } from "../routes.js";
+import i18next from 'i18next';
 
 const TARGET_FPS = 60; // Target frame rate
 const FRAME_DURATION = 1000 / TARGET_FPS;
@@ -20,6 +21,7 @@ const frameDuration = 1000 / FPS;  // Time per frame in milliseconds
 // Select the SVG elements
 let svgLeftPad, svgRightPad, svgBall;
 let leftPadY, rightPadY, ballX, ballY;
+let player1Score = 0, player2Score = 0;
 
 
 class GameRem extends HTMLElement {
@@ -122,19 +124,25 @@ class GameRem extends HTMLElement {
         <nav-bar data-authorized></nav-bar>
         <div id="mainContainer">
             <h1>Pong</h1>
-            <h4 id="status">Connecting...</h4>
+            <h4 id="status" data-translate="text" data-key="connecting">Connecting...</h4>
             <div id="countdown" style="font-size: 48px; text-align: center;"></div>
-            <button id="logout-button" class="btn btn-danger">Quit Room</button>
+            <button id="logout-button" class="btn btn-danger" data-translate="text" data-key="quit_room">Quit Room</button>
             <!-- Game container with SVG pitch -->
             <div class="game-container">
                 <div id="players-container">
                     <div id="player1-container" class="player-container">
-                        <h2 id="player1-name">Player 1</h2>
-                        <h3 id="player1-score">Score: 0</h3>
+                        <h2 id="player1-name" data-translate="text" data-key="player_1">Player 1</h2>
+                        <h3>
+                            <span id="player1-score-label" data-translate="text" data-key="score">Score: </span>
+                            <span id="player1-score-value">${player1Score}</span>
+                        </h3>
                     </div>
                     <div id="player2-container" class="player-container">
-                        <h2 id="player2-name">Player 2</h2>
-                        <h3 id="player2-score">Score: 0</h3>
+                        <h2 id="player2-name" data-translate="text" data-key="player_2">Player 2</h2>
+                        <h3>
+                            <span id="player2-score-label" data-translate="text" data-key="score">Score: </span>
+                            <span id="player2-score-value">${player2Score}</span>
+                        </h3>
                     </div>
                 </div>
                 <svg class="pitch-svg" xmlns="http://www.w3.org/2000/svg">
@@ -328,7 +336,7 @@ export async function startCountdown() {
     }
     if (!gameEnded) {
         const countdownElement = document.getElementById('countdown');
-        countdownElement.textContent = 'Start!';
+        countdownElement.textContent = i18next.t('start');
         ws.send(JSON.stringify({
             event: 'start',
         }));
@@ -398,4 +406,8 @@ export function setGoal(data) {
 export function setGameEnded() {
     gameEnded = true;
 }
-  
+
+export function updateScores(data) {
+    document.getElementById('player1-score-value').textContent = data.score.player1;
+    document.getElementById('player2-score-value').textContent = data.score.player2;
+}

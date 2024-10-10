@@ -5,6 +5,7 @@ import {setGoal, setState, moveLoop} from "../pages/gameRem.js";
 import { getCookie } from '../user_login.js';
 import { toastNotifications } from '../main.js';
 import { router } from '../routes.js';
+import i18next from 'i18next';
 
 export let ws;
 export let updateReceived;
@@ -16,9 +17,9 @@ async function renderRoomNotFound(container) {
 
     // Añadir el mensaje de error y el botón
     roomNotFoundContainer.innerHTML = /* html */`
-        <h1>Sala No Encontrada</h1>
-        <div class="message my-4">La sala a la que intentas acceder no existe.</div>
-        <button class="btn btn-outline-secondary mt-4" id="backToHomeButton">Regresar a Inicio</button>
+        <h1>${i18next.t('room_not_found')}</h1>
+        <div class="message my-4">${i18next.t('room_not_found_info')}</div>
+        <button class="btn btn-outline-secondary mt-4" id="backToHomeButton">${i18next.t('back_to_home')}</button>
     `;
 
     // Agregar el contenedor al DOM
@@ -47,7 +48,7 @@ export async function setWebsocket(id) {
 
     ws.onopen = () => {
         // To Replace with WebSocket server address AND dedicated room from waitroom
-        statusDisplay.textContent = 'Connected';
+        statusDisplay.textContent = i18next.t('connected');
 
     
     };
@@ -116,7 +117,7 @@ export async function setWebsocket(id) {
     
 
     ws.onclose = () => {
-        statusDisplay.textContent = 'Disconnected';
+        statusDisplay.textContent = i18next.t('disconnected');
     };
 
     ws.onerror = (error) => {
