@@ -34,6 +34,7 @@ def update_match_tournament(sender, instance, **kwargs):
             tourn.final_score = str(instance.score_p1) + "-" + str(instance.score_p2)
             tourn.state = "finished"
             tourn.save()
+            logger.info(f"Tournament is saved and state is {tourn.state}")
 
     except Match.DoesNotExist:
         logger.info(f"Next match not found in tournament instance for tag {instance.next_match}")
@@ -76,9 +77,10 @@ def build_bracket_tournament(sender, instance, created,**kwargs):
 
 @receiver(post_save, sender=Tournament)
 def save_tournament_blockchain(sender, instance, created, **kwargs):
-    logger.info(f"=======================STATE is{instance.state} ==========")
-    logger.info(f"ENTERING BLOCKCHAIN SAVE TOURNAMENT=======================")
-    
+    logger.info(f"================= BLOCKCHAIN SIGNAL ========================")
+    logger.info(f"ENTERING BLOCKCHAIN SAVE TOURNAMENT with block url {Block_url}")
+    logger.info(f"tournament is {instance.id} and stae {instance.state}")
+    logger.info(f"================= BLOCKCHAIN SIGNAL ========================")
     if created:
         return
     if instance.state != "finished":
@@ -90,7 +92,6 @@ def save_tournament_blockchain(sender, instance, created, **kwargs):
     try:
         logger.info(f"IT SHOULD SAVE TO BCKCHAIN WITH {payload} BUT WE ARE SAVING GAS")
         status = set_tournament(payload)
-        # response = requests.post("http://localhost:8000/tourapi/blockchain/set_tournament", payload)
         if status == 200 or status == 201:
             logger.info("Tournament result successfully posted to blockchain.")
         else:
