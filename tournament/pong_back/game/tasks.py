@@ -54,8 +54,3 @@ def manage_full_ai_match(self):
         logger.error(f"an Issue occurred in Tournament queryet search for AI task : {str(e)}")
         raise e
             
-@shared_task(bind=True)
-def clear_inactive_gameroom(self):
-    
-    total = PongConsumer.cleanup_room()
-    logger.info(f"Task manager cleared {total} inactive room")

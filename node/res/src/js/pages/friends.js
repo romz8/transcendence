@@ -61,7 +61,6 @@ class Friends extends HTMLElement {
 					if (addUsername) {
 						addUsername.value = '';
 					}
-					console.log(responseJson);
 					throw (`${responseJson.error}`);
 				}
 			}
@@ -82,7 +81,6 @@ async function	loadRequests() {
 			headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 		});
 		const responseJson = await response.json();
-		console.log(responseJson);
 		if (response.ok) {
 			let requestListHtml;
 			if (responseJson.friends.length < 1) {
@@ -124,7 +122,6 @@ async function	loadFriendList() {
 			headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 		});
 		const responseJson = await response.json();
-		console.log(responseJson);
 		if (response.ok) {
 			let friendListHtml;
 			if (responseJson.friends.length < 1) {
@@ -194,7 +191,6 @@ function	setListenerFriends() {
 	});
 	/* Sets listeners to confirm and reject friend requests */
 	friendRequestItems.forEach( (friendRequestItem) => {
-		console.log('confirm');
 		const acceptBtn = friendRequestItem.querySelector('.friend-accept');
 		const rejectBtn = friendRequestItem.querySelector('.friend-reject');
 		const username = friendRequestItem.getAttribute('data-friend-username');
@@ -222,7 +218,6 @@ function	setListenerFriends() {
 			});
 		}
 		else
-			console.log('confirm');
 		if (rejectBtn) {
 			rejectBtn.addEventListener('click', async () => {
 				try {

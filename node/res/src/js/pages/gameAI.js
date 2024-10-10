@@ -1,7 +1,8 @@
 import { displayCountdown } from "../game/gameDisplay";
 import { router } from "../routes";
 import { getCookie } from "../user_login";
-import { Modal } from 'bootstrap'
+import { Modal } from 'bootstrap';
+import i18next from 'i18next';
 
 let gameid = -1;
 const WIN = 1;
@@ -324,7 +325,8 @@ class PongAI extends HTMLElement {
     }
 
     genModalHTML(text, btnHome = '', btnOptional = ''){
-        this.innerHTML += /* html */`
+        const tmpDiv = document.createElement('div');
+        tmpDiv.innerHTML = `
         <div class="modal fade modal-sm" id="TournModal" tabindex="-1" aria-labelledby="TournModalLabel" aria-hidden="true">
           <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -333,7 +335,7 @@ class PongAI extends HTMLElement {
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body d-flex flex-column justify-content-center align-items-center">
-                <h6>${text}</h6>
+                <h6>${i18next.t(text)}</h6>
               </div>
               <div class="modal-footer">
                 ${btnHome}
@@ -342,14 +344,15 @@ class PongAI extends HTMLElement {
             </div>
           </div>
         </div>
-        `
+        `;
+        return (tmpDiv);
     }
 
     genFinishModal(text){
-        const btnHome = '<button id="home-btn" type="button" data-bs-dismiss="modal" class="btn btn-primary">Go Home</button>';
-        const btnOptional = '<button id="again-btn" type="button" data-bs-dismiss="modal" class="btn btn-primary">Try Again</button>';
-        this.genModalHTML(text, btnHome, btnOptional)
-
+        const btnHome = `<button id="home-btn" type="button" data-bs-dismiss="modal" class="btn btn-primary">${i18next.t('go_home')}</button>`;
+        const btnOptional = `<button id="again-btn" type="button" data-bs-dismiss="modal" class="btn btn-primary">${i18next.t('try_again')}</button>`;
+        const modalShit = this.genModalHTML(text, btnHome, btnOptional);
+        this.appendChild(modalShit);
         const TournModal = new Modal(document.getElementById('TournModal'));
         TournModal.show();
         const againBtn = document.getElementById("again-btn");
@@ -378,7 +381,7 @@ class PongAI extends HTMLElement {
                 this.fetchResult();
             }
             else
-                this.genFinishModal("AI WON");
+                this.genFinishModal("ai_won");
             return true;
         }
         else if (this.rightScore == WIN )
@@ -388,7 +391,7 @@ class PongAI extends HTMLElement {
                 this.fetchResult();
             }
             else
-                this.genFinishModal("YOU WON");
+                this.genFinishModal("you_won");
             return true;
         }
         return false;
@@ -467,7 +470,6 @@ export default function gameai (id) {
     {
         // gameid = id;
         let test = id.id.split('/');
-        console.log(test);
         if (test)
             gameid = test[1].split('-');
     }

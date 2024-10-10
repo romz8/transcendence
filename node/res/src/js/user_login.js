@@ -88,30 +88,23 @@ export function conectWB(access_token)
 {
     socket = new WebSocket(`wss://localhost:3001/login/ws/user_status/?token=${access_token}`);
     socket.onopen = function(event) {
-        console.log("Conexión WebSocket establecida.");
     };
     
     socket.onmessage = function(event) {
         const data = JSON.parse(event.data);
-        console.log("Mensaje recibido:", data);
     };
     
     socket.onerror = function(error) {
-        console.error("Error en WebSocket:", error);
     };
     
     socket.onclose = function(event) {
-        console.log("Conexión WebSocket cerrada.");
     };
 }
 
 export function disconnectWB() {
     if (socket) {
         socket.close();
-        console.log("WebSocket desconectado manualmente.");
         socket = null; // Limpiamos la referencia del socket
-    } else {
-        console.log("No hay una conexión WebSocket activa.");
     }
 }
 
@@ -154,14 +147,11 @@ async function getNewAccessToken(infoLogin)
 			throw new Error('Network response was not ok ' + response.statusText);
 		}
 		const data = await response.json();
-		console.log(data);
 		if (data['access'])
 		{
-			console.log(data['access_token']);
 			document.cookie = `token=${data['access']}; expires=${expiresDate(data['token_exp']).toUTCString()}; Secure; SameSite=Strict`;
 			document.cookie = `refresh=${data['refresh']}; expires=${expiresDate(data['refresh_exp']).toUTCString()}; Secure; SameSite=Strict`;
 		}
-		console.log('Response OK');
 	} catch (error) {
 		history.pushState('', '', '/');
 		router();
@@ -235,7 +225,6 @@ export async function is_authenticated(access)
 			return response.json();
 		})
 		.then(data => {
-			console.log(data);
 			if (data['error'])
 				return(false);
 			if (!socket){

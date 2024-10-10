@@ -3,14 +3,13 @@ import {createWaitRoom, getWaitRoom, getListWaitRoom, deleteWaitRoom, joinWaitRo
 import {router} from '../routes.js';
 import i18next from 'i18next';
 import { Modal } from 'bootstrap';
+import { generateLangs } from '../languages.js';
 
 async function renderLobby(){
-	console.log('Rendering lobby');
 	const modalContainer = document.createElement('div');
     
     let availableRooms = await getListWaitRoom();
     if (!Array.isArray(availableRooms) || availableRooms.length === 0) {
-        console.log('No available rooms found');
         modalContainer.innerHTML = /* html */`
         <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
           <div class="modal-dialog modal-dialog-centered">
@@ -41,8 +40,6 @@ async function renderLobby(){
         // Remo
         return; // Exit if no rooms are available
     }
-    console.log("in render the data are ")
-    console.log(JSON.stringify(availableRooms));
     modalContainer.innerHTML = /* html */`
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
@@ -87,7 +84,6 @@ async function renderLobby(){
 			document.querySelectorAll('.room-item').forEach(el => el.classList.remove('active'));
 			this.classList.add('active');
 			selectedRoomId = this.getAttribute('data-room-id'); // Set the selected room ID
-			console.log('Selected room ID:', selectedRoomId);
 		});
 	});
 
@@ -98,7 +94,6 @@ async function renderLobby(){
 			const resp = await joinWaitRoom(selectedRoomId);
 			if (resp) {
 				// Handle successful join
-				console.log('Joined room:', resp);
 				history.pushState(null, '', '/lobby/' + selectedRoomId);
 				router();
 			} else {
@@ -127,18 +122,21 @@ class Waitroom extends HTMLElement {
 	async connectedCallback() {
 		this.innerHTML = /* html */`
         <nav-bar data-authorized></nav-bar>
-        <main id="main-container" class="container">
-            <div class="col-sm-12 col-md-9 col-lg-6 mx-auto">
+        <main class="container">
+            <div class="d-flex flex-column justify-content-center align-items-center">
                 <div class="mb-5 row">
-                    <h1 class="text-center" data-translate="text" data-key="waitroom">Waitroom</h1>
+                    <h1 class="text-center krona-font" data-translate="text" data-key="waitroom">Waitroom</h1>
                     <p class="text-center" data-translate="text" data-key="waitroom_info">Create a new game or join an existing one.</p>
                 </div>
+              <div id="main-container" class="d-flex justify-content-center gap-3 mt-3">
+                <a id="crt-game" class="btn btn-primary" href="/waitroom/create" type="button" data-link data-translate="text" data-key="create_game"></a>
+                <a id="jn-game" class="btn btn-primary" href="/waitroom/join" type="button" data-link data-translate="text" data-key="join_game"></a>
             </div>
+        </div>
         </main>
     `;
+    generateLangs();
     let mainContainer = document.getElementById("main-container")
-    let createGameButton = addGameButton("crt-game" ,i18next.t('create_game'), "/waitroom/create", mainContainer);
-    let joinGameButton = addGameButton("jn-game" ,i18next.t('join_game'), "/waitroom/join", mainContainer);
 
 		const path = window.location.pathname;
 		let resp = null;
@@ -150,7 +148,6 @@ class Waitroom extends HTMLElement {
 				router();
 				break;
 			case '/waitroom/join':
-				console.log('we are joingin');
 				await renderLobby();
 				break;
 			case '/waitroom/delete':

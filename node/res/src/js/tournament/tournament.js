@@ -17,7 +17,6 @@ class Tournament extends HTMLElement {
     async connectedCallback() {
         const id = this.getAttribute('data-id');
         if (!id) {
-            console.error("Tournament ID not set");
             return;
         }
         this.innerHTML = /* html */`
@@ -85,8 +84,6 @@ class Tournament extends HTMLElement {
         <div id="main-container"></div>
         `;
         this.container = this.querySelector('#main-container');
-        //console.log(window.location.pathname)
-        //console.log(`/tournament/${id}`)
         while (window.location.pathname == `/tournament/${id}`) {
             await renderLoop(id, this.container); // Fetch and render updates
             await delay(1000); // Wait for 1 seconds
@@ -125,7 +122,6 @@ async function renderLoop(id, container) {
     }
     // Check if state has changed
     const auth = await getAuth();
-    // //console.log("Auth is", auth);
     const username = auth.username;
     if (resp.state !== state) {
         state = resp.state;
@@ -180,14 +176,11 @@ async function renderWaiting(id, username, container) {
 async function fetchPlayers(id) {
     try {
         const players = await getPlayerListTournament(id);
-        // //console.log(players)
         if (!players) {
-            //console.log("empty tournament player list");
             return;
         }
         updatePlayerList(players);
     } catch (error) {
-        console.error('Error fetching players:', error);
     }
 }
 
@@ -217,7 +210,6 @@ function updateProgressBar() {
 async function renderActiveTournament(id, username, container) {
     const match = await getMatchesListTournament(id);
     if (!match || match.length === 0) {
-        console.error("No matches found");
         return;
     }
 
@@ -346,7 +338,6 @@ async function renderTournamentFinished(data, container) {
     // Crear un contenedor para el resultado del torneo
     const resultContainer = document.createElement('div');
     resultContainer.className = 'tournament-finished container d-flex flex-column align-items-center justify-content-center text-center';
-    console.log(runner_up)
     resultContainer.innerHTML = /* html */`
         <h1> ${i18next.t('tournament_over')}</h1>
         <div class="winner my-4"> ${i18next.t('congrats')}<span class="text-success">${winner.alias}</span>!</div>
@@ -371,7 +362,6 @@ async function renderTournamentFinished(data, container) {
 function roundDispatch(match){
     
     let round = {}; //creating a round object to store mathes by round
-    //console.log("in round dispatch matches are", match);
     match.forEach(m => {
         // Initialize the round key as an array if it doesn't exist
         if (!round[m.round])
@@ -429,7 +419,6 @@ function displayBanner(data, id, container) {
                     <button class="btn btn-primary ml-2" id="startGameButton">Play</button>
                 </div>
             `;
-            console.error(data)
             let gameButton = document.getElementById("startGameButton");
             gameButton.addEventListener("click",async ()=>{
                 let ruta = null;

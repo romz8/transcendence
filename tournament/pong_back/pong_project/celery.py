@@ -28,10 +28,6 @@ app.conf.beat_schedule = {
         'task': 'game.tasks.manage_full_ai_match',
         'schedule': crontab(minute='*'),  # Every minutes
     },
-    'clear-inactive-gameroom' : {
-        'task' : 'game.tasks.clear_inactive_gameroom',
-        'schedule': crontab(minute='*'),  # Every minutes
-    },
 }
 
 app.conf.worker_state_db = settings.CELERY_WORKER_STATE_DB

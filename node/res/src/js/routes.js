@@ -76,11 +76,9 @@ function routeSearch(path){
 	let route = null;
 	let param = null;
 
-	console.log('path in route Search is : ', path);
 	for (const key in routes) {
 		if (key === path){
 			route = routes[key];
-			console.log('route is perfect match : ', route);
 			return {route, param};
 		}
 		if (key.includes(':id')){
@@ -91,12 +89,10 @@ function routeSearch(path){
 					param = { id };
 				}
 				route = routes[key];
-				console.log('route is match with route and id : ', route.title, id);
 				return {route, param};
 			}
 		}
 	}
-	console.log('route is not found');
 	return {route, param};
 }
 
@@ -111,7 +107,6 @@ export async function	router() {
 		if (route) {
 			if (isAuth === route.auth) {
 				document.title = route.title;
-				console.log(param);
 				if (param) {
 					app.innerHTML = route.render(param);
 				}

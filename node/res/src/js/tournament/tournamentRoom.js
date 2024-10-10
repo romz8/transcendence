@@ -24,14 +24,20 @@ class TournamentRoom extends HTMLElement {
       }
       </style>
       <nav-bar data-authorized></nav-bar>
+      <main class="container">
       <div class="d-flex flex-column justify-content-center align-items-center">
-        <h1  data-translate="text" data-key="tournament">Tournament</h1>
-        <div id="main-container" class="d-flex justify-content-center gap-3 mt-3">
+          <div class="mb-5 row">
+              <h1 class="text-center krona-font" data-translate="text" data-key="tournament">Tournament</h1>
+              <p class="text-center" data-translate="text" data-key="waitroom_info">Create a new game or join an existing one.</p>
+          </div>
+          <div id="main-container" class="d-flex justify-content-center gap-3 mt-3">
+            <a class="btn btn-primary" href="/tournament/create" type="button" data-link data-translate="text" data-key="create_tour"></a>
+            <a class="btn btn-primary" href="/tournament/join" type="button" data-link data-translate="text" data-key="join_tour"></a>
 
+          </div>
         </div>
-      </div>
+        </main>
         `;
-    generateLangs();
     const mainContainer = document.getElementById("main-container")
     if (this.hasTournament){
         let tourn = await getTournament();
@@ -42,26 +48,23 @@ class TournamentRoom extends HTMLElement {
         }
     }
 
-    let createTournamentButton = addGameButton('create-tour', i18next.t('create_tour'), "/tournament/create", mainContainer);
-    let joinTournamentButton = addGameButton('join-tour', i18next.t('join_tour'), "/tournament/join", mainContainer);
-    console.log(createTournamentButton)
-    console.log(joinTournamentButton)
     if (this.hasTournament){
-        var deleteButton = addGameButton('delete-tour',  i18next.t('delete_wait_room'), "/waitroom/delete", mainContainer);
-        deleteButton.addEventListener('click', waitRoomView);
+      var deleteButton = addGameButton('delete-tour',  i18next.t('delete_wait_room'), "/waitroom/delete", mainContainer);
+      deleteButton.addEventListener('click', waitRoomView);
     }
     const path = window.location.pathname;
     let resp = null;
     switch(path){
-        case "/tournament/create":
-            await createModale();
-            break;
+      case "/tournament/create":
+        await createModale();
+        break;
         case "/tournament/join":
-            await joinModale();
-            break;
-        default: 
-            break;
-    };
+          await joinModale();
+          break;
+          default: 
+          break;
+        };
+    generateLangs();
   }
 }
 
@@ -143,12 +146,10 @@ async function joinModale(){
               const resp = await joinTournament(selectedRoomId);
               if (resp) {
                   // Handle successful join
-                  console.log('Joined room:', resp);
                   history.pushState(null,"","/tournament/" + resp.tournament);
                   router();
               } else {
                   // Handle join failure
-                  console.log('Failed to join room');
               }
           } else {
               alert('Please select a room!');
@@ -168,7 +169,6 @@ async function joinModale(){
             document.querySelectorAll('.room-item').forEach(el => el.classList.remove('active'));
             this.classList.add('active');
             selectedRoomId = this.getAttribute('data-room-id'); // Set the selected room ID
-            console.log('Selected room ID:', selectedRoomId);
         });
     
     // Add event listener to the modal submit button
@@ -249,7 +249,6 @@ async function createModale(){
             router();
         }
         catch(error){
-            console.log(error);
         }
     })
 

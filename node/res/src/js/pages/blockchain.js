@@ -1,4 +1,5 @@
 import { getCookie } from "../user_login";
+import i18next from 'i18next';
 
 class BlockChain extends HTMLElement {
 	constructor() {
@@ -8,8 +9,8 @@ class BlockChain extends HTMLElement {
 			<main class="container">
 				<div class="col-sm-12 col-md-9 col-lg-6 mx-auto">
 					<div class="mb-5 row">
-						<h1 class="text-center krona-font">Blockchain history</h1>
-						<p class="text-center">View all history registered in the blockchain.</p>
+						<h1 class="text-center krona-font" data-translate="text" data-key="blockchain_history">Blockchain history</h1>
+						<p class="text-center" data-translate="text" data-key="blockchain_info">View all history registered in the blockchain.</p>
 					</div>
 					<section id='matches-container' class="d-flex flex-column gap-3">
 					</section>
@@ -32,10 +33,8 @@ class BlockChain extends HTMLElement {
 			return response.json();
 		})
 		.then(data => {
-			console.log(data);
 			const matchesContainer = document.getElementById('matches-container');
 			const block = data["results"];
-			console.log(block)
 			block.map(match => {
 				const matchCard = document.createElement('div');
 			
@@ -46,7 +45,7 @@ class BlockChain extends HTMLElement {
 				// Aquí asumo que tienes una función `getMatchType` que puede obtener el tipo de torneo
 				matchCard.innerHTML = /* html */ `
 					<div class="d-flex justify-content-between">
-						<p class="match-card-type mb-0">Players: ${(match.participant_count)}</p>
+						<p class="match-card-type mb-0">${i18next.t('player_count', { count: match.participant_count})}</p>
 					</div>
 					<div class="d-flex justify-content-center gap-5 align-items-center">
 						<div class="d-flex align-items-center gap-3">
@@ -66,7 +65,6 @@ class BlockChain extends HTMLElement {
 			
 		})
 		.catch(error => {
-			console.error('There has been a problem with your fetch operation:', error);
 			return false;
 		});
 
