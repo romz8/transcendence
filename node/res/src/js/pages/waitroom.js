@@ -2,67 +2,62 @@ import {createWaitRoom, getWaitRoom, getListWaitRoom, deleteWaitRoom, joinWaitRo
 // import {createTournament, getTournament, deleteTournament, joinTournament} from "../api.js"
 import {router} from '../routes.js';
 import i18next from 'i18next';
-
-
-function test(e)
-{
-	e.preventDefault();
-	console.log('AAAAAAAAA');
-}
-
-async function waitRoomView(e){
-    
-	e.preventDefault();
-	console.log('AAAAAAAAA');
-	const url = new URL(e.target.href);
-	const path = url.pathname;
-	console.log('inside the waitRoomView, the path is ', path);
-	let resp = null;
-	switch(path){
-		case '/waitroom/create':
-			console.log('HIHIH');
-			resp = await createWaitRoom();
-			let gameId = resp.genId;
-			console.log('gameId is : ', gameId);
-			history.pushState(null,'','/game/' + gameId);
-			router();
-			break;
-		case '/waitroom/join':
-			console.log('we are joingin');
-			await renderLobby();
-			break;
-		case '/waitroom/delete':
-			resp = await deleteWaitRoom();
-			renderWaitRoom();
-			break;
-		default: 
-			break;
-	};
-}
+import { Modal } from 'bootstrap';
 
 async function renderLobby(){
 	console.log('Rendering lobby');
 	const modalContainer = document.createElement('div');
     
-	let availableRooms = await getListWaitRoom();
-	if (!Array.isArray(availableRooms) || availableRooms.length === 0) {
-		console.log('No available rooms found');
-		alert('No rooms are available to join.');
-		return; // Exit if no rooms are available
-	}
-	console.log('in render the data are ');
-	console.log(JSON.stringify(availableRooms));
-   
-	modalContainer.innerHTML = /* html */`
+    let availableRooms = await getListWaitRoom();
+    if (!Array.isArray(availableRooms) || availableRooms.length === 0) {
+        console.log('No available rooms found');
+        modalContainer.innerHTML = /* html */`
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="exampleModalLabel">Join a Game: Select a Room</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <p>No rooms are available to join.</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        `;
+        const existingModal = document.getElementById('exampleModal');
+        if (existingModal) {
+            existingModal.remove();
+        }   
+        document.body.appendChild(modalContainer);
+    
+        // Initialize and show the modal using Bootstrap's JavaScript API
+        const exampleModal = new Modal(document.getElementById('exampleModal'));
+        exampleModal.show();
+        // Remo
+        return; // Exit if no rooms are available
+    }
+    console.log("in render the data are ")
+    console.log(JSON.stringify(availableRooms));
+    modalContainer.innerHTML = /* html */`
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header">
+          <div class="modal-header bg-primary text-white">
             <h5 class="modal-title" id="exampleModalLabel">Join a Game: Select a Room</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <ul class="list-group" id="roomList">
-                ${availableRooms.map(room => /*html*/`<li class="list-group-item room-item" data-room-id="${room.genId}">ROOM : ${room.genId}</li>`).join('')}
+                ${availableRooms.map(room => /*html*/`
+                <li class="list-group-item d-flex justify-content-between align-items-center room-item" data-room-id="${room.genId}">
+                    <span class="">ROOM: ${room.genId}</span>
+                </li>
+                `).join('')}
             </ul>
           </div>
           <div class="modal-footer">
@@ -80,9 +75,8 @@ async function renderLobby(){
 	}   
 	document.body.appendChild(modalContainer);
 
-	// Initialize and show the modal using Bootstrap's JavaScript API
-	const exampleModal = new bootstrap.Modal(document.getElementById('exampleModal'));
-	exampleModal.show();
+    const exampleModal = new Modal(document.getElementById('exampleModal'));
+    exampleModal.show();
 
 	let selectedRoomId = null; // Variable to store the selected room ID
 
@@ -118,11 +112,9 @@ async function renderLobby(){
 }
 
 function addGameButton(id, name, path, self){
-	self.innerHTML += /* html */`
-    <a id="${id}" class="btn btn-primary" href=${path} type="button" data-link>${name}</a>
-    `;
-	let GameButton = document.getElementById(id);
-	return GameButton;
+  self.innerHTML += /* html */`<a id="${id}" class="btn btn-primary" href=${path} type="button" data-link>${name}</a>`;
+  let GameButton = document.getElementById(id);
+  return GameButton;
 }
             
 class Waitroom extends HTMLElement {
@@ -151,8 +143,9 @@ class Waitroom extends HTMLElement {
 				this.hasRoom = true;
 			}
 		}
-		let createGameButton = addGameButton('crt-game' ,'Create Game', '/waitroom/create', this);
-		let joinGameButton = addGameButton('jn-game' ,'Join Game', '/waitroom/join', this);
+        const mainContainer = document.getElementById("main-container")
+        let createGameButton = addGameButton("crt-game" ,"Create Game", "/waitroom/create", mainContainer);
+        let joinGameButton = addGameButton("jn-game" ,"Join Game", "/waitroom/join", mainContainer);
 
 		const path = window.location.pathname;
 		console.log('inside the waitRoomView, the path is ', path);

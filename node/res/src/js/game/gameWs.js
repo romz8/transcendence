@@ -3,15 +3,41 @@ import {displayLeave, displayForfeitMessage, displayOverMessage} from './gameDis
 import {statusDisplay, roleDisplay, Display} from "../pages/gameRem.js";
 import {setGoal, setState, moveLoop} from "../pages/gameRem.js";
 import { getCookie } from '../user_login.js';
+import { toastNotifications } from '../main.js';
+import { router } from '../routes.js';
 
 export let ws;
 export let updateReceived;
 
+async function renderRoomNotFound(container) {
+    // Crear un contenedor para el mensaje de sala no encontrada
+    const roomNotFoundContainer = document.createElement('div');
+    roomNotFoundContainer.className = 'room-not-found container d-flex flex-column align-items-center justify-content-center text-center';
+
+    // Añadir el mensaje de error y el botón
+    roomNotFoundContainer.innerHTML = /* html */`
+        <h1>Sala No Encontrada</h1>
+        <div class="message my-4">La sala a la que intentas acceder no existe.</div>
+        <button class="btn btn-outline-secondary mt-4" id="backToHomeButton">Regresar a Inicio</button>
+    `;
+
+    // Agregar el contenedor al DOM
+    container.appendChild(roomNotFoundContainer);
+
+    // Evento para el botón
+    const backToHomeButton = document.getElementById('backToHomeButton');
+    backToHomeButton.addEventListener('click', () => {
+        history.pushState(null, "", "/"); // Redirigir a la página de inicio
+        router(); // Llamar a la función del enrutador
+    });
+}
+
+
 export async function setWebsocket(id) {
     
-    const token = getCookie('token');
+    const token = await getCookie('token');
     const host = window.location.hostname;
-    let url = `ws://${host}:8000/ws/pingpong/`+ id + "/";
+    let url = `wss://${host}:3001/tourapi/ws/pingpong/`+ id + "/";
     //let url = 'ws://10.11.5.6:8000/ws/pingpong/'+ id + "/"; 
     url += "?token=" + token;
     console.log("url is : ", url);
@@ -28,8 +54,13 @@ export async function setWebsocket(id) {
 
     ws.onmessage = async (event) => {
         const data = JSON.parse(event.data);
-        //console.log("message received is : ", data);
-        
+        console.log("message received is : ", data);
+        if (data.error)
+        {
+            const mainContainer = document.getElementById("mainContainer");
+            mainContainer.innerHTML = '';
+            renderRoomNotFound(mainContainer);
+        }
         if (data.type === "init") {
             let role = data.role;
             if (role == 'player1') {

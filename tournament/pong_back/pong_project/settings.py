@@ -18,10 +18,10 @@ from pathlib import Path
 
 load_dotenv()
 
-# CONTRACT_ADDRESS = os.getenv('CONTRACT_ADDRESS')
-# PATH_TO_ABI = os.getenv('PATH_TO_ABI')
-# PRIVATE_KEY = os.getenv('PRIVATE_KEY')
-# OWNER_ADDRESS = os.getenv('OWNER_ADDRESS')
+CONTRACT_ADDRESS = os.getenv('CONTRACT_ADDRESS')
+PATH_TO_ABI = os.getenv('PATH_TO_ABI')
+PRIVATE_KEY = os.getenv('PRIVATE_KEY')
+OWNER_ADDRESS = os.getenv('OWNER_ADDRESS')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    # 'blockchain',
+    'blockchain',
     'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',

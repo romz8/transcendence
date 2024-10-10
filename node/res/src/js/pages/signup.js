@@ -85,7 +85,7 @@ class Signup extends HTMLElement {
 					usernameSpinner.classList.add('d-none');
 					let userInfo = { username: `${inputUsername.value}` };
 
-					const response = await fetch('http://localhost:8080/usernameCheck/', {
+					const response = await fetch('https://localhost:3001/login/usernameCheck/', {
 						method: 'POST',
 						body: JSON.stringify(userInfo),
 					});
@@ -176,7 +176,7 @@ class Signup extends HTMLElement {
 			e.preventDefault();
 			const formData = new FormData(signupForm);
 			try {
-				const response = await fetch('http://localhost:8080/signUp/', {
+				const response = await fetch('https://localhost:3001/login/signUp/', {
 					method: 'POST',
 					body: formData,
 				});

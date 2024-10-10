@@ -120,7 +120,7 @@ def loginIntra(request):
         'client_id': os.environ['UID'],
         'client_secret': os.environ['SECRET'],
         'code': body.get('code'),
-        'redirect_uri': "http://localhost:3000/",
+        'redirect_uri': "https://localhost:3001/",
         'state': body.get('state')
     }
     try:

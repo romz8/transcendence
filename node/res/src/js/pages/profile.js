@@ -117,9 +117,9 @@ class ProFile extends HTMLElement {
 			dataUpdate.append('imagefile', inputProfilePic.files[0]);
 			dataUpdate.append('language', languageSelect.value);
 			try {
-				const response = await fetch('http://localhost:8080/update_info_user/', {
+				const response = await fetch('https://localhost:3001/login/update_info_user/', {
 					method: 'POST',
-					headers: {'Authorization': 'Bearer ' + getCookie('token')},
+					headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 					body: dataUpdate,
 				});
 				if (!response.ok) {
@@ -137,36 +137,8 @@ class ProFile extends HTMLElement {
 		/* Translate language, needed in async connectedCallback() to make sure it's executed */
 		generateLangs();
 	};
-        
-	
-}
 
-/* function    updateProfileInfo () {
-	console.log(document.getElementById('alias').value);
-	const infoLogin = {
-		alias: document.getElementById('alias').value
-	};
-	fetch('http://localhost:8080/update_info_user/', {
-		method: 'POST',
-		headers: {
-			'Authorization': 'Bearer ' + getCookie('token'),
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(infoLogin)
-	})
-		.then(response => {
-			if (!response.ok)
-				throw new Error('Network response was not ok ' + response.statusText);
-			return response.json();
-		})
-		.then(data => {
-			alert('info updated succesfully');
-		})
-		.catch(error => {
-			console.error('There has been a problem with your fetch operation:', error);
-			return false;
-		});
-} */
+}
 
 customElements.define('pro-file', ProFile);
 

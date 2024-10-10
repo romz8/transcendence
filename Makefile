@@ -2,6 +2,10 @@
 all:
 	docker compose -f docker-compose.yml up --detach --build
 
+stop:
+	@if [ ! -z "$$(docker ps -aq)" ]; then \
+		docker compose stop; \
+	fi
 
 clean:
 	@if [ ! -z "$$(docker ps -aq)" ]; then \

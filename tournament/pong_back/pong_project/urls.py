@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path("game/", include("game.urls")),
-    #path('blockchain/', include('blockchain.urls')),
+    path('tourapi/admin/', admin.site.urls),
+    path("tourapi/game/", include("game.urls")),
+    path('tourapi/blockchain/', include('blockchain.urls')),
 ]

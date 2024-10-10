@@ -8,6 +8,7 @@ import profile from './pages/profile.js';
 import friends from './pages/friends.js';
 import loading from './pages/loading.js';
 import signup from './pages/signup.js';
+import blockchain from './pages/blockchain.js';
 import matchHistory from './pages/match_history.js';
 import { is_authenticated, getCookie } from './user_login.js';
 import renderLobby from './pages/renderLobby.js';
@@ -35,6 +36,7 @@ const routes = {
 	'/match-history': { title: 'Match History', render: matchHistory, auth: true},
 	'/tournament/:id': { title: 'Game', render: tournament, auth: true},
 	'/lobby/:id': { title: 'Lobby', render: renderLobby, auth: true},
+	"/blockchain": { title: "Blockchain", render: blockchain, auth: true}
 };
 
 /* Select main container where different pages will render */
@@ -102,7 +104,7 @@ function routeSearch(path){
 export async function	router() {
 	app.innerHTML = loading();
 	setTimeout(async () => {
-		const isAuth =  await is_authenticated(getCookie('token'));
+		const isAuth =  await is_authenticated(await getCookie('token'));
 		const windowPathname = window.location.pathname;
 		const {route, param} = routeSearch(windowPathname);
 		//updateActiveElementNavbar();

@@ -33,11 +33,12 @@ class MatchHistory extends HTMLElement {
 			</main>
 		`;
 	}
-	connectedCallback() {
-		fetch('http://localhost:8000/game/allmatch/', {
+
+	async connectedCallback() {
+		fetch('https://localhost:3001/tourapi/game/allmatch/', {
 			method: 'GET',
 			headers: {
-				'Authorization': 'Bearer ' + getCookie('token'),
+				'Authorization': 'Bearer ' + await getCookie('token'),
 				'Content-Type': 'application/json'
 			},
 		})
@@ -57,33 +58,32 @@ class MatchHistory extends HTMLElement {
 				document.getElementById('game-counter').innerText = totalGames;
 				document.getElementById('wins-counter').innerText = totalWins;
 				document.getElementById('losses-counter').innerText = totalLosses;
-
-				data.map(match => {
-					const matchCard = document.createElement('div');
-					const winner = getMatchResult(match.score_p1, match.score_p2);
-					if (winner === 'Victory')
-						matchCard.classList.add('w-100', 'match-card', 'match-card-win');
-					else
-						matchCard.classList.add('w-100', 'match-card', 'match-card-defeat');
-					matchCard.innerHTML = /* html */`
-						<div class="d-flex justify-content-between">
-							<p class="match-card-type mb-0">${getMatchType(match.tournament)}</p>
-							<p class="match-card-type mb-0">${getMatchResult(match.score_p1, match.score_p2)}</p>
-						</div>
-						<div class="d-flex justify-content-center gap-5 align-items-center">
-							<div class="d-flex align-items-center gap-3">
-								<div class="match-card-pic"></div>
-								<p class="mb-0">${match.player1.alias}</p>
-							</div>
-							<p class="match-card-score krona-font fs-2 mb-0">${match.score_p1} - ${match.score_p2}</p>
-							<div class="d-flex align-items-center gap-3">
-								<p class="mb-0">${match.player2.alias}</p>
-								<div class="match-card-pic"></div>
-							</div>
-						</div>
-						<div class="d-flex justify-content-end gap-3 mb-0">
-							<p class="mb-0">${timeAgo(match.game_date)}</p>
-						</div>
+			data.map(match => {
+				const matchCard = document.createElement('div');
+				const winner = getMatchResult(match.score_p1, match.score_p2);
+				if (match.winner === true)
+					matchCard.classList.add('w-100', 'match-card', 'match-card-win');
+				else
+					matchCard.classList.add('w-100', 'match-card', 'match-card-defeat');
+				matchCard.innerHTML = /* html */`
+					<div class="d-flex justify-content-between">
+					<p class="match-card-type mb-0">${getMatchType(match.tournament)}</p>
+					<p class="match-card-type mb-0">${match.winner? 'Victroy':'Defeat'}</p>
+					</div>
+					<div class="d-flex justify-content-center gap-5 align-items-center">
+					<div class="d-flex align-items-center gap-3">
+						<div class="match-card-pic"></div>
+						<p class="mb-0">${match.player1.alias}</p>
+					</div>
+					<p class="match-card-score krona-font fs-2 mb-0">${match.score_p1} - ${match.score_p2}</p>
+					<div class="d-flex align-items-center gap-3">
+						<p class="mb-0">${match.player2.alias}</p>
+						<div class="match-card-pic"></div>
+					</div>
+					</div>
+					<div class="d-flex justify-content-end gap-3 mb-0">
+					<p class="mb-0">${timeAgo(match.game_date)}</p>
+					</div>
 				`;
 			
 					matchesContainer.appendChild(matchCard);

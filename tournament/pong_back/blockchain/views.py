@@ -1,51 +1,65 @@
 # blockchain/views.py
 from django.shortcuts import render
 from django.http import HttpResponse
-from .eth import set_tournament_result, get_tournament_results
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view
+from .eth import rpc_url, web3, contract, account_address, private_key
+
 import logging
 
-# View for the landing page and form submission
-@csrf_exempt
-def tournament_landing_page(request):
-    if request.method == 'POST':
-        # Handle the form submission (POST request)
-        winner = request.POST.get('winner')
-        runner_up = request.POST.get('runner_up')
-        final_score = request.POST.get('final_score')
-        participant_count = request.POST.get('participant_count')
+logger = logging.getLogger(__name__)
 
-        try:
-            # Call the set_tournament_result function to interact with the contract
-            tx_receipt = set_tournament_result(winner, runner_up, final_score, int(participant_count))
+def set_tournament(payload):
+    try:
+        winner = payload['winner']
+        runner_up = payload['runner_up']
+        final_score = payload['final_score']
+        participant_count = payload['participant_count']
 
-            if 'error' in tx_receipt:
-                logging.error(f"Error setting result: {tx_receipt['error']}")
-                return render(request, 'landing_page.html', {
-                    'error': tx_receipt['error']
-                })
 
-            # If success, render the form with a success message
-            return render(request, 'landing_page.html', {
-                'success': f"Transaction successful with hash: {tx_receipt.transactionHash.hex()}"
-            })
+        nonce = web3.eth.get_transaction_count(account_address)
+        latest_block = web3.eth.get_block("latest")
+        base_fee_per_gas = latest_block.baseFeePerGas   # Base fee in the latest block (in wei)
+        max_priority_fee_per_gas = web3.to_wei(1, 'gwei') # Priority fee to include the transaction in the block
+        max_fee_per_gas = (5 * base_fee_per_gas) + max_priority_fee_per_gas # Maximum amount you’re willing to pay
 
-        except Exception as e:
-            logging.error(f"Exception occurred: {str(e)}")
-            return render(request, 'landing_page.html', {
-                'error': str(e)
-            })
+        logger.info('---------------------------------------')
+        logger.info(nonce)
+        logger.info(max_fee_per_gas)
+        logger.info(max_priority_fee_per_gas)
+        logger.info('---------------------------------------')
 
-    elif request.method == 'GET' and 'check_results' in request.GET:
-        try:
-            # Get tournament results from the contract
-            tournament_results = get_tournament_results()
-            return render(request, 'landing_page.html', {'results': tournament_results})
-        except Exception as e:
-            logging.error(f"Error fetching results: {str(e)}")
-            return render(request, 'landing_page.html', {
-                'error': str(e)
-            })
+        unsent_tx = contract.functions.set(winner, runner_up, final_score, participant_count).build_transaction({
+            'chainId': 11155111,
+            'maxFeePerGas': max_fee_per_gas,
+            'maxPriorityFeePerGas': max_priority_fee_per_gas,
+            'nonce': nonce,
+        })
+
+        signed_tx = web3.eth.account.sign_transaction(unsent_tx, private_key)
+        tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
         
-    # Handle GET request, just render the form
-    return render(request, 'landing_page.html')
+        return 200
+
+    except Exception as e:
+        return 400
+
+@api_view(['GET'])
+def get_tournament(request):
+    try:
+        results = contract.functions.get().call()
+                # Convert the list of results into a more usable format
+        response = [
+            {
+                'winner': result[0],
+                'runner_up': result[1],
+                'final_score': result[2],
+                'participant_count': result[3]
+            }
+            for result in results  # Iterate over the list of TournamentResult structures
+        ]
+        return JsonResponse({"results": response}, safe=False)  # Return the list of results
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
