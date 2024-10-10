@@ -94,7 +94,7 @@ async function	loadRequests() {
 					return(/* html */`
 						<li class="friend-request-item px-4 rounded cs-border d-flex justify-content-between align-items-center mb-2" data-friend-username="${friend.username}">
 							<div class="d-flex align-items-center gap-3">
-								<span class="user-status-pill rounded-circle"></span>
+								<span class="user-status-pill rounded-circle" style="background-image: url('${friend.img}')"></span>
 								<p class="mx-0 my-0 px-0 py-0 fs-6 align-bottom secondary-color-subtle">${i18next.t('friend_request', { alias: friend.alias, username: friend.username })}</p>
 							</div>
 							<div class="d-flex gap-2">
@@ -134,10 +134,11 @@ async function	loadFriendList() {
 			else {
 				friendListHtml = responseJson.friends.map((friend) => {
 					const statusColor = friend.online ? 'bg-success' : 'bg-danger';
+					console.error(friend.img)
 					return( /* html */`
 						<li class="friend-item pe-none px-4 rounded cs-border d-flex justify-content-between align-items-center mb-2" data-friend-username="${friend.username}">
 							<div class="d-flex align-items-center gap-3">
-								<span class="user-status-pill rounded-circle position-relative" style="background-image: url('${friend.img}');">
+								<span class="user-status-pill rounded-circle position-relative" style="background-image: url('${friend.img}')">
 									<span class="position-absolute top-0 start-0 translate-middle p-2 ${statusColor} rounded-circle">
     									<span class="visually-hidden">Status</span>
   									</span>

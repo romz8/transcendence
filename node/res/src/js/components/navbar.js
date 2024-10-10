@@ -24,6 +24,7 @@ class NavBar extends HTMLElement {
 					<li><a class="dropdown-item" href="/profile" data-link><i class="fa-solid fa-gear fa-lg me-2"></i><span data-translate="text" data-key="settings">Settings</span></a></li>
 					<li><a class="dropdown-item" href="/friends" data-link><i class="fa-solid fa-user-group fa-lg me-2"></i><span data-translate="text" data-key="friends">Friends</span></a></li>
 					<li><a class="dropdown-item" href="/match-history" data-link><i class="fa-solid fa-chart-simple fa-lg me-2"></i><span data-translate="text" data-key="match_history">Match history</span></a></li>
+					<li><a class="dropdown-item" href="/blockchain" data-link><i class="fa-brands fa-ethereum fa-lg me-2"></i><span>Blockchain</span></a></li>
 					<li><a id="logout-btn" class="dropdown-item" href="" data-link><i class="fa-solid fa-right-from-bracket fa-lg me-2"></i><span data-translate="text" data-key="logout">Log out</span></a></li>
 				</ul>
 			</li>

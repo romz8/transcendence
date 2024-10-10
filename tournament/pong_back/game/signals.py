@@ -78,7 +78,6 @@ def build_bracket_tournament(sender, instance, created,**kwargs):
 @receiver(post_save, sender=Tournament)
 def save_tournament_blockchain(sender, instance, created, **kwargs):
     logger.info(f"================= BLOCKCHAIN SIGNAL ========================")
-    logger.info(f"ENTERING BLOCKCHAIN SAVE TOURNAMENT with block url {Block_url}")
     logger.info(f"tournament is {instance.id} and stae {instance.state}")
     logger.info(f"================= BLOCKCHAIN SIGNAL ========================")
     if created:

@@ -66,9 +66,9 @@ class ProFile extends HTMLElement {
 		/* Set language selected value */
 		const	languageSelect = document.getElementById('language-select');
 		 try {
-			const response = await fetch('http://localhost:8080/getLang', {
+			const response = await fetch('https://localhost:3001/login/getLang/', {
 				method: 'GET',
-				headers: {'Authorization': 'Bearer ' + getCookie('token')},
+				headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 			});
 			const responseJson = await response.json();
 			if (!response.ok) {
