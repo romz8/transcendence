@@ -1,5 +1,7 @@
 import { getTournament, getAuth, getPlayerListTournament, getMatchesListTournament, getPlayerTournnamentActive, putMatchTest} from "../api.js";
+import i18next from 'i18next';
 import {router} from "../routes.js"
+import waitroom from "../pages/waitroom.js";
 
 let maxPlayers = null; // Maximum number of players (can be 4 or 8 based on the game rules)
 let registered = null; // Number of currently registered
@@ -159,8 +161,8 @@ async function updateData(id) {
 async function renderWaiting(id, username, container) {
     container.innerHTML = /* html */`
     <div class="container mt-5">
-        <h1 class="text-center">Waiting Room for Tournament ID : ${id}</h1>
-        <h2 class="text-center">You are : ${username}</h1>
+        <h1 class="text-center">${i18next.t('waitroom_tournament')}: ${id}</h1>
+        <h2 class="text-center">${i18next.t("you_are")} : ${username}</h1>
         <div class="progress">
             <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
             role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
@@ -225,8 +227,8 @@ async function renderActiveTournament(id, username, container) {
     // Crear la estructura base
     container.innerHTML = /* html */`
     <div class="container mt-5">
-        <h1 class="text-center">Playing Tournament ID: ${id}</h1>
-        <h2 class="text-center">You are: ${username}</h2>
+        <h1 class="text-center">${i18next.t("playing_tournament")}: ${id}</h1>
+        <h2 class="text-center">${i18next.t("you_are")}: ${username}</h2>
     </div>
     `;
 
@@ -346,12 +348,12 @@ async function renderTournamentFinished(data, container) {
     resultContainer.className = 'tournament-finished container d-flex flex-column align-items-center justify-content-center text-center';
     console.log(runner_up)
     resultContainer.innerHTML = /* html */`
-        <h1>Torneo Finalizado</h1>
-        <div class="winner my-4">¡Felicidades a <span class="text-success">${winner.alias}</span>!</div>
-        <div class="score display-5 my-3">Resultado Final: <strong>${final_score}</strong></div>
-        <div class="runner-up my-3">Subcampeón: <span class="text-warning">${runner_up.alias}</span></div>
-        <div class="date my-3">Fecha del Torneo: ${new Date(datetourn).toLocaleString()}</div>
-        <button class="btn btn-outline-secondary mt-4" id="backToHomeButton">Regresar a Inicio</button>
+        <h1> ${i18next.t('tournament_over')}</h1>
+        <div class="winner my-4"> ${i18next.t('congrats')}<span class="text-success">${winner.alias}</span>!</div>
+        <div class="score display-5 my-3">${i18next.t('final_result')}: <strong>${final_score}</strong></div>
+        <div class="runner-up my-3">${i18next.t('runner_up')}: <span class="text-warning">${runner_up.alias}</span></div>
+        <div class="date my-3">${i18next.t('tournament_date')}: ${new Date(datetourn).toLocaleString()}</div>
+        <button class="btn btn-outline-secondary mt-4" id="backToHomeButton">${i18next.t("return_home")}</button>
     `;
 
 
@@ -423,7 +425,7 @@ function displayBanner(data, id, container) {
         {
             bannerDiv.innerHTML =  /* html */`
                 <div class="alert alert-info text-center" role="alert">
-                    You have a match to play against ${data.opponent}!
+                    ${i18next.t("match_play")} ${data.opponent}!
                     <button class="btn btn-primary ml-2" id="startGameButton">Play</button>
                 </div>
             `;
@@ -442,19 +444,19 @@ function displayBanner(data, id, container) {
     } else if (data.status === 'eliminated') {
         bannerDiv.innerHTML =  /* html */`
             <div class="alert alert-danger text-center" role="alert">
-                You are eliminated from the tournament.
+                ${i18next.t("eliminated")}
             </div>
         `;
     } else if (data.status === 'waiting_for_next_match') {
         bannerDiv.innerHTML =  /* html */`
             <div class="alert alert-warning text-center" role="alert">
-                Waiting for your next match...
+                ${i18next.t("wait_nxt_match")}
             </div>
         `;
     } else if (data.status === 'not_registered') {
         bannerDiv.innerHTML =  /* html */`
             <div class="alert alert-secondary text-center" role="alert">
-                You are not registered for this tournament. Read-only :)
+                ${i18next.t("RO_tournament")}
             </div>
         `;
     }

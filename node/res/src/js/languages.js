@@ -89,6 +89,21 @@ export async function generateLangs()
 					defeats: 'Defeats',
 					waitroom: 'Waitroom',
 					waitroom_info: 'Create a new game or join an existing one.',
+					
+					////////////////////////////////
+
+					match_play: 'You have a match to play against',
+					waitroom_tournament: "Waiting Room for Tournament ID", 
+					you_are: "You are",
+					playing_tournament:"Playing Tournament ID",
+					congrats: "Congrats", //¡Felicidades a
+					tournament_over: "Tournament is over",
+					final_result: "Final Results",
+					runner_up: "Runner up",
+					tournament_date: "Tournament Date",
+					wait_nxt_match: "Waiting for your next match...",
+					eliminated:"You are eliminated from the tournament.",
+					RO_tournament:"You are not registered for this tournament. Read-only :)"
 				}
 			},
 			es: {
@@ -113,6 +128,21 @@ export async function generateLangs()
 					login: 'Iniciar sesión',
 					login_42: 'Iniciar sesión con 42',
 					no_account: '¿No tienes una cuenta?',
+					
+					//////////////////////////////////////////////////
+					match_play: 'Tienes un partido contra',
+					waitroom_tournament: "Sala de espera para el torneo ID",
+					you_are: "Eres",
+					tournament_over: "Torneo Finalizado",
+					playing_tournament: "Jugando el torneo ID",
+					congrats: "¡Felicidades a",
+					final_result: "Resultados finales",
+					runner_up: "Subcampeón",
+					tournament_date: "Fecha del torneo",
+					wait_nxt_match: "Esperando tu próximo partido...",
+					eliminated: "Has sido eliminado del torneo.",
+					RO_tournament: "No estás registrado para este torneo :)"
+
 				}
 			},
 			ca: {
@@ -172,6 +202,20 @@ export async function generateLangs()
 					defeats: 'Derrotes',
 					waitroom: 'Sala d\'espera',
 					waitroom_info: 'Crea una nova partida o uneix-te a una existent.',
+
+					////////////////////////////////////////
+					match_play: 'Tens un partit contra',
+					waitroom_tournament: "Sala d'espera per al torneig ID",
+					you_are: "Ets",
+					playing_tournament: "Jugant el torneig ID",
+					congrats: "Felicitats",
+					tournament_over: "Torneig Finalitzat",
+					final_result: "Resultats finals",
+					runner_up: "Subcampió",
+					tournament_date: "Data del torneig",
+					wait_nxt_match: "Esperant el teu pròxim partit...",
+					eliminated: "Has estat eliminat del torneig.",
+					RO_tournament: "No estàs registrat per a aquest torneig. :)"
 				}
 			},
 			fr: {
@@ -196,6 +240,20 @@ export async function generateLangs()
 					login: 'Se connecter',
 					login_42: 'Se connecter avec 42',
 					no_account: 'Pas de compte?',
+
+					/////////////////////
+					match_play: 'Vous avez un match à jouer contre',
+					waitroom_tournament: "Salle d'attente pour le tournoi ID",
+					you_are: "Vous êtes",
+					playing_tournament: "Jouant le tournoi ID",
+					congrats: "Félicitations", //Félicitations à
+					tournament_over: "Tournoi Terminé",
+					final_result: "Résultats finaux",
+					runner_up: "Finaliste",
+					tournament_date: "Date du tournoi",
+					wait_nxt_match: "En attente de votre prochain match...",
+					eliminated: "Vous êtes éliminé du tournoi.",
+					RO_tournament: "Vous n'êtes pas inscrit à ce tournoi. :)"
 				}
 			}			
 		}		
