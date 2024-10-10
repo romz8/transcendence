@@ -1,6 +1,8 @@
 import { t } from "i18next";
 import { getWaitRoom, leaveWaitRoom } from "../api.js";
 import { router } from "../routes.js";
+import i18next from 'i18next'
+import { generateLangs } from "../languages.js";
 
 let lobbyId = -1;
 
@@ -18,22 +20,23 @@ class RenderLobby extends HTMLElement{
         this.innerHTML += /*html*/`
             <div id="status-banner" class="mt-4"></div>
             <div id="mainContainer" class="container d-flex flex-column align-items-center justify-content-center text-center">
-                <h1>Waiting Room</h1>
+                <h1 data-translate="text" data-key="wait_room">Waiting Room</h1>
                 <div class="lobby-container">
                     <div class="owner-column">
-                        <h2>Room Owner</h2>
+                        <h2 data-translate="text" data-key="room_owner">Room Owner</h2>
                         <p>${waitRoom.owner.alias}</p>
                     </div>
                     <div id="attendee" class="attendee-column">
-                        <h2>Attendee</h2>
+                        <h2 data-translate="text" data-key="attendee">Attendee</h2>
                         <p></p>
                     </div>
                 </div>
-                <button id="search-btn" class="btn btn-outline-cream btn-general d-flex align-items-center justify-content-center gap-3 mb-3">Search Opponent</button>
-                <button id="leave-btn" class="btn btn-danger btn-general d-flex align-items-center justify-content-center gap-3 mb-3">Leave Room</button>
+                <button id="search-btn" class="btn btn-outline-cream btn-general d-flex align-items-center justify-content-center gap-3 mb-3" data-translate="text" data-key="serach_oponent">Search Opponent</button>
+                <button id="leave-btn" class="btn btn-danger btn-general d-flex align-items-center justify-content-center gap-3 mb-3" data-translate="text" data-key="leave_room">Leave Room</button>
                 <div id="timer"></div>
             </div>
         `
+        generateLangs();
         const attendeeColumn = document.getElementById("attendee");
         if (waitRoom.attendee) {
             const attendeeContainer = document.createElement("div");
@@ -46,7 +49,7 @@ class RenderLobby extends HTMLElement{
             attendeeColumn.appendChild(attendeeContainer);
         } else {
             const noAttendeesMsg = document.createElement("p");
-            noAttendeesMsg.innerText = "No attendees yet.";
+            noAttendeesMsg.innerText = i18next.t('no_attendees');
             attendeeColumn.appendChild(noAttendeesMsg);
         }
         const searchOponent = document.getElementById("search-btn");
@@ -93,10 +96,10 @@ function displayBanner(waitRoom, id) {
 
   if (waitRoom.owner && waitRoom.attendee) {
     // Both players are present
-    bannerDiv.innerHTML = `
+    bannerDiv.innerHTML = /* html */`
       <div class="alert alert-info text-center" role="alert">
-        Both players are present! Ready to start the game.
-        <button class="btn btn-primary ml-2" id="startGameButton">Play</button>
+        ${i18next.t('ready_start')}
+        <button class="btn btn-primary ml-2" id="startGameButton">${i18next.t('play_btn')}</button>
       </div>
     `;
     const playButton = document.getElementById("startGameButton");
@@ -106,9 +109,9 @@ function displayBanner(waitRoom, id) {
     });
   } else {
     // Waiting for opponent
-    bannerDiv.innerHTML = `
+    bannerDiv.innerHTML = /* html */`
       <div class="alert alert-warning text-center" role="alert">
-        Waiting for an opponent to join...
+        ${i18next.t('waiting_oponent')}
       </div>
     `;
   }
@@ -127,7 +130,7 @@ function startCountdown(expireAt) {
 
         if (timeRemaining <= 0) {
             clearInterval(timerInterval);
-            timerDiv.innerText = "This room has expired.";
+            timerDiv.innerText = i18next.t('room_expired');
             return;
         }
 
@@ -139,7 +142,7 @@ function startCountdown(expireAt) {
         const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
 
         // Format time string
-        const timeString = `Time remaining: ${hours
+        const timeString = `${i18next.t('time_remaining')} ${hours
         .toString()
         .padStart(2, "0")}:${minutes
         .toString()
@@ -160,9 +163,9 @@ export function displayError(message, self) {
       <div class="error-card card text-center p-4 shadow" style="max-width: 400px; border-radius: 10px;">
         <div class="card-body">
           <div class="error-icon mb-4" style="font-size: 4rem; color: var(--bs-danger);">⚠️</div>
-          <h4 class="card-title text-danger">Error</h4>
+          <h4 class="card-title text-danger">${i18next.t('error')}Error</h4>
           <p class="card-text mb-4">${message}</p>
-          <button id="backToHome" class="btn btn-outline-secondary mt-3">Volver a Inicio</button>
+          <button id="backToHome" class="btn btn-outline-secondary mt-3">${i18next.t('return_home')}</button>
         </div>
       </div>
     </div>
