@@ -13,3 +13,4 @@ python-dotenv
 celery==5.3.5
 redis
 channels-redis
+pyOpenSSL==24.2.1

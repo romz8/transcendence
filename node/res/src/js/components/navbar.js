@@ -1,7 +1,6 @@
 import { router } from '../routes';
 import { updateLightMode } from '../main';
 import { createToast } from './toast';
-import { generateLangs } from '../languages';
 import { disconnectWB } from '../user_login';
 
 class NavBar extends HTMLElement {
@@ -11,16 +10,21 @@ class NavBar extends HTMLElement {
 		let	optionalElements = '';
 		if (this.hasAttribute('data-authorized')) {
 			optionalElements = /* html */`
-			<li><a href="/tournament" class="nav-link" data-link>Tournament</a></li>
-			<li><a href="/waitroom" class="nav-link" data-link>Play Remote</a></li>
-			<li><a href="/gamebot" id="play-btn" class="nav-link" data-link>Play Local</a></li>
 			<li class="nav-item dropdown">
-				<a id="profile-btn" class="nav-link dropdown-toggle" href="" role="button" data-bs-toggle="dropdown" aria-expanded="false">Profile</a>
+				<a id="play-btn" class="nav-link dropdown-toggle" href="" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-translate="text" data-key="play">Play</a>
 				<ul class="dropdown-menu dropdown-menu-end">
-					<li><a class="dropdown-item" href="/profile" data-link><i class="fa-regular fa-user fa-lg me-2"></i><span id="settings-text">Settings</span></a></li>
-					<li><a class="dropdown-item" href="/friends" data-link><i class="fa-regular fa-face-laugh-wink fa-lg me-2"></i><span id="friends-text">Friends</span></a></li>
-					<li><a class="dropdown-item" href="/match-history" data-link><i class="fa-regular fa-chart-bar fa-lg me-2"></i><span id="match-history-text">Match history</span></a></li>
-					<li><a id="logout-btn" class="dropdown-item" href="" data-link><i class="fa-solid fa-arrow-right-from-bracket fa-lg me-2"></i><span id="logout-text">Log out</span></a></li>
+					<li><a class="dropdown-item" href="/gamebot" data-link><i class="fa-solid fa-table-tennis-paddle-ball fa-lg me-2"></i><span data-translate="text" data-key="local_game">Local game</span></a></li>
+					<li><a class="dropdown-item" href="/waitroom" data-link><i class="fa-solid fa-earth-americas fa-lg me-2"></i><span data-translate="text" data-key="online_game">Online game</span></a></li>
+					<li><a class="dropdown-item" href="/tournament" data-link><i class="fa-solid fa-trophy fa-lg me-2"></i><span data-translate="text" data-key="tournament">Tournament</span></a></li>
+				</ul>
+			</li>
+			<li class="nav-item dropdown">
+				<a class="nav-link dropdown-toggle" href="" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-translate="text" data-key="profile">Profile</a>
+				<ul class="dropdown-menu dropdown-menu-end">
+					<li><a class="dropdown-item" href="/profile" data-link><i class="fa-solid fa-gear fa-lg me-2"></i><span data-translate="text" data-key="settings">Settings</span></a></li>
+					<li><a class="dropdown-item" href="/friends" data-link><i class="fa-solid fa-user-group fa-lg me-2"></i><span data-translate="text" data-key="friends">Friends</span></a></li>
+					<li><a class="dropdown-item" href="/match-history" data-link><i class="fa-solid fa-chart-simple fa-lg me-2"></i><span data-translate="text" data-key="match_history">Match history</span></a></li>
+					<li><a id="logout-btn" class="dropdown-item" href="" data-link><i class="fa-solid fa-right-from-bracket fa-lg me-2"></i><span data-translate="text" data-key="logout">Log out</span></a></li>
 				</ul>
 			</li>
 			`;
@@ -39,14 +43,14 @@ class NavBar extends HTMLElement {
 							<ul class="topnav__links d-flex align-items-center gap-4">
 								${optionalElements}
 								<li class="nav-item dropdown">
-									<a id="language-btn" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+									<a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-translate="text" data-key="language">
 										Language
 									</a>
 									<ul class="dropdown-menu dropdown-menu-end">
-										<li class="language-select" value="ca"><a id="ca-btn" class="dropdown-item" href="#">Catalan</a></li>
-										<li class="language-select" value="es"><a id="es-btn" class="dropdown-item" href="#">Spanish</a></li>
-										<li class="language-select" value="en"><a id="en-btn" class="dropdown-item" href="#">English</a></li>
-										<li class="language-select" value="fr"><a id="fr-btn" class="dropdown-item" href="#">French</a></li>
+										<li class="language-select" value="ca"><a data-translate="text" data-key="catalan" class="dropdown-item" href="" data-link>Catalan</a></li>
+										<li class="language-select" value="es"><a data-translate="text" data-key="spanish"class="dropdown-item" href="" data-link>Spanish</a></li>
+										<li class="language-select" value="en"><a data-translate="text" data-key="english" class="dropdown-item" href="" data-link>English</a></li>
+										<li class="language-select" value="fr"><a data-translate="text" data-key="french" class="dropdown-item" href="" data-link>French</a></li>
 									</ul>
 								</li>
 								<li class="d-flex align-items-center">
@@ -58,26 +62,9 @@ class NavBar extends HTMLElement {
 					</div>
 				</nav>
 			</header>
-		`;
-		/*
-			On navbar creation it checks that light-mode icons match the color-scheme selected,
-			they could be reversed due to navbar not being loaded into DOM when color-scheme is set
-		*/
-		function	setColorModeIcon() {
-			const	lightIcon = document.getElementById('light-icon');
-			const	darkIcon = document.getElementById('dark-icon');
-			
-			if (document.documentElement.hasAttribute('data-bs-theme') || (!document.documentElement.hasAttribute('data-bs-theme') && darkIcon.classList.contains('invisible_cs'))) {
-				lightIcon.classList.toggle('invisible_cs');
-				lightIcon.classList.toggle('visible_cs');
-				darkIcon.classList.toggle('invisible_cs');
-				darkIcon.classList.toggle('visible_cs');
-			}
-		}
-		setColorModeIcon();
+		`;		
 	}
 	connectedCallback() {
-		generateLangs()
 		const	burgerButton = document.querySelector('.topnav__burger');
 		const	topnavMenu = document.querySelector('.topnav__menu');
 		const	topnavList = document.querySelector('.topnav__list');
@@ -130,7 +117,7 @@ class NavBar extends HTMLElement {
 					createToast('successful','Hope to see you back soon!');
 					document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; Secure; SameSite=Strict";
 					document.cookie = "refresh=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; Secure; SameSite=Strict";
-				disconnectWB()
+					disconnectWB();
 					localStorage.removeItem('username');
 					localStorage.removeItem('alias');
 					localStorage.removeItem('name');
@@ -141,6 +128,22 @@ class NavBar extends HTMLElement {
 				});
 			}
 		}
+		/*
+			On navbar creation it checks that light-mode icons match the color-scheme selected,
+			they could be reversed due to navbar not being loaded into DOM when color-scheme is set
+		*/
+		function	setColorModeIcon() {
+			const	lightIcon = document.getElementById('light-icon');
+			const	darkIcon = document.getElementById('dark-icon');
+			
+			if (document.documentElement.hasAttribute('data-bs-theme') || (!document.documentElement.hasAttribute('data-bs-theme') && darkIcon.classList.contains('invisible_cs'))) {
+				lightIcon.classList.toggle('invisible_cs');
+				lightIcon.classList.toggle('visible_cs');
+				darkIcon.classList.toggle('invisible_cs');
+				darkIcon.classList.toggle('visible_cs');
+			}
+		}
+		setColorModeIcon();
 	}
 }
 

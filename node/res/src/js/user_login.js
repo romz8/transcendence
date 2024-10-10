@@ -1,34 +1,31 @@
+import { createToast } from './components/toast';
 import { router } from './routes';
-
-let uid;
-
-window.onload = fetchUIDENV;
 
 ///////////////////////////////////////////// UTILS /////////////////////////////////////////////
 
 async function fetchUIDENV() {
-	fetch('http://localhost:8080/uidenv/', {
+	return fetch('https://localhost:3001/login/uidenv/', {
 		method: 'GET',
 	})
-		.then(response => {
-			if (!response.ok)
-				throw new Error('Network response was not ok ' + response.statusText);
-			return response.json();
-		})
-		.then(data => {
-			uid = data['UID'];
-		})
-		.catch(error => console.error('There has been a problem with your fetch operation:', error));
+	.then(response => {
+		if (!response.ok)
+			throw new Error('Network response was not ok ' + response.statusText);
+		return response.json();
+	})
+	.then(data => {
+		return data['UID'];
+	})
+	.catch(error => console.error('There has been a problem with your fetch operation:', error));
 }
 
 export function expiresDate(seconds)
 {
-	const currentDate = new Date();
-	currentDate.setSeconds(currentDate.getSeconds() + Number(seconds));
-	return currentDate;
+    const currentDate = new Date();
+    currentDate.setSeconds(currentDate.getSeconds() + Number(seconds));
+    return currentDate;
 }
 
-export function getCookie(cname) {
+function getTokens(cname){
 	let name = cname + '=';
 	let ca = document.cookie.split(';');
 	for(let i = 0; i < ca.length; i++)
@@ -42,23 +39,43 @@ export function getCookie(cname) {
 	return '';
 }
 
-function getPathVars() {
-	const querySearch = window.location.search;
-	const URLParams = new URLSearchParams(querySearch);
-    
-	if (URLParams)
+export async function getCookie(cname) {
+	if (cname === "token")
 	{
-		let vars = {};
-		vars['code'] = URLParams.get('code');
-		vars['state'] = URLParams.get('state');
-		return vars;
+		let retValue = getTokens(cname);
+		if (retValue == '')
+		{
+			retValue = getTokens("refresh");
+			if (!retValue)
+				return '';
+			await refresh_token(retValue);
+			return (getTokens(cname));
+		}
+		return retValue;
+	}
+	else
+	{
+		return getTokens(cname);
 	}
 }
 
+function getPathVars() {
+    const querySearch = window.location.search;
+    const URLParams = new URLSearchParams(querySearch);
+    
+    if (URLParams)
+    {
+        let vars = {};
+        vars["code"] = URLParams.get('code');
+        vars["state"] = URLParams.get('state');
+        return vars
+    }
+}
+
 function clearURL() {
-	const url = new URL(window.location.href);
-	url.search = '';
-	window.history.replaceState({}, document.title, url.toString());
+    const url = new URL(window.location.href);
+    url.search = '';
+    window.history.replaceState({}, document.title, url.toString());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,7 +86,7 @@ export var socket = null;
 
 export function conectWB(access_token)
 {
-    socket = new WebSocket(`ws://localhost:8080/ws/user_status/?token=${access_token}`);
+    socket = new WebSocket(`wss://localhost:3001/login/ws/user_status/?token=${access_token}`);
     socket.onopen = function(event) {
         console.log("Conexión WebSocket establecida.");
     };
@@ -101,14 +118,22 @@ export function disconnectWB() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export async function callApi42(){
-	const params = new URLSearchParams ({
-		'client_id': uid,
-		'redirect_uri': 'http://localhost:3000/',
-		'scope': 'public',
-		'state': '1234566i754twrqwdfghgfddtrwsewrt',
-		'response_type': 'code'
-	});
-	window.location.href = `https://api.intra.42.fr/oauth/authorize/?${params.toString()}`;
+	const uid = await fetchUIDENV()
+	if (uid)
+	{
+		const params = new URLSearchParams ({
+			'client_id': uid,
+			'redirect_uri': 'https://localhost:3001/',
+			'scope': 'public',
+			'state': '1234566i754twrqwdfghgfddtrwsewrt',
+			'response_type': 'code'
+		});
+		window.location.href = `https://api.intra.42.fr/oauth/authorize/?${params.toString()}`;	
+	}
+	else
+	{
+		createToast('warning', 'Error: server not provided UID pleas wait')
+	}
 }
 
 ///////////////////////////////////// REFRESH TOKEN /////////////////////////////////////
@@ -116,7 +141,7 @@ export async function callApi42(){
 async function getNewAccessToken(infoLogin)
 {
 	try {
-		const response = await fetch('http://localhost:8080/refreshToken/', {
+		const response = await fetch('https://localhost:3001/login/refreshToken/', {
 			method: 'POST',
 			headers: {
 				'Accept': 'application/json',
@@ -138,8 +163,8 @@ async function getNewAccessToken(infoLogin)
 		}
 		console.log('Response OK');
 	} catch (error) {
-		console.error('There has been a problem with your fetch operation:', error);
-		return null;
+		history.pushState('', '', '/');
+		router();
 	}
 }
 
@@ -149,23 +174,17 @@ async function refresh_token(refresh)
 		refresh_token: refresh
 	};
 	await getNewAccessToken(infoLogin);
-	router();
 }
 
 ///////////////////////////////////////// LOGIN INTRA ////////////////////////////////////////////////
 
-function callBackAccess() {
-    if (!getCookie("token"))
-    {
-        // console.log(getCookie('refresh'))
-        const refresh = getCookie("refresh");
-        if (refresh)
-            refresh_token(refresh);
-    }
+async function callBackAccess() {
+    if (await getCookie("token"))
+		return;
     let vars = getPathVars();
     if (!vars["code"] || !vars["state"])
         return ;
-    fetch('http://localhost:8080/loginIntra/', {
+    fetch('https://localhost:3001/login/loginIntra/', {
         method: 'POST',
         headers: {
             'Accept': 'application/json',
@@ -193,7 +212,7 @@ function callBackAccess() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-	callBackAccess();
+    callBackAccess();
 });
 
 //////////////////////////////////////////////////////////
@@ -203,7 +222,7 @@ export async function is_authenticated(access)
 	if (!access) {
 		return Promise.resolve(false);
 	}
-	return fetch('http://localhost:8080/verify_token/', {
+	return fetch('https://localhost:3001/login/verify_token/', {
 		method: 'GET',
 		headers: {
 			'Authorization': 'Bearer ' + access,
@@ -228,7 +247,9 @@ export async function is_authenticated(access)
 			return(true);
 		})
 		.catch(error => {
-			console.error('There has been a problem with your fetch operation:', error);
+			document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; Secure; SameSite=Strict";
+			document.cookie = "refresh=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; Secure; SameSite=Strict";
+			disconnectWB()
 			return false;
 		});
 }

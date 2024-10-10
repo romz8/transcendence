@@ -6,3 +6,4 @@ migrations
 celery-beat-schedule
 celery-worker-state
 img_profile
+dist

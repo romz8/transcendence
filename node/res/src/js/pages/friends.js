@@ -2,6 +2,9 @@ import { callApi42, is_authenticated, getCookie } from '../user_login';
 import { router } from '/src/js/routes.js';
 import { createToast } from '../components/toast';
 import { updateUserInfo } from '../main';
+import i18next from 'i18next';
+import { generateLangs } from '../languages.js';
+
 
 class Friends extends HTMLElement {
 	constructor() {
@@ -11,15 +14,15 @@ class Friends extends HTMLElement {
             <main class="container">
 				<div class="col-sm-12 col-md-9 col-lg-6 mx-auto">
 					<div class="mb-5 row">
-						<h1 class="text-center">Friends</h1>
-						<p class="text-center">Add, remove, and see your friends status.</p>
+						<h1 class="text-center" data-translate="text" data-key="friends">Friends</h1>
+						<p class="text-center" data-translate="text" data-key="friends_info">Add, remove, and see your friends status.</p>
 					</div>
 					<form id="add-user-form">
 						<div class="mb-3 d-flex justify-content-between gap-3">
 							<div class="flex-grow-1">
-								<input type="text" class="form-control" id="add-username" name="username" aria-describedby="nameHelp" placeholder="Username" minlength="2" maxlength="16" required>
+								<input type="text" class="form-control" id="add-username" name="username" aria-describedby="nameHelp" data-translate="placeholder" data-key="username" placeholder="Username" minlength="2" maxlength="16" required>
 							</div>
-							<button type="submit" id="add-user-btn" class="btn btn-outline-cream-fill btn-general mb-3">Add friend</button>
+							<button type="submit" id="add-user-btn" class="btn btn-outline-cream-fill btn-general mb-3" data-translate="text" data-key="add_friend">Add friend</button>
 						</div>
 					</form>
 					<ul class="p-3 m-0 request-list"></ul>
@@ -29,19 +32,24 @@ class Friends extends HTMLElement {
 		`;
 	}
 	async connectedCallback() {
+		
+		/* Load requests and friend list from database */
 		await loadRequests();
 		await loadFriendList();
+
+		/* Generate listener to confirm, reject, and delete new friends */
 		setListenerFriends();
 
+		/* Control submit button to add a new friend */
 		const	addUserForm = document.getElementById('add-user-form');
 		const	addUsername = document.getElementById('add-username');
 		addUserForm.addEventListener('submit', async (e) => {
 			e.preventDefault();
 			const formData = new FormData(addUserForm);
 			try {
-				const response = await fetch('http://localhost:8080/add_friend/', {
+				const response = await fetch('https://localhost:3001/login/add_friend/', {
 					method: 'POST',
-					headers: {'Authorization': 'Bearer ' + getCookie('token')},
+					headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 					body: formData,
 				});
 				if (response.ok) {
@@ -61,15 +69,17 @@ class Friends extends HTMLElement {
 				createToast('warning', `Error: ${e}`);
 			}
 		});
-	};
+		/* Translate language, needed in async connectedCallback() to make sure it's executed */
+		generateLangs();
+	}
 }
 
 async function	loadRequests() {
 	const	requestList = document.querySelector('.request-list');
 	try {
-		const response = await fetch('http://localhost:8080/list_pending/', {
+		const response = await fetch('https://localhost:3001/login/list_pending/', {
 			method: 'POST',
-			headers: {'Authorization': 'Bearer ' + getCookie('token')},
+			headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 		});
 		const responseJson = await response.json();
 		console.log(responseJson);
@@ -77,7 +87,7 @@ async function	loadRequests() {
 			let requestListHtml;
 			if (responseJson.friends.length < 1) {
 				requestListHtml = /* html */ `
-					<p class="fs-4 m-0 p-0 secondary-color-subtle">No pending friend requests</p>`;
+					<p class="fs-4 m-0 p-0 secondary-color-subtle">${i18next.t('no_pending_requets')}</p>`;
 			}
 			else {
 				requestListHtml = responseJson.friends.map((friend) => {
@@ -85,11 +95,11 @@ async function	loadRequests() {
 						<li class="friend-request-item px-4 rounded cs-border d-flex justify-content-between align-items-center mb-2" data-friend-username="${friend.username}">
 							<div class="d-flex align-items-center gap-3">
 								<span class="user-status-pill rounded-circle"></span>
-								<p class="mx-0 my-0 px-0 py-0 fs-6 align-bottom secondary-color-subtle">${friend.alias} (@${friend.username}) wants to add you as a friend.</p>
+								<p class="mx-0 my-0 px-0 py-0 fs-6 align-bottom secondary-color-subtle">${i18next.t('friend_request', { alias: friend.alias, username: friend.username })}</p>
 							</div>
 							<div class="d-flex gap-2">
-								<button type="button" class="btn btn-success btn-sm friend-accept">Accept</button>
-								<button type="button" class="btn btn-danger btn-sm friend-reject">Reject</button>
+								<button type="button" class="btn btn-success btn-sm friend-accept">${i18next.t('accept')}</button>
+								<button type="button" class="btn btn-danger btn-sm friend-reject">${i18next.t('reject')}</button>
 							</div>
 						</li>
 					`);
@@ -109,9 +119,9 @@ async function	loadRequests() {
 async function	loadFriendList() {
 	const	friendList = document.querySelector('.friend-list');
 	try {
-		const response = await fetch('http://localhost:8080/list_friends/', {
+		const response = await fetch('https://localhost:3001/login/list_friends/', {
 			method: 'POST',
-			headers: {'Authorization': 'Bearer ' + getCookie('token')},
+			headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 		});
 		const responseJson = await response.json();
 		console.log(responseJson);
@@ -119,7 +129,7 @@ async function	loadFriendList() {
 			let friendListHtml;
 			if (responseJson.friends.length < 1) {
 				friendListHtml = /* html */ `
-					<p class="fs-4 m-2 p-0 secondary-color-subtle">No friends yet</p>`;
+					<p class="fs-4 m-2 p-0 secondary-color-subtle">${i18next.t('no_friends')}</p>`;
 			}
 			else {
 				friendListHtml = responseJson.friends.map((friend) => {
@@ -129,13 +139,13 @@ async function	loadFriendList() {
 							<div class="d-flex align-items-center gap-3">
 								<span class="user-status-pill rounded-circle position-relative" style="background-image: url('${friend.img}');">
 									<span class="position-absolute top-0 start-0 translate-middle p-2 ${statusColor} rounded-circle">
-    									<span class="visually-hidden">New alerts</span>
+    									<span class="visually-hidden">Status</span>
   									</span>
 								</span>
-								<p class="mx-0 my-0 px-0 py-0 fs-5 align-bottom">@${friend.username}</p>
+								<p class="mx-0 my-0 px-0 py-0 fs-5 align-bottom pe-auto">@${friend.username}</p>
 								<p class="mx-0 my-0 px-0 py-0 fs-6 align-bottom secondary-color-subtle">${friend.alias}</p>
 							</div>
-							<i class="fa-regular fa-trash-can fa-lg delete-friend pe-auto"></i>
+							<i class="fa-solid fa-trash-can fa-lg delete-friend pe-auto"></i>
 						</li>	
 					`);
 				}).join('');
@@ -162,9 +172,9 @@ function	setListenerFriends() {
 			deleteBtn.addEventListener('click', async () => {
 				try {
 					const	bodyInfo = { username: friendItem.getAttribute('data-friend-username') };
-					const	response = await fetch('http://localhost:8080/delete_friend/', {
+					const	response = await fetch('https://localhost:3001/login/delete_friend/', {
 						method: 'POST',
-						headers: {'Authorization': 'Bearer ' + getCookie('token')},
+						headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 						body: JSON.stringify(bodyInfo),
 					});
 					const responseJson = await response.json();
@@ -184,6 +194,7 @@ function	setListenerFriends() {
 	});
 	/* Sets listeners to confirm and reject friend requests */
 	friendRequestItems.forEach( (friendRequestItem) => {
+		console.log('confirm');
 		const acceptBtn = friendRequestItem.querySelector('.friend-accept');
 		const rejectBtn = friendRequestItem.querySelector('.friend-reject');
 		const username = friendRequestItem.getAttribute('data-friend-username');
@@ -191,9 +202,9 @@ function	setListenerFriends() {
 			acceptBtn.addEventListener('click', async () => {
 				try {
 					const	bodyInfo = { username };
-					const	response = await fetch('http://localhost:8080/confirm_friends/', {
+					const	response = await fetch('https://localhost:3001/login/confirm_friends/', {
 						method: 'POST',
-						headers: {'Authorization': 'Bearer ' + getCookie('token')},
+						headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 						body: JSON.stringify(bodyInfo),
 					});
 					const responseJson = await response.json();
@@ -210,13 +221,15 @@ function	setListenerFriends() {
 				}
 			});
 		}
+		else
+			console.log('confirm');
 		if (rejectBtn) {
 			rejectBtn.addEventListener('click', async () => {
 				try {
 					const	bodyInfo = { username };
-					const	response = await fetch('http://localhost:8080/delete_pending/', {
+					const	response = await fetch('https://localhost:3001/login/delete_pending/', {
 						method: 'POST',
-						headers: {'Authorization': 'Bearer ' + getCookie('token')},
+						headers: {'Authorization': 'Bearer ' + await getCookie('token')},
 						body: JSON.stringify(bodyInfo),
 					});
 					const responseJson = await response.json();

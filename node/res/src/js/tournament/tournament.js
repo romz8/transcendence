@@ -90,6 +90,11 @@ class Tournament extends HTMLElement {
             await delay(1000); // Wait for 1 seconds
         }
     }
+    disconnectedCallback()
+    {
+        state = null;
+        bannerState = null;
+    }
 }
   
 customElements.define('tourna-ment', Tournament);
@@ -111,7 +116,11 @@ function delay(ms) {
 
 async function renderLoop(id, container) {
     const resp = await updateData(id);
-    
+    if (resp == null)
+    {
+        history.pushState('','','/')
+        router();
+    }
     // Check if state has changed
     const auth = await getAuth();
     // //console.log("Auth is", auth);
@@ -140,6 +149,8 @@ async function renderLoop(id, container) {
 
 async function updateData(id) {
     const conf = await getTournament(id); // Fetch tournament configuration
+    if (conf == null)
+        return null
     maxPlayers = conf.size; // Maximum number of players
     registered = conf.n_registered; // Number of currently registered
     return conf;       
@@ -333,12 +344,12 @@ async function renderTournamentFinished(data, container) {
     // Crear un contenedor para el resultado del torneo
     const resultContainer = document.createElement('div');
     resultContainer.className = 'tournament-finished container d-flex flex-column align-items-center justify-content-center text-center';
-
+    console.log(runner_up)
     resultContainer.innerHTML = /* html */`
         <h1>Torneo Finalizado</h1>
         <div class="winner my-4">¡Felicidades a <span class="text-success">${winner.alias}</span>!</div>
         <div class="score display-5 my-3">Resultado Final: <strong>${final_score}</strong></div>
-        <div class="runner-up my-3">Subcampeón: <span class="text-warning">${runner_up}</span></div>
+        <div class="runner-up my-3">Subcampeón: <span class="text-warning">${runner_up.alias}</span></div>
         <div class="date my-3">Fecha del Torneo: ${new Date(datetourn).toLocaleString()}</div>
         <button class="btn btn-outline-secondary mt-4" id="backToHomeButton">Regresar a Inicio</button>
     `;
@@ -385,6 +396,7 @@ window.addEventListener("popstate",() => {
 async function bannerLogic(id, container)
 {
     const data = await getPlayerTournnamentActive(id);
+
     if (data.status !== bannerState)
     {
         bannerState = data.status;
@@ -407,25 +419,26 @@ function displayBanner(data, id, container) {
     }
 
     if (data.status === 'match_to_play') {
-        bannerDiv.innerHTML =  /* html */`
-            <div class="alert alert-info text-center" role="alert">
-                You have a match to play against ${data.opponent}!
-                <button class="btn btn-primary ml-2" id="startGameButton">Play</button>
-            </div>
-        `;
-        console.error(data)
-        let gameButton = document.getElementById("startGameButton");
-        gameButton.addEventListener("click",async ()=>{
-            //const resp = await putMatchTest(data.match_id); //*********************** FOR TEST ONLy ********/
-            ////console.log("result is : ", resp); //to test only
-            let ruta = null;
-            if (data.is_ai == true)
-                ruta = 'gamebot'
-            else
-                ruta = 'game'
-            history.pushState(null,"",`/${ruta}/t/${data.match_id}-${id}`);
-            router();
-        })
+        if (bannerDiv)
+        {
+            bannerDiv.innerHTML =  /* html */`
+                <div class="alert alert-info text-center" role="alert">
+                    You have a match to play against ${data.opponent}!
+                    <button class="btn btn-primary ml-2" id="startGameButton">Play</button>
+                </div>
+            `;
+            console.error(data)
+            let gameButton = document.getElementById("startGameButton");
+            gameButton.addEventListener("click",async ()=>{
+                let ruta = null;
+                if (data.is_ai == true)
+                    ruta = 'gamebot'
+                else
+                    ruta = 'game'
+                history.pushState(null,"",`/${ruta}/t/${data.match_id}-${id}`);
+                router();
+            })
+        }
     } else if (data.status === 'eliminated') {
         bannerDiv.innerHTML =  /* html */`
             <div class="alert alert-danger text-center" role="alert">
