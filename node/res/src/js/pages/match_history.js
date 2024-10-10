@@ -52,7 +52,7 @@ class MatchHistory extends HTMLElement {
         let totalWins;
         let totalLosses;
         
-        fetch('https://localhost:3001/tourapi/game/allmatch/', {
+        fetch('https://localhost:3001/login/match_history/', {
             method: 'GET',
             headers: {
                 'Authorization': 'Bearer ' + await getCookie('token'),
@@ -65,10 +65,11 @@ class MatchHistory extends HTMLElement {
             return response.json();
         })
         .then(data => {
-
             const matchesContainer = document.getElementById('matches-container');
-            totalGames = data.length;
-            totalWins = data.filter(match => match.winner).length;
+            const matches = data["matches"];
+            totalGames = matches.length;
+            console.log(matches);
+            totalWins = matches.filter(match => match.winner).length;
             totalLosses = totalGames - totalWins;
 
             document.getElementById('game-counter').innerText = totalGames;
@@ -76,7 +77,7 @@ class MatchHistory extends HTMLElement {
             document.getElementById('losses-counter').innerText = totalLosses;
             
             // Create match cards
-            data.map(match => {
+            matches.map(match => {
                 const matchCard = document.createElement('div');
                 const winner = getMatchResult(match.score_p1, match.score_p2);
                 if (match.winner === true)
@@ -90,13 +91,13 @@ class MatchHistory extends HTMLElement {
                     </div>
                     <div class="d-flex justify-content-center gap-5 align-items-center">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="match-card-pic"></div>
+                        <div class="match-card-pic" style="background-image: url('${match.player1.img}')"></div>
                         <p class="mb-0">${match.player1.alias}</p>
                     </div>
                     <p class="match-card-score krona-font fs-2 mb-0">${match.score_p1} - ${match.score_p2}</p>
                     <div class="d-flex align-items-center gap-3">
                         <p class="mb-0">${match.player2.alias}</p>
-                        <div class="match-card-pic"></div>
+                        <div class="match-card-pic" style="background-image: url('${match.player2.img}')"></div>
                     </div>
                     </div>
                     <div class="d-flex justify-content-end gap-3 mb-0">

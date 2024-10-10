@@ -5,7 +5,7 @@ import { Modal } from 'bootstrap';
 import i18next from 'i18next';
 
 let gameid = -1;
-const WIN = 1;
+const WIN = 2;
 class PongAI extends HTMLElement {
     constructor() {
         super();
