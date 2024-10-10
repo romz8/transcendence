@@ -480,6 +480,7 @@ export async function leaveWaitRoom(){
         else{
             let error_txt = await resp.text();
             console.log("issue on deleting the ressrouce", error_txt);
+            return resp;
         }
     }
     catch(error)

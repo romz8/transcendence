@@ -35,6 +35,7 @@ urlpatterns = [
     path('login/verify_token/', views.verify_token, name="verify_token"),
     path("login/info_user/", views.infoUser, name="info_user"),
     path("login/update_info_user/", views.updateInfoUser, name="update_info_user"),
+	path("login/getLang/", views.getLang, name="getLang"),
     path("login/uidenv/", login.uidenv, name="uidenv"),
     path('login/loginIntra/', login.loginIntra, name='loginIntra'),
     path('login/insertlogin/', login.insertLogin, name='insertlogin'),

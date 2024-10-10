@@ -1,6 +1,7 @@
 import { displayCountdown } from "../game/gameDisplay";
 import { router } from "../routes";
 import { getCookie } from "../user_login";
+import { Modal } from 'bootstrap'
 
 let gameid = -1;
 const WIN = 1;
@@ -223,7 +224,17 @@ class PongAI extends HTMLElement {
     }
 
     async startGame() {
+        this.ballX = this.gameWidth / 2;
+        this.ballY = this.gameHeight / 2;
+        this.ballDirectionX = Math.floor(Math.random() * 2) == 0? -1: 1;
+        this.ballDirectionY = Math.floor(Math.random() * 2) == 0? -1: 1;
+        this.ballSpeedX = 3;
+        this.ballSpeedY = 2;
+
+        this.leftScore = 0;
+        this.rightScore = 0;
         this.gameRunning = true;
+
         document.addEventListener('keydown', (e) => this.keys[e.key.toLowerCase()] = true);
         document.addEventListener('keyup', (e) => this.keys[e.key.toLowerCase()] = false);        
         
@@ -240,6 +251,52 @@ class PongAI extends HTMLElement {
         this.iaInterval = setInterval(this.iaPredict, 1000, this);
         await gameLoop();
     }
+
+    displayOverMessage() {
+    
+        let messageStyle, homeButton = '', tournamentButton = '';
+        if (gameid){
+            tournamentButton =/*html*/ `<button id="tournament-btn" class="btn btn-primary mt-3">Ir al Torneo</button>`
+        }
+        else{
+            homeButton = /*html*/`<button id="home-btn" class="btn btn-warning mt-3">Go Home</button>`;
+        }
+        if (this.leftScore < this.rightScore) {
+            messageStyle = "text-success";
+        } else {
+            messageStyle = "text-danger";
+            homeButton = /*html*/`<button id="home-btn" class="btn btn-warning mt-3">Go Home</button>`;
+        }
+    
+        const mainContainer = document.getElementById('mainContainer');
+    
+        mainContainer.innerHTML = /* html */`
+            <div class="text-center mt-5">
+                <h2 class="${messageStyle}">${this.leftScore < this.rightScore ? 'You won!' : 'You lost!'}</h2>
+                <p>
+                    AI ${this.leftScore} - 
+                    YOU ${this.rightScore}
+                </p>
+                ${tournamentButton}
+                ${homeButton}
+            </div>
+        `;
+
+        if (gameid){
+    
+            document.getElementById('tournament-btn').addEventListener('click', () => {
+                window.location.href = `/tournament/${gameid[1]}`;
+            });
+        }
+        if (document.getElementById('home-btn')) {
+            document.getElementById('home-btn').addEventListener('click', () => {
+                history.pushState('', '', '/');
+                router();
+            });
+        }
+    }
+    
+
 
     async fetchResult(){
         const access = await getCookie('token');
@@ -258,17 +315,15 @@ class PongAI extends HTMLElement {
             return response.json();
         })
         .then(data => {
-            history.pushState(null,"",`/tournament/${gameid[1]}`);
-            router();
+            this.displayOverMessage();
         })
         .catch(error => 
         {
-            history.pushState(null,"",`/tournament/${gameid[1]}`);
-            router();
+            this.displayOverMessage();
         });
     }
 
-    genFinishModal(text){
+    genModalHTML(text, btnHome = '', btnOptional = ''){
         this.innerHTML += /* html */`
         <div class="modal fade modal-sm" id="TournModal" tabindex="-1" aria-labelledby="TournModalLabel" aria-hidden="true">
           <div class="modal-dialog modal-dialog-centered">
@@ -281,15 +336,36 @@ class PongAI extends HTMLElement {
                 <h6>${text}</h6>
               </div>
               <div class="modal-footer">
-                <button id="home-btn" type="button" class="btn btn-primary">Go Home</button>
-                <button id="again-btn" type="button" class="btn btn-primary">Try Again</button>
+                ${btnHome}
+                ${btnOptional}
               </div>
             </div>
           </div>
-        </div>  
+        </div>
         `
-        const TournModal = new bootstrap.Modal(document.getElementById('TournModal'));
+    }
+
+    genFinishModal(text){
+        const btnHome = '<button id="home-btn" type="button" data-bs-dismiss="modal" class="btn btn-primary">Go Home</button>';
+        const btnOptional = '<button id="again-btn" type="button" data-bs-dismiss="modal" class="btn btn-primary">Try Again</button>';
+        this.genModalHTML(text, btnHome, btnOptional)
+
+        const TournModal = new Modal(document.getElementById('TournModal'));
         TournModal.show();
+        const againBtn = document.getElementById("again-btn");
+        if (againBtn) {
+            againBtn.addEventListener('click', () => {
+                history.pushState('', '', '/gamebot');
+                router();
+            });
+        }
+        const homeBtn = document.getElementById("home-btn");
+        if (homeBtn) {
+            homeBtn.addEventListener('click', () => {
+                history.pushState('', '', '/');
+                router();
+            });
+        }
     }
 
     checkWinner(){
@@ -298,15 +374,21 @@ class PongAI extends HTMLElement {
         if (this.leftScore == WIN )
         {
             if (gameid != -1)
+            {
                 this.fetchResult();
-            this.genFinishModal("AI WON");
+            }
+            else
+                this.genFinishModal("AI WON");
             return true;
         }
         else if (this.rightScore == WIN )
         {
             if (gameid != -1)
+            {
                 this.fetchResult();
-            this.genFinishModal("YOU WON");
+            }
+            else
+                this.genFinishModal("YOU WON");
             return true;
         }
         return false;

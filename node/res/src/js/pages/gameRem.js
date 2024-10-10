@@ -187,7 +187,8 @@ class GameRem extends HTMLElement {
         input = false;
         gameEnded = false;
         endscore = undefined;
-        ws.close();
+        if (ws && !(ws.state === 3 || ws.state === 2))
+            ws.close();
     }
 }
 

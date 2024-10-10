@@ -10,22 +10,53 @@ async function renderLobby(){
     let availableRooms = await getListWaitRoom();
     if (!Array.isArray(availableRooms) || availableRooms.length === 0) {
         console.log('No available rooms found');
-        alert('No rooms are available to join.');
+        modalContainer.innerHTML = /* html */`
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="exampleModalLabel">Join a Game: Select a Room</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <p>No rooms are available to join.</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        `;
+        const existingModal = document.getElementById('exampleModal');
+        if (existingModal) {
+            existingModal.remove();
+        }   
+        document.body.appendChild(modalContainer);
+    
+        // Initialize and show the modal using Bootstrap's JavaScript API
+        const exampleModal = new Modal(document.getElementById('exampleModal'));
+        exampleModal.show();
+        // Remo
         return; // Exit if no rooms are available
     }
     console.log("in render the data are ")
     console.log(JSON.stringify(availableRooms));
-   
     modalContainer.innerHTML = /* html */`
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header">
+          <div class="modal-header bg-primary text-white">
             <h5 class="modal-title" id="exampleModalLabel">Join a Game: Select a Room</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <ul class="list-group" id="roomList">
-                ${availableRooms.map(room => /*html*/`<li class="list-group-item room-item" data-room-id="${room.genId}">ROOM : ${room.genId}</li>`).join('')}
+                ${availableRooms.map(room => /*html*/`
+                <li class="list-group-item d-flex justify-content-between align-items-center room-item" data-room-id="${room.genId}">
+                    <span class="">ROOM: ${room.genId}</span>
+                </li>
+                `).join('')}
             </ul>
           </div>
           <div class="modal-footer">
