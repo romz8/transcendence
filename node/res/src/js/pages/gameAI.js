@@ -5,7 +5,7 @@ import { Modal } from 'bootstrap';
 import i18next from 'i18next';
 
 let gameid = -1;
-const WIN = 1;
+const WIN = 2;
 class PongAI extends HTMLElement {
     constructor() {
         super();
@@ -257,23 +257,23 @@ class PongAI extends HTMLElement {
     
         let messageStyle, homeButton = '', tournamentButton = '';
         if (gameid){
-            tournamentButton =/*html*/ `<button id="tournament-btn" class="btn btn-primary mt-3">Ir al Torneo</button>`
+            tournamentButton =/*html*/ `<button id="tournament-btn" class="btn btn-primary mt-3">${i18next.t('go_to_tournament')}</button>`
         }
         else{
-            homeButton = /*html*/`<button id="home-btn" class="btn btn-warning mt-3">Go Home</button>`;
+            homeButton = /*html*/`<button id="home-btn" class="btn btn-warning mt-3">${i18next.t('go_home')}</button>`;
         }
         if (this.leftScore < this.rightScore) {
             messageStyle = "text-success";
         } else {
             messageStyle = "text-danger";
-            homeButton = /*html*/`<button id="home-btn" class="btn btn-warning mt-3">Go Home</button>`;
+            homeButton = /*html*/`<button id="home-btn" class="btn btn-warning mt-3">${i18next.t('go_home')}</button>`;
         }
     
         const mainContainer = document.getElementById('mainContainer');
     
         mainContainer.innerHTML = /* html */`
             <div class="text-center mt-5">
-                <h2 class="${messageStyle}">${this.leftScore < this.rightScore ? 'You won!' : 'You lost!'}</h2>
+                <h2 class="${messageStyle}">${this.leftScore < this.rightScore ? i18next.t('you_won') : i18next.t('you_lost')}</h2>
                 <p>
                     AI ${this.leftScore} - 
                     YOU ${this.rightScore}

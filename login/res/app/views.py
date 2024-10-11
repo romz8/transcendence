@@ -3,7 +3,7 @@ from django.http import JsonResponse
 import logging
 from app.validator import token_required
 
-from app.models import Users
+from app.models import Users, Match
 
 import os
 from django.db import IntegrityError
@@ -18,9 +18,60 @@ from django.core.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
+@api_view(["GET"])
+def match_history(request):
+    if request.user == AnonymousUser() or not request.user:
+        return JsonResponse({'error': 'missing token'}, status=498)
+    try:
+        user = request.user
+        matches = Match.objects.filter(player1=user).union(Match.objects.filter(player2=user))
+        match_history_list = []
+        for match in matches:
+            url_player1 = protection_url(match.player1.img)
+            url_player2 = protection_url(match.player2.img)
+            match_data = {
+                'game_date': match.game_date.isoformat(),
+                'player1': {
+                    'id': match.player1.id,
+                    'alias': match.player1.alias,
+                    'img': url_player1,
+                } if match.player1 else None,
+                'player2': {
+                    'id': match.player2.id,
+                    'alias': match.player2.alias,
+                    'img': url_player2,
+                } if match.player2 else None,
+                'score_p1': match.score_p1,
+                'score_p2': match.score_p2,
+                'state': match.state,
+                'tournament': True if match.tournament else False,
+                'winner': determine_winner(match, user)
+            }
+            match_history_list.append(match_data)
+
+        return JsonResponse({"matches": match_history_list})
+    except Exception as e:
+        return JsonResponse({"error": "Somthing goes wrong"}, status=400)
+
+def determine_winner(match, user):
+    if match.score_p1 > match.score_p2:
+        return True if match.player1 == user else False
+    elif match.score_p1 < match.score_p2:
+        return True if match.player2 == user else False
+    return None
+
+def protection_url(img):
+    if img:
+        url = "https://localhost:3001" + img.url
+    else:
+        url = "https://localhost:3001/login/media/def/default.jpg"
+    return url
+
+
+
 @api_view(['GET'])
 def verify_token(request):
-    if request.user == AnonymousUser():
+    if request.user == AnonymousUser() or not request.user:
         return JsonResponse({'error': 'missing token'}, status=498)
     username = request.user.username
     response = {"user": username}

@@ -125,8 +125,7 @@ class Match(models.Model):
     score_p1 = models.IntegerField(default=0)
     score_p2 = models.IntegerField(default=0)
     state = models.CharField(max_length=100, default="waiting", choices=STATE_CHOICES)
-    game_id = models.CharField(max_length=36, unique=False, editable=False) #ISSUE FOR TOURNAMENT AT CREATION IF NOT TURNED OFF
-    #used four tournament only
+    game_id = models.CharField(max_length=36, unique=False, editable=False)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, db_column = "tournamentid", blank=True, null=True)
     round=models.IntegerField(default=0, null=True, blank=True)
     next_match = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
