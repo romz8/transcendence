@@ -163,8 +163,12 @@ export async function generateLangs()
 					try_again: 'Try again',
 					ai_won: 'AI WON',
 					you_won: 'YOU WON',
-					scored: 'Goals cored',
+					scored: 'Goals scored',
 					conceded: 'Goals conceded',
+					winrate: 'Winrate',
+					victory: 'Victory',
+					defeat: 'Defeat',
+					regular: 'Regular',
 				}
 			},
 			es: {
@@ -297,6 +301,10 @@ export async function generateLangs()
 					you_won: 'TÚ GANASTE',
 					scored: 'Goles a favor',
 					conceded: 'Goles en contra',
+					winrate: 'Tasa de victorias',
+					victory: 'Victoria',
+					defeat: 'Derrota',
+					regular: 'Regular',
 				}
 			},
 			ca: {
@@ -429,6 +437,10 @@ export async function generateLangs()
 					you_won: 'TU HAS GUANYAT',
 					scored: 'Gols a favor',
 					conceded: 'Gols en contra',
+					winrate: 'Taxa de victòries',
+					victory: 'Victòria',
+					defeat: 'Derrota',
+					regular: 'Regular',
 				}
 			},
 			fr: {
@@ -561,6 +573,11 @@ export async function generateLangs()
 					you_won: 'VOUS AVEZ GAGNÉ',
 					scored: 'Buts marqués',
 					conceded: 'Buts encaissés',
+					winrate: 'Taux de victoire',
+					victory: 'Victoire',
+					defeat: 'Défaite',
+					regular: 'Régulier',
+
 				}
 			}			
 		}		

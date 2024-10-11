@@ -90,6 +90,7 @@ class MatchHistory extends HTMLElement {
         .then(data => {
             const matchesContainer = document.getElementById('matches-container');
             const matches = data["matches"];
+            console.log(matches);
             totalGames = matches.length;
             totalWins = matches.filter(match => match.winner).length;
             totalLosses = totalGames - totalWins;
@@ -99,7 +100,7 @@ class MatchHistory extends HTMLElement {
             document.getElementById('losses-counter').innerText = totalLosses;
             
             // Create match cards
-            data.map(match => {
+            matches.map(match => {
                 currentGames++;
                 gamesPlayed.push(currentGames);
                 const matchCard = document.createElement('div');
@@ -130,7 +131,7 @@ class MatchHistory extends HTMLElement {
                 matchCard.innerHTML = /* html */`
                     <div class="d-flex justify-content-between">
                     <p class="match-card-type mb-0">${getMatchType(match.tournament)}</p>
-                    <p class="match-card-type mb-0">${match.winner? 'Victroy':'Defeat'}</p>
+                    <p class="match-card-type mb-0">${match.winner? i18next.t('victory'):i18next.t('defeat')}</p>
                     </div>
                     <div class="d-flex justify-content-center gap-5 align-items-center">
                     <div class="d-flex align-items-center gap-3">
@@ -255,7 +256,7 @@ class MatchHistory extends HTMLElement {
                 x: {
                     title: {
                         display: true,
-                        text: 'Games Played',
+                        text: i18next.t('games_played'),
                         font: {
                             size: 20
                         }
@@ -264,7 +265,7 @@ class MatchHistory extends HTMLElement {
                 y: {
                     title: {
                         display: true,
-                        text: 'Winrate (%)',
+                        text: i18next.t('winrate') + '(%)',
                         font: {
                             size: 20
                         }
@@ -293,7 +294,7 @@ function getMatchResult(scoreP1, scoreP2) {
 }
 
 function getMatchType(tournament){
-    return tournament ? 'Tournament': 'Regular';
+    return tournament ? i18next.t('tournament') : i18next.t('regular');
 }
 
 customElements.define('match-history', MatchHistory);
