@@ -16,8 +16,6 @@ RUN npm install
 RUN apt-get update && apt-get install -y nginx
 RUN mkdir /etc/nginx/ssl/
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
-COPY nginx/ssl/key.pem /etc/nginx/ssl/key.pem
-COPY nginx/ssl/cert.pem /etc/nginx/ssl/cert.pem
 
 RUN chmod +x ./entrypoint.sh
 
