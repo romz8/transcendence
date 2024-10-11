@@ -72,17 +72,14 @@ class BlockChain extends HTMLElement {
 }
 
 function extractUsername(data) {
-    // Expresión regular para identificar el patrón correcto: user id <number> aka <username>
     const regex = /^user id \d+ aka (.+)$/;
 
-    // Intentar encontrar una coincidencia con el patrón
     const match = data.match(regex);
 
-    // Si hay una coincidencia, devolver el alias; de lo contrario, devolver el texto original
     if (match) {
-        return match[1];  // El alias que está después de "aka"
+        return match[1];
     } else {
-        return data;  // Si no coincide, devolver el valor tal como está
+        return data;
     }
 }
 
