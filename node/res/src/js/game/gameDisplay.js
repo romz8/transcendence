@@ -15,7 +15,9 @@ export function displayForfeitMessage(data) {
     let text;
     let c_style;
 
-    if (playerName == data.player) {
+    console.log(data)
+    console.log(localStorage.getItem("alias"))
+    if (localStorage.getItem("alias") == data.loser) {
         c_style = "bg-danger";
         text = i18next.t("lost_forfeit")
     }

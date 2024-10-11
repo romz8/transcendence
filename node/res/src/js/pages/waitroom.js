@@ -106,12 +106,6 @@ async function renderLobby(){
 	});
 }
 
-function addGameButton(id, name, path, self){
-  self.innerHTML += /* html */`<a id="${id}" class="btn btn-primary" href=${path} type="button" data-link>${name}</a>`;
-  let GameButton = document.getElementById(id);
-  return GameButton;
-}
-            
 class Waitroom extends HTMLElement {
 	constructor() {
 		super();

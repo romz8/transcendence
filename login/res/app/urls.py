@@ -40,6 +40,7 @@ urlpatterns = [
     path('login/loginIntra/', login.loginIntra, name='loginIntra'),
     path('login/insertlogin/', login.insertLogin, name='insertlogin'),
     path('login/checkLogin/', login.checkLogin, name='checkLogin'),
+    path('login/match_history/', views.match_history, name='match_history'),
     # path('login/protected_view/', views.protected_view, name='protected_view'),
     path('login/refreshToken/', login.refreshToken, name='refreshToken'),
     path('login/signUp/', login.signUp, name='signUp'),

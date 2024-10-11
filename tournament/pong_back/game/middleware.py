@@ -15,41 +15,56 @@ async def get_user_from_token(username):
     except ObjectDoesNotExist:
         raise AuthenticationFailed('Invalid or expired token')
 
-class JwtAuthMiddleware:    
+class JwtAuthMiddleware:
     def __init__(self, inner):
         self.inner = inner
 
     async def __call__(self, scope, receive, send):
-        query_string = scope['query_string'].decode('utf-8')
-        query_params = parse_qs(query_string)
-        token = query_params.get('token', [None])[0]
-        
-        if not token:
-            raise AuthenticationFailed('Invalid or expired token')
-
-        headers = {"Authorization": f"Bearer {token}"}
-        logger.info(f"Headers sent: {headers}")
-
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get("http://login:8080/login/verify_token/", headers=headers) as resp:
-                    if resp.status == 200:
-                        json_resp = await resp.json()
-                        username = json_resp.get('user')
-                        if username:
-                            scope['user'] = await get_user_from_token(username)
+            query_string = scope['query_string'].decode('utf-8')
+            query_params = parse_qs(query_string)
+            token = query_params.get('token', [None])[0]
+
+            if not token:
+                raise AuthenticationFailed('No token provided')
+
+            headers = {"Authorization": f"Bearer {token}"}
+            logger.info(f"Headers sent: {headers}")
+
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get("http://login:8080/login/verify_token/", headers=headers) as resp:
+                        if resp.status == 200:
+                            json_resp = await resp.json()
+                            username = json_resp.get('user')
+                            if username:
+                                scope['user'] = await get_user_from_token(username)
+                            else:
+                                raise AuthenticationFailed('Invalid or expired token')
                         else:
+                            logger.error(f"Token verification failed with status: {resp.status}")
                             raise AuthenticationFailed('Invalid or expired token')
-                    else:
-                        logger.error(f"Token verification failed with status: {resp.status}")
-                        raise AuthenticationFailed('Invalid or expired token')
-        except aiohttp.ClientError as e:
-            logger.error(f"HTTP error: {e}")
-            raise AuthenticationFailed('Invalid or expired token')
+            except aiohttp.ClientError as e:
+                logger.error(f"HTTP error during token verification: {e}")
+                raise AuthenticationFailed('Token verification failed')
 
-        return await self.inner(scope, receive, send)
+            return await self.inner(scope, receive, send)
 
-    
+        except AuthenticationFailed as e:
+            logger.error(f"Authentication failed: {e}")
+            close_message = {
+                'type': 'websocket.close',
+                'code': 4001
+            }
+            await send(close_message)
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}")
+            close_message = {
+                'type': 'websocket.close',
+                'code': 4000
+            }
+            await send(close_message)
+
 def JwtAuthMiddlewareStack(inner):
     return JwtAuthMiddleware(AuthMiddlewareStack(inner))
 

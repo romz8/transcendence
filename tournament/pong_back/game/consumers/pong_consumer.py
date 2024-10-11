@@ -281,6 +281,14 @@ class PongConsumer(AsyncWebsocketConsumer):
             roomstate = event['roomstate']
             winner = event.get('winner', None)
             loser = event.get('loser', None)
+            winner_name = None
+            loser_name = None
+
+            for player_id, player_data in self.room.players.items():
+                if player_data['role'] == self.room.winner:
+                    winner_name = player_data['playername']
+                elif player_data['role'] == self.room.loser:
+                    loser_name = player_data['playername']
             match roomstate:
                 case 'over':
                     message = f'Game over: {winner} won with {score[winner]} - {loser} lost with {score[loser]}'
@@ -290,7 +298,7 @@ class PongConsumer(AsyncWebsocketConsumer):
                     message = 'Unknown state'                
             await self.send(text_data=json.dumps({
                 'score': score,'roomstate': roomstate,
-                'winner': winner,'loser': loser,'message': message}))
+                'winner': winner_name,'loser': loser_name,'message': message}))
         except Exception as e:
             logger.error(f"Error sending game_over message: {e}")
 
@@ -343,18 +351,32 @@ class PongConsumer(AsyncWebsocketConsumer):
     
     async def close_with_error(self, code, message):
         """
-        close function syste : accept the connection to return a tailor-made message and code
+        close function system: accept the connection to return a tailor-made message and code
         """
-        logger.error(f"***** CLOSING ON ERROR {code} - {message} ********")
         await self.accept()
+
         if code == 4444:
+            winner_name = None
+            loser_name = None
+
+            for player_id, player_data in self.room.players.items():
+                if player_data['role'] == self.room.winner:
+                    winner_name = player_data['playername']
+                elif player_data['role'] == self.room.loser:
+                    loser_name = player_data['playername']
+
             await self.send(text_data=json.dumps({
-                'score': self.room.score,'roomstate': self.room.state.name,
-                'winner': self.room.winner,'loser': self.room.loser,'message': message}))
+                'score': self.room.score,
+                'roomstate': self.room.state.name,
+                'winner': winner_name,
+                'loser': loser_name,
+                'message': message
+            }))
         else:
             await self.send(text_data=json.dumps({'error': message, 'code': code}))
+
         await self.close(code=code)
-    
+
     def display(self):
         for room_id, room in PongConsumer.rooms.items():
             logger.info('*************** Room Display **********************')
