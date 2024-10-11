@@ -163,6 +163,8 @@ export async function generateLangs()
 					try_again: 'Try again',
 					ai_won: 'AI WON',
 					you_won: 'YOU WON',
+					scored: 'Goals cored',
+					conceded: 'Goals conceded',
 				}
 			},
 			es: {
@@ -293,6 +295,8 @@ export async function generateLangs()
 					try_again: 'Intentar de nuevo',
 					ai_won: 'LA IA GANÓ',
 					you_won: 'TÚ GANASTE',
+					scored: 'Goles a favor',
+					conceded: 'Goles en contra',
 				}
 			},
 			ca: {
@@ -423,6 +427,8 @@ export async function generateLangs()
 					try_again: 'Prova-ho de nou',
 					ai_won: 'L\'IA HA GUANYAT',
 					you_won: 'TU HAS GUANYAT',
+					scored: 'Gols a favor',
+					conceded: 'Gols en contra',
 				}
 			},
 			fr: {
@@ -553,6 +559,8 @@ export async function generateLangs()
 					try_again: 'Réessayer',
 					ai_won: 'L\'IA A GAGNÉ',
 					you_won: 'VOUS AVEZ GAGNÉ',
+					scored: 'Buts marqués',
+					conceded: 'Buts encaissés',
 				}
 			}			
 		}		

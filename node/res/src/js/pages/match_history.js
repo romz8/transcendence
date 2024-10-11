@@ -1,6 +1,6 @@
 import { getCookie } from '../user_login';
 import i18next from 'i18next';
-import { Chart, ArcElement, Tooltip, Legend, Title, PieController } from 'chart.js';
+import { Chart, ArcElement, Tooltip, Legend, Title, PieController, LineController, CategoryScale, LinearScale, PointElement, LineElement } from 'chart.js';
 
 // Register the necessary components
 Chart.register(
@@ -8,6 +8,11 @@ Chart.register(
     Tooltip,       // For showing tooltips on hover
     Legend,        // For showing the legend
     PieController, // For the 'pie' chart type
+    LineController, // For the 'line' chart type
+    CategoryScale, // For the 'line' chart type
+    LinearScale,   // For the 'line' chart type
+    PointElement,         // For the 'line' chart type
+    LineElement,         // For the 'line' chart type
     Title          // Optional, if you want a title
 );
 
@@ -36,10 +41,22 @@ class MatchHistory extends HTMLElement {
                                 <h2 id="losses-counter" class="krona-font fs-1">8</h2>
                                 <p data-translate="text" data-key="defeats">Defeats</p>
                             </span>
-                            <canvas id="games-chart" width="400" height="400"></canvas>
+                            <div class="row mt-3">
+                                <div class="d-flex col-md-6">
+                                    <canvas id="games-chart" class="primary-bg-color-subtle p-5 rounded"></canvas>
+                                </div>
+                                <div class="d-flex col-md-6">
+                                    <canvas id="goals-chart" class="primary-bg-color-subtle p-5 rounded"></canvas>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="d-flex col-md-12">
+                                    <canvas id="winrate-chart" class="primary-bg-color-subtle p-5 rounded"></canvas>
+                                </div>
+                            </div>
                         </div>
                     </section>
-                    <section id='matches-container' class="d-flex flex-column gap-3">
+                    <section id='matches-container' class="d-flex flex-column gap-3 mb-5">
                     </section>
                 </div>
             </main>
@@ -48,9 +65,15 @@ class MatchHistory extends HTMLElement {
     }
 
     async connectedCallback() {
-        let totalGames;
-        let totalWins;
-        let totalLosses;
+        let totalGames = 0;
+        let totalWins = 0;
+        let totalLosses = 0;
+        let goalsScored = 0;
+        let goalsConceded = 0;
+        let currentGames = 0;
+        let currentWins = 0;
+        let winrate = [0];
+        let gamesPlayed = [0];
         
         fetch('https://localhost:3001/tourapi/game/allmatch/', {
             method: 'GET',
@@ -77,12 +100,33 @@ class MatchHistory extends HTMLElement {
             
             // Create match cards
             data.map(match => {
+                currentGames++;
+                gamesPlayed.push(currentGames);
                 const matchCard = document.createElement('div');
-                const winner = getMatchResult(match.score_p1, match.score_p2);
-                if (match.winner === true)
+                if (match.winner === true) {
+                    currentWins++;
                     matchCard.classList.add('w-100', 'match-card', 'match-card-win');
-                else
+                    if (match.score_p1 > match.score_p2) {
+                        goalsScored += match.score_p1;
+                        goalsConceded += match.score_p2;
+                    }
+                    else {
+                        goalsScored += match.score_p2;
+                        goalsConceded += match.score_p1;
+                    }
+                }
+                else {
                     matchCard.classList.add('w-100', 'match-card', 'match-card-defeat');
+                    if (match.score_p1 < match.score_p2) {
+                        goalsScored += match.score_p1;
+                        goalsConceded += match.score_p2;
+                    }
+                    else {
+                        goalsScored += match.score_p2;
+                        goalsConceded += match.score_p1;
+                    }
+                }
+                winrate.push(currentWins / currentGames * 100);
                 matchCard.innerHTML = /* html */`
                     <div class="d-flex justify-content-between">
                     <p class="match-card-type mb-0">${getMatchType(match.tournament)}</p>
@@ -106,21 +150,18 @@ class MatchHistory extends HTMLElement {
             
                 matchesContainer.appendChild(matchCard);
             });
-
             // Draw the chart
-            this.drawChart(totalWins, totalLosses);
+            this.drawChartGames(totalWins, totalLosses);
+            this.drawChartGoals(goalsScored, goalsConceded);
+            this.drawChartWinrate(winrate, gamesPlayed);
         })
         .catch(error => {
             return false;
         });
     }
 
-    drawChart(totalWins, totalLosses) {
-        // Destroy the existing chart if it exists
-        if (this.chart) {
-            this.chart.destroy();
-        }
-
+    drawChartGames(totalWins, totalLosses) {
+        
         const xValues = [i18next.t('wins'), i18next.t('defeats')];
         const yValues = [totalWins, totalLosses];
         const barColors = ["#00aba9", "#b91d47"];
@@ -137,8 +178,59 @@ class MatchHistory extends HTMLElement {
             },
             options: {
                 plugins: {
-                    legend: { display: false },
+                    legend: { display: true, position: 'bottom' },
                     tooltip: { enabled: true }
+                }
+            }
+        });
+    }
+    drawChartGoals(goalsScored, goalsConceded) {
+       
+
+        const xValues = [i18next.t('scored'), i18next.t('conceded')];
+        const yValues = [goalsScored, goalsConceded];
+        const barColors = ["#00aba9", "#b91d47"];
+        
+        // Create a new chart
+        this.chart = new Chart("goals-chart", {
+            type: "pie",  // 'pie' chart type
+            data: {
+                labels: xValues,
+                datasets: [{
+                    backgroundColor: barColors,
+                    data: yValues,
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { display: true, position: 'bottom' },
+                    tooltip: { enabled: true }
+                }
+            }
+        });
+    }
+    drawChartWinrate(winrate, gamesPlayed) {
+        const xValues = gamesPlayed;
+        const yValues = winrate;
+        const barColors = ["#00aba9", "#b91d47"];
+        
+        // Create a new chart
+        this.chart = new Chart("winrate-chart", {
+            type: "line",
+            data: {
+                labels: xValues,
+                datasets: [{
+                fill: false,
+                lineTension: 0,
+                backgroundColor: "rgba(0,0,255,1.0)",
+                borderColor: "rgba(0,0,255,0.1)",
+                data: yValues
+                }]
+            },
+            options: {
+                legend: {display: true},
+                scales: {
+                yAxes: [{ticks: {min: 6, max:16}}],
                 }
             }
         });
