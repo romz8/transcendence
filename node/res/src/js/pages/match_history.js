@@ -178,7 +178,15 @@ class MatchHistory extends HTMLElement {
             },
             options: {
                 plugins: {
-                    legend: { display: true, position: 'bottom' },
+                    legend: { 
+                        display: true, 
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                size: 20
+                            }
+                        }
+                    },
                     tooltip: { enabled: true }
                 }
             }
@@ -203,7 +211,15 @@ class MatchHistory extends HTMLElement {
             },
             options: {
                 plugins: {
-                    legend: { display: true, position: 'bottom' },
+                    legend: { 
+                        display: true, 
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                size: 20
+                            },
+                        }
+                    },
                     tooltip: { enabled: true }
                 }
             }
@@ -213,28 +229,53 @@ class MatchHistory extends HTMLElement {
         const xValues = gamesPlayed;
         const yValues = winrate;
         const barColors = ["#00aba9", "#b91d47"];
-        
+    
         // Create a new chart
         this.chart = new Chart("winrate-chart", {
             type: "line",
             data: {
                 labels: xValues,
                 datasets: [{
-                fill: false,
-                lineTension: 0,
-                backgroundColor: "rgba(0,0,255,1.0)",
-                borderColor: "rgba(0,0,255,0.1)",
-                data: yValues
+                    fill: false,
+                    lineTension: 0,
+                    backgroundColor: "rgba(0,0,255,1.0)",
+                    borderColor: "rgba(0,0,255,0.1)",
+                    data: yValues
                 }]
             },
             options: {
-                legend: {display: true},
-                scales: {
-                yAxes: [{ticks: {min: 6, max:16}}],
+                plugins: {
+                    legend: { display: false},
+                    tooltip: { enabled: true },
+                    title: {
+                        display: false,
+                      }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Games Played',
+                        font: {
+                            size: 20
+                        }
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Winrate (%)',
+                        font: {
+                            size: 20
+                        }
+                    }
                 }
+            }
             }
         });
     }
+
+    
 }
 
 function timeAgo(date) {
